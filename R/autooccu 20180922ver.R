@@ -57,7 +57,9 @@ autooccuMCEM_sampleZ = function(theta, X, A, A1, A2, Z0, detmat, detX, num_sampl
 
 # PSEUDO LIKELIHOOD of AUTOOCCU MODEL
 # Pseudo Likelihood here, first version with non perfect detection is done Sept/22/2018 and checked NOT CHECKED YET
-autooccu.logPL = function(theta, envX, A, A1, A2, Z, detmat, detX) # assume known Z, data should form as nrow(data)==nrow(X),ncol(data)=# of periods. detX is design matrix of detections, WITHOUT 1s, should be a list. length(detX) = ncol(data) = # of periods # A1 is dist matrix for species 2, all about first spc1 should be 0
+autooccu.logPL = function(theta, envX, A, A1, A2, Z, detmat, detX, centered) # assume known Z, data should form as nrow(data)==nrow(X),ncol(data)=# of periods. detX is design matrix of detections, WITHOUT 1s, should be a list. length(detX) = ncol(data) = # of periods # A1 is dist matrix for species 2, all about first spc1 should be 0
+
+# add another two parameters, s.t. A = exp(-exp(k)*distMat)
 {
 	# deal with the underlaying Ising model
 	# REMEMBWE TO ADD 1s to envX, detX will automaticlly include because envX in cbinded
@@ -72,7 +74,7 @@ autooccu.logPL = function(theta, envX, A, A1, A2, Z, detmat, detX) # assume know
 	Xbeta = envX %*% beta # X should be doubled for 2 species cases, since environment is the same to both of them, maybe better to write X = rbind(X,X)
 	mu = exp(Xbeta) / (1 + exp(Xbeta))
 	#logPL = Xbeta + eta * A %*% (Z - mu) 
-	logPL = Xbeta + (eta * A + eta1 * A1 + eta2 * A2) %*% (Z - mu) #  ETA = eta * A + eta1 * A1 + eta2 * A2, in which eta1 is the spatial auto correlation constant for spc.2, eta is the spatial constant of spc.1 eta2 is the interspecies interaction constant
+	logPL = Xbeta + (eta * A + eta1 * A1 + eta2 * A2) %*% (Z - centered * mu) #  ETA = eta * A + eta1 * A1 + eta2 * A2, in which eta1 is the spatial auto correlation constant for spc.2, eta is the spatial constant of spc.1 eta2 is the interspecies interaction constant
 	logPL = t(Z) %*% logPL - sum(log(1 + exp(logPL))) # what need to do is just add detection history likelihoods here, while, Z should be EM.
 
 	# now deal with non-perfect detection
@@ -109,11 +111,11 @@ autooccu.ElogPL = function(theta, X, A, A1 , A2, Z, detmat, detX) # E step for E
 	EminuslogPL
 }
 
-autooccu.ElogPLnotpr = function(theta, X, A, A1 , A2, Z, detmat, detX) # E step for EM
+autooccu.ElogPLnotpr = function(theta, X, A, A1 , A2, Z, detmat, detX, centered) # E step for EM
 {
   n_sample = ncol(Z)
   PLs = apply(X=Z,MARGIN = 2,FUN='autooccu.logPL',theta = theta,
-                  envX = X, A = A, A1 = A1, A2 = A2,  detmat = detmat, detX = detX)
+                  envX = X, A = A, A1 = A1, A2 = A2,  detmat = detmat, detX = detX, centered)
   sumPL = sum(PLs)#calculate the E of likelihood
   EminuslogPL = sumPL/n_sample
   EminuslogPL
@@ -121,7 +123,7 @@ autooccu.ElogPLnotpr = function(theta, X, A, A1 , A2, Z, detmat, detX) # E step 
 
 
 # AUTOOCCU FIT HERE, MCEM is still under developing 2018/9/22
-autooccu.fit = function(X, A, A1, A2, detmat, detX, MCEMsample = 10000 ,hessian = T, method = 'BFGS')
+autooccu.fit = function(X, A, A1, A2, detmat, detX, centered = T ,MCEMsample = 10000 ,hessian = T, method = 'BFGS')
 { 
   #require('snow')
   start = glm(as.numeric(rowSums(detmat)>0) ~ X - 1, family = binomial)$coef
@@ -132,7 +134,7 @@ autooccu.fit = function(X, A, A1, A2, detmat, detX, MCEMsample = 10000 ,hessian 
 	cond = T
 	toll = 1e-5 # tolerance for EM algorithm
 	Z_naive = as.matrix(rowSums(detmat)>0)
-	LL0 = autooccu.logPL(theta_previous, X, A, A1, A2, Z_naive, detmat, detX)
+	LL0 = autooccu.logPL(theta_previous, X, A, A1, A2, Z_naive, detmat, detX, centered)
 	print(paste("model started with -log(L) = ",as.character(LL0)))
 	print("Initial MCEM")
 	ww = 0
@@ -142,7 +144,7 @@ autooccu.fit = function(X, A, A1, A2, detmat, detX, MCEMsample = 10000 ,hessian 
 		Z = autooccuMCEM_sampleZ(theta, X, A, A1, A2, Z0 = Z_naive, detmat, detX, num_sample = MCEMsample) # USED SIMPLEST IMPLIMENT here, need to change to perfect sampler
 		print("all clear, initial M step...")
 		#opt = try(optim(theta_previous, autooccu.ElogPL, autologistic.grad, X = X, A = A, A1=A1, A2 = A2 ,Z = Z, detmat = detmat, detX = detX # gradient needed here, may be we cannot use it before we can find the gradient
-		opt = try(optim(theta_previous, autooccu.ElogPLnotpr, NULL, X = X, A = A, A1=A1, A2 = A2 ,Z = Z, detmat = detmat, detX = detX,
+		opt = try(optim(theta_previous, autooccu.ElogPLnotpr, NULL, X = X, A = A, A1=A1, A2 = A2 ,Z = Z, detmat = detmat, detX = detX, centered = centered,
               method = method, control = list(maxit = 300,trace=6,REPORT = 1), hessian = hessian),
               silent = F) # M step for EM
 		if (class(opt) == "try-error")
@@ -186,9 +188,9 @@ autooccu.fit = function(X, A, A1, A2, detmat, detX, MCEMsample = 10000 ,hessian 
 		Xbeta = X %*% coefficients[1:ncol(X)]
 		mu = exp(Xbeta)
 		mu = mu / (1 + mu)
-		autocovariate_1 = A %*% (Z - mu)
-		autocovariate_2 = A1 %*% (Z - mu)
-		covariate_interspecies = A2 %*% (Z - mu)
+		autocovariate_1 = A %*% (Z - centered * mu)
+		autocovariate_2 = A1 %*% (Z - centered * mu)
+		covariate_interspecies = A2 %*% (Z - centered * mu)
 		linear.predictors = Xbeta + coefficients[p - 2] * autocovariate_1 + coefficients[p - 1] * autocovariate_2 + coefficients[p - 0] * covariate_interspecies
 		fitted.values = exp(linear.predictors)
 		fitted.values = fitted.values / (1 + fitted.values)
@@ -214,7 +216,7 @@ autooccu.bootstrap.helper = function(dummy, X, A, A1, A2, theta, detmat,...)
 {
     Z = rautoccu(X, A, A1, A2,theta) # sample a Z form the underlaying Ising model
 	detmat = autooccu_sample.detection(theta, X, A, A1, A2, Z, detmat, detX) #sample detection history
-    fit = autooccu.fit(X, A, A1, A2, detmat, detX, MCEMsample = 10000 ,hessian = F, method = 'BFGS')
+    fit = autooccu.fit(X, A, A1, A2, detmat, detX, MCEMsample = 10000, centered = T ,hessian = F, method = 'BFGS')
     temp = rep(NA, length(theta))
     if (is.null(fit$convergence) || fit$convergence != 0)
         warning(fit$message)
@@ -223,13 +225,13 @@ autooccu.bootstrap.helper = function(dummy, X, A, A1, A2, theta, detmat,...)
     temp
 }
 
-autologistic.bootstrap = function(X, A, A1, A2, theta, detmat, bootit)
+autologistic.bootstrap = function(X, A, A1, A2, theta, detmat, centered = T ,bootit)
 {
     boot.sample = data.frame(matrix(NA, bootit, length(theta)))
     require(pbapply)
 	  cat("\n")
 	  flush.console()
-	  gathered = pbapply::pblapply(1:bootit, autologistic.bootstrap.helper, X, A, A1, A2, theta, detmat)
+	  gathered = pbapply::pblapply(1:bootit, autologistic.bootstrap.helper, X, A, A1, A2, theta, detmat, centered = T)
 		
 	for (j in 1:bootit){
 		boot.sample[j, ] = gathered[[j]]
