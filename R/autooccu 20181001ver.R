@@ -21,7 +21,7 @@ getGraph = function(distM,theta)
 	return(A)
 }
 
-rautoccu = function(X, distM,theta,method = "CFTP",nIter=nIter,n=1) #distM is a distance matrix 
+rautoccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1) #distM is a distance matrix 
 {	
 	require(IsingSampler)
 	p = length(theta)
