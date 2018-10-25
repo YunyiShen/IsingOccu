@@ -1,5 +1,5 @@
 
-getGraph = function(distM,theta)
+getGraph = function(distM,theta,int_range = "exp")
 {
 	p = length(theta)
 	sites = nrow(distM)
@@ -8,8 +8,21 @@ getGraph = function(distM,theta)
 	eta02 = theta[p-2]
 	d02 = theta[p-1]
 	eta1 = theta[p]
-	D1 = eta01*as.matrix(1/((distM)^(2+d01))) # long range interactions dimension constant d01 and d02 (sigma in some physics papers regarding Ising model)
-	D2 = eta02*as.matrix(1/((distM)^(2+d02)))
+	if(int_range=="arth"){
+		D1 = eta01*as.matrix(1/((distM)^(2+d01))) # long range interactions dimension constant d01 and d02 (sigma in some physics papers regarding Ising model)
+		D2 = eta02*as.matrix(1/((distM)^(2+d02)))
+	}
+	else{
+	if(int_range=="exp"){
+		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
+		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
+	}
+	else{
+	print("int_range must be exp or arth, will assume exp")
+		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
+		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
+		}
+	}
 	I = matrix(0,nrow=sites,ncol=sites)
 	diag(I) = eta1
 	A = cbind(D1,I)
@@ -21,7 +34,7 @@ getGraph = function(distM,theta)
 	return(A)
 }
 
-rautoccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1) #distM is a distance matrix 
+rautoccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "exp") #distM is a distance matrix 
 {	
 	require(IsingSampler)
 	p = length(theta)
@@ -32,7 +45,7 @@ rautoccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1) #distM is a di
 	Xfull = cbind(rbind(X,zeros),rbind(zeros,X))
 	thr = Xfull%*%beta1
 	rm(Xfull)
-	A = getGraph(distM,theta)
+	A = getGraph(distM,theta,int_range = int_range)
 	as.matrix(IsingSampler(n=n,graph = A,thresholds=thr, responses = c(-1L, 1L),nIter=nIter,method=method)) # use IsingSampler
 }
 
@@ -112,7 +125,7 @@ Pdet = function(envX, detmat, detX, theta)
 
 # PSEUDO LIKELIHOOD of AUTOOCCU MODEL
 # Pseudo Likelihood here, first version with non perfect detection is done Sept/22/2018 and checked NOT CHECKED YET
-autooccu.logPL = function(theta, envX, distM, Z ,detmat, detX) # assume known Z, data should form as nrow(data)==nrow(X),ncol(data)=# of periods. detX is design matrix of detections, WITHOUT 1s, should be a list. length(detX) = ncol(data) = # of periods # A1 is dist matrix for species 2, all about first spc1 should be 0
+autooccu.logPL = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp") # assume known Z, data should form as nrow(data)==nrow(X),ncol(data)=# of periods. detX is design matrix of detections, WITHOUT 1s, should be a list. length(detX) = ncol(data) = # of periods # A1 is dist matrix for species 2, all about first spc1 should be 0
 {
 	# deal with the underlaying Ising model
 	# REMEMBWE TO ADD 1s to envX, detX will automaticlly include 1s because envX in cbinded
@@ -124,9 +137,9 @@ autooccu.logPL = function(theta, envX, distM, Z ,detmat, detX) # assume known Z,
 	zeros = matrix(0,nrow=sites,ncol=ncov)
 	beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
 	Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr = -Xfull%*%beta1
+	thr = Xfull%*%beta1
 	rm(Xfull)
-	A = -getGraph(distM,theta)
+	A = getGraph(distM,theta,int_range = int_range)
 	logPL = ( IsingPL(x=Z, graph=A, thresholds=thr, beta=1, responses = c(-1L, 1L)))
 	rm(A)
 	
@@ -156,14 +169,14 @@ autooccu.logPL = function(theta, envX, distM, Z ,detmat, detX) # assume known Z,
 
 # E-STEP of EM Algorithm
 # E-STEP of EM Algorithm
-autooccu.ElogPL = function(theta, X, distM, Z, detmat, detX) # E step for EM a par version using snow
+autooccu.ElogPL = function(theta, X, distM, Z, detmat, detX, int_range = "exp") # E step for EM a par version using snow
 {
   require('snow')
   cl = makeSOCKcluster(detectCores())
   n_sample = ncol(Z)
-  clusterExport(cl,list("Z","theta","X","distM","detmat","detX","autooccu.logPL"),envir = environment())
+  clusterExport(cl,list("Z","theta","X","distM","detmat","detX","autooccu.logPL","int_range"),envir = environment())
   PLs = parCapply(cl=cl,x=Z,FUN='autooccu.logPL',theta = theta,
-                            envX = X, distM=distM,  detmat = detmat, detX = detX)
+                            envX = X, distM=distM,  detmat = detmat, detX = detX,int_range=int_range)
   #w = as.array(Z)
 	sumPL = sum(PLs)#calculate the E of likelihood
 	EminuslogPL = sumPL/n_sample
@@ -172,11 +185,11 @@ autooccu.ElogPL = function(theta, X, distM, Z, detmat, detX) # E step for EM a p
 	EminuslogPL
 }
 
-autooccu.ElogPLnotpr = function(theta, X, distM, Z, detmat, detX) # E step for EM
+autooccu.ElogPLnotpr = function(theta, X, distM, Z, detmat, detX, int_range = "exp") # E step for EM
 {
   n_sample = ncol(Z)
   PLs = apply(X=Z,MARGIN = 2,FUN='autooccu.logPL',theta = theta,
-                  envX = X, distM=distM,detmat = detmat, detX = detX)
+                  envX = X, distM=distM,detmat = detmat, detX = detX, int_range=int_range)
   sumPL = sum(PLs)#calculate the E of likelihood
   EminuslogPL = sumPL/n_sample
   EminuslogPL
@@ -184,7 +197,7 @@ autooccu.ElogPLnotpr = function(theta, X, distM, Z, detmat, detX) # E step for E
 
 
 # AUTOOCCU FIT HERE, MCEM is still under developing 2018/9/22
-autooccu.fit = function(X, distM, detmat, detX, MCEMsample = 10000 ,hessian = T, method = 'BFGS')
+autooccu.fit = function(X, distM, detmat, detX, MCEMsample = 10000 ,hessian = T, method = 'BFGS',int_range = "exp")
 { 
   #require('snow')
   start = glm(as.numeric(rowSums(detmat)>0) ~ X - 1, family = binomial)$coef
@@ -205,7 +218,7 @@ autooccu.fit = function(X, distM, detmat, detX, MCEMsample = 10000 ,hessian = T,
 		Z = autooccuMCEM_sampleZ(theta_previous, X, distM, Z0 = Z_naive, detmat, detX, num_sample = MCEMsample) # USED SIMPLEST IMPLIMENT here, need to change to perfect sampler
 		print("all clear, initial M step...")
 		#opt = try(optim(theta_previous, autooccu.ElogPL, autologistic.grad, X = X, A = A, A1=A1, A2 = A2 ,Z = Z, detmat = detmat, detX = detX # gradient needed here, may be we cannot use it before we can find the gradient [it seems not so hard to get the gradient by hand, so try it]
-		opt = try(optim(theta_previous, autooccu.ElogPLnotpr, NULL, X = X, distM = distM ,Z = Z, detmat = detmat, detX = detX,
+		opt = try(optim(theta_previous, autooccu.ElogPLnotpr, NULL, X = X, distM = distM ,Z = Z, detmat = detmat, detX = detX, int_range = int_range,
               method = method, control = list(maxit = 300,trace=6,REPORT = 1), hessian = hessian),
               silent = F) # M step for EM
 		if (class(opt) == "try-error")

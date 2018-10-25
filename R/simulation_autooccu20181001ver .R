@@ -5,11 +5,14 @@ nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
-distanceM = distanceM
+distanceM = distanceM-1
 diag(distanceM) = 0
 
-x = rep(0:(nlat - 1) / (nlat - 1), times = nlat) - 0.5
-y = rep(0:(nlat - 1) / (nlat - 1), each = nlat) - 0.5
+set.seed(12345)
+#x = rep(0:(nlat - 1) / (nlat - 1), times = nlat) - 0.5
+#y = rep(0:(nlat - 1) / (nlat - 1), each = nlat) - 0.5
+x = runif(nlat^2,-1,1)
+y = runif(nlat^2,-1,1)
 ones = rep(1,times = nlat*nlat)
 X = cbind(ones,x,y)
 
@@ -32,13 +35,13 @@ theta = matrix(c(0.2,1,1, # env reaction of 1
                  .5,1,1,  # env reaction of 2
                  1,-1,1,-1,2,  # detection beta of 1
                  1,1,1,-1,2,   # detection beta of 2
-                 0.3,3,        # eta01 d1
-                 0.3,3,		  # eta02 d2
-                 -.3))
+                 0.1,2,        # eta01 d1
+                 0.1,2,		  # eta02 d2
+                 -1))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
 detmat = matrix(0,nrow = 2*nlat^2,ncol = nperiod) # a sample detection matrix
-set.seed(12345)
+
 
 
 p = length(theta)
@@ -58,12 +61,12 @@ raster::plot(raster::raster(
     nrow=20,ncol=20)))
 
 set.seed(12345)
-Zsample = rautoccu(X,distanceM,theta,method = "MH",nIter=300,n=100)
+Zsample = rautoccu(X,distanceM,theta,method = "MH",nIter=300,n=1,int_range = "exp")
 
 raster::plot(raster::raster(
   matrix( 
     Zsample
-    [1:400],
+    [401:800],
     nrow=20,ncol=20)))
 #raster::plot(raster::raster(matrix(detmat[401:800,1],nrow = 20,ncol=20)))
 
@@ -76,9 +79,9 @@ raster::plot(raster::raster(
     [1:400,1],
     nrow=20,ncol=20)))
 
-autooccu.logPL(theta, X, distM, Z=Zsample, detmat, detX)
+autooccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
 
-optPLwithZ = optim(par=(theta+0.2*rnorm(length(theta))),fn=autooccu.logPL,NULL,envX=X,distM=distM,Z=Zsample,detmat=detmat,detX=detX)
+optPLwithZ = optim(par=(theta),fn=autooccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
 
 optPLwithZ$par
 abs((theta-optPLwithZ$par)/theta)
