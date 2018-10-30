@@ -128,7 +128,7 @@ Pdet = function(envX, detmat, detX, theta)
 autooccu.logPL = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp") # assume known Z, data should form as nrow(data)==nrow(X),ncol(data)=# of periods. detX is design matrix of detections, WITHOUT 1s, should be a list. length(detX) = ncol(data) = # of periods # A1 is dist matrix for species 2, all about first spc1 should be 0
 {
 	# deal with the underlaying Ising model
-	# REMEMBWE TO ADD 1s to envX, detX will automaticlly include 1s because envX in cbinded
+	# REMEMBER TO ADD 1s to envX, detX will automaticlly include 1s because envX in cbinded
 	# nsite = nrow(X)/2	
 	require(IsingSampler)
 	p = length(theta)
@@ -146,25 +146,47 @@ autooccu.logPL = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"
 	# what need to do is just add detection history likelihoods here, while, Z should be EM.
 
 	# now deal with non-perfect detection
-	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
-	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
-	npardet = ncol(detDesign[[1]])
-	Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
-	Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[(npardet+1):(2*npardet)])
-	P_det1 = lapply(Xbeta_det1,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
-	rm(Xbeta_det1)
-	P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
-	rm(Xbeta_det2)
-	P_det1 = (matrix(unlist(P_det1),nrow = nrow(X),ncol = nperiod)) # detection probability, row is site i col is period j
-	P_det2 = (matrix(unlist(P_det2),nrow = nrow(X),ncol = nperiod))
-	P_det = rbind(P_det1,P_det2)	
+	#nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
+	#beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
+	#detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
+	#npardet = ncol(detDesign[[1]])
+	#Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
+	#Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[(npardet+1):(2*npardet)])
+	#P_det1 = lapply(Xbeta_det1,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
+	#rm(Xbeta_det1)
+	#P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
+	#rm(Xbeta_det2)
+	#P_det1 = (matrix(unlist(P_det1),nrow = nrow(X),ncol = nperiod)) # detection probability, row is site i col is period j
+	#P_det2 = (matrix(unlist(P_det2),nrow = nrow(X),ncol = nperiod))
+	#P_det = rbind(P_det1,P_det2)
+	P_det = Pdet(envX, detmat, detX, theta)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
 	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
 	logLdata = sum(as.numeric((Z+1)/2) * LP_Z1 + as.numeric(1-((Z+1)/2)) * LP_Z0) # likelihood of data 
 	
 	# total neg log likelihood
 	-logPL-logLdata 
+}
+
+autooccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of Ising Model
+    require(IsingSampler)
+	p = length(theta)
+	sites = nrow(distM)
+	ncov = ncol(envX)
+	zeros = matrix(0,nrow=sites,ncol=ncov)
+	beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
+	Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
+	thr = Xfull%*%beta1
+	rm(Xfull)
+	A = getGraph(distM,theta,int_range = int_range)
+	negPot = thr%*%Z + t(Z)%*%A%*%Z
+	
+	P_det = Pdet(envX, detmat, detX, theta)
+	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
+	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
+	logLdata = sum(as.numeric((Z+1)/2) * LP_Z1 + as.numeric(1-((Z+1)/2)) * LP_Z0)
+
+	return(negPot+logLdata)
 }
 
 # E-STEP of EM Algorithm
@@ -289,6 +311,15 @@ autooccu.fit = function(X, distM, detmat, detX, MCEMsample = 10000 ,hessian = T,
     object
 }
 
+# THIS is the autooccu fitting function using Moller et al. 2006 sampler (if we can only use MCEM to do MPLE, then Baysian is much faster)
+autooccu.fit.Moller = function(X,distM, detmat, detX, maxiter = 10000 , vars = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),int_range = "exp"){
+	
+	
+	
+	
+	
+	
+}
 ## bootstrap to see the CI
 autooccu.bootstrap.helper = function(dummy, X, A, A1, A2, theta, detmat,...)
 {
