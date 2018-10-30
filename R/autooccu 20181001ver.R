@@ -50,7 +50,7 @@ rautoccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "ex
 }
 
 # sample detection given Z
-autooccu_sample.detection = function(theta, X, distM, Z ,detmat, detX){
+autooccu_sample.detection = function(theta, X, Z ,detmat, detX){
 	p = length(theta)
 	RN = matrix( runif(nrow(detmat)*ncol(detmat)),nrow = nrow(detmat),ncol = ncol(detmat) )
 	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
@@ -119,7 +119,7 @@ Pdet = function(envX, detmat, detX, theta)
 	P_det1 = (matrix(unlist(P_det1),nrow = nrow(X),ncol = nperiod)) # detection probability, row is site i col is period j
 	P_det2 = (matrix(unlist(P_det2),nrow = nrow(X),ncol = nperiod))
 	P_det = rbind(P_det1,P_det2)
-	return(Pdet)
+	return(P_det)
 }
 
 
@@ -307,17 +307,105 @@ autooccu.fit = function(X, distM, detmat, detX, MCEMsample = 10000 ,hessian = T,
                   convergence = convergence, message = message, value = value, AIC=AIC,err=err)
     if (hessian && ! is.null(I.hat))
         object$I.hat = I.hat
-    class(object) = "autooccu"
+    class(object) = "autooccu.MPLE"
     object
 }
 
+# Moller MH ratio
+Moller.ratio = function(theta_curr ,theta_prop
+						,Z_curr ,Z_prop
+						,x_curr,x_prop
+						,detmat
+						,vars_prior
+						,theta_tuta,Z_tuta
+						,envX, detX, distM,int_range ){
+	log_q_theta_Z_tuta_x_prop = autooccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_prop, detX, int_range = int_range) 
+	# then auxiliented variable x_prop is same to detmat, and proposed using likelihood function in the main sampler
+	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars.prior)))
+	#prior of proposed theta
+	log_q_theta_Z_prop_detmat = autooccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = detmat, detX, int_range = int_range)
+	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
+	log_q_theta_Z_curr_x_curr = autooccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = x_curr, detX, int_range = int_range)
+	
+	#### end of the upper part, start the lower
+	
+	log_q_theta_Z_tuta_x_curr = autooccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_curr, detX, int_range = int_range)
+	log_pi_theta_curr =log(dnorm(theta_curr,0,vars))
+	log_q_theta_Z_curr_detmat = autooccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = detmat, detX, int_range = int_range)
+	log_q_theta_Z_prop_x_prop = autooccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = x_prop, detX, int_range = int_range)
+	
+	log_MH_ratio = (log_q_theta_Z_tuta_x_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_q_theta_Z_curr_x_curr)-
+				   (log_q_theta_Z_tuta_x_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_q_theta_Z_prop_x_prop)
+
+	return(min(1,exp(log_MH_ratio)))
+}
+
+
+
 # THIS is the autooccu fitting function using Moller et al. 2006 sampler (if we can only use MCEM to do MPLE, then Baysian is much faster)
-autooccu.fit.Moller = function(X,distM, detmat, detX, maxiter = 10000 , vars = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),int_range = "exp"){
-	
-	
-	
-	
-	
+# remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
+autooccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345){
+	require(coda)
+	set.seed(seed)
+	start = glm(as.numeric(rowSums(detmat)>0) ~ X - 1, family = binomial)$coef
+	start_det = glm(detmat[,1] ~ cbind(X,detX[[1]]) - 1,family = binomial)$coef
+	theta_curr = c(start,start_det,1,0,1,0,1)
+	theta_tuta = theta_curr
+	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(start.theta)))
+	Z.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = nrow(detmat)))
+	Z_absolute = (as.numeric(rowSums(detmat)>0)) * 2 - 1
+	Z_tuta = Z_absolute
+	Z_curr = Z_tuta
+	x_curr = detmat
+	for(i in 1:burn.in){# to burn in 
+		#propose theta 
+		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		#propose Z from uniform distribution 
+		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		# propose x, from the likelihood
+		x_prop = autooccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
+		# MH ratio
+		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_prop
+						,x_curr,x_prop
+						,detmat
+						,vars_prior
+						,theta_tuta,Z_tuta
+						,envX=X, detX, distM,int_range)
+		r = runif(1)
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			Z_curr = Z_prop
+			x_curr = x_prop
+		}
+	}
+	for(i in 1:(mcmc.save)){ # for to save 
+		#propose theta 
+		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		#propose Z from uniform distribution 
+		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		# propose x, from the likelihood
+		x_prop = autooccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
+		# MH ratio
+		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_prop
+						,x_curr,x_prop
+						,detmat
+						,vars_prior
+						,theta_tuta,Z_tuta
+						,envX=X, detX, distM,int_range)
+		r = runif(1)
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			Z_curr = Z_prop
+			x_curr = x_prop
+		}
+		theta.mcmc[i,]=theta_curr
+		Z.mcmc[i,]=Z_curr
+	}
+	res = list(theta.mcmc = theta.mcmc, vars=vars, interaction.range = int_range, graph = graph, envX=X)
+	class(res)="autooccu.Moller"
+	return(res)
 	
 }
 ## bootstrap to see the CI
