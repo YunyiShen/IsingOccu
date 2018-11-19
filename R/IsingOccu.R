@@ -220,7 +220,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	return(res)
 }
 ## bootstrap to see the CI
-IsingOccu.Moller.bootstrap.helper = function(dummy, X, distM,theta, theta, detmat,detX,int_range="exp",...)
+IsingOccu.Moller.bootstrap.helper = function(dummy, X, distM, theta, detmat,detX,int_range="exp",...)
 {
     Z = rIsingOccu(X, distM,theta,method,nIter,n=1,int_range) # sample a Z form the underlaying Ising model
 	detmat = IsingOccu_sample.detection(theta, X, Z ,detmat, detX) #sample detection history
@@ -229,7 +229,7 @@ IsingOccu.Moller.bootstrap.helper = function(dummy, X, distM,theta, theta, detma
     return(temp)
 }
 
-IsingOccu.Moller.bootstrap = function(X, distM,theta, theta, detmat,detX,int_range="exp", bootit,...)
+IsingOccu.Moller.bootstrap = function(X, distM, theta, detmat,detX,int_range="exp", bootit,...)
 {
     boot.sample = data.frame(matrix(NA, bootit, length(theta)))
     require(pbapply)
