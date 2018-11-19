@@ -1,6 +1,6 @@
 require('gtools')
 set.seed(125)
-source('autooccu 20181001ver.R')
+source('IsingOccu.R')
 nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
@@ -61,7 +61,7 @@ raster::plot(raster::raster(
     nrow=20,ncol=20)))
 
 set.seed(12345)
-Zsample = rautoccu(X,distanceM,theta,method = "MH",nIter=300,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "MH",nIter=300,n=1,int_range = "exp")
 
 raster::plot(raster::raster(
   matrix( 
@@ -70,7 +70,7 @@ raster::plot(raster::raster(
     nrow=20,ncol=20)))
 #raster::plot(raster::raster(matrix(detmat[401:800,1],nrow = 20,ncol=20)))
 
-detSample = autooccu_sample.detection(theta, X, distM, Z=Zsample, detmat, detX)
+detSample = IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
 detmat = detSample
 
 raster::plot(raster::raster(
@@ -79,9 +79,9 @@ raster::plot(raster::raster(
     [1:400,1],
     nrow=20,ncol=20)))
 
-autooccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
+# autooccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
 
-optPLwithZ = optim(par=(theta),fn=autooccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
+# optPLwithZ = optim(par=(theta),fn=autooccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
 
 optPLwithZ$par
 abs((theta-optPLwithZ$par)/theta)
