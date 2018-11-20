@@ -77,9 +77,8 @@ IsingOccu_sample.detection = function(theta, X, Z ,detmat, detX){
 	sample_detHistory
 }
 
-#Sampler for MCEM, sample Z from the total likelihood given all detections and all theta
 
-Pdet = function(envX, detmat, detX, theta)
+Pdet = function(envX, detmat, detX, theta) # likelihood given Z and detections
 {
 	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
 	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
@@ -99,7 +98,7 @@ Pdet = function(envX, detmat, detX, theta)
 
 
 
-IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of Ising Model
+IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of IsingOccu Model
     require(IsingSampler)
 	p = length(theta)
 	sites = nrow(distM)
