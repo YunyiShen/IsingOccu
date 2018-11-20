@@ -100,6 +100,7 @@ Pdet = function(envX, detmat, detX, theta) # likelihood given Z and detections
 
 IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of IsingOccu Model
     require(IsingSampler)
+  Z=matrix(Z,nrow=length(Z),ncol=1)
 	p = length(theta)
 	sites = nrow(distM)
 	ncov = ncol(envX)
@@ -109,7 +110,7 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 	thr = Xfull%*%beta1
 	rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range)
-	negPot = thr%*%Z + t(Z)%*%A%*%Z
+	negPot = t(thr)%*%Z + t(Z)%*%A%*%Z
 	
 	P_det = Pdet(envX, detmat, detX, theta)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
@@ -129,7 +130,8 @@ Moller.ratio = function(theta_curr ,theta_prop
 						,envX, detX, distM,int_range ){
 	log_q_theta_Z_tuta_x_prop = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_prop, detX, int_range = int_range) 
 	# then auxiliented variable x_prop is same to detmat, and proposed using likelihood function in the main sampler
-	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars.prior)))
+	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
+	log_pi_theta_prop = sum(log_pi_theta_prop)
 	#prior of proposed theta
 	log_q_theta_Z_prop_detmat = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = detmat, detX, int_range = int_range)
 	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
@@ -138,7 +140,8 @@ Moller.ratio = function(theta_curr ,theta_prop
 	#### end of the upper part, start the lower
 	
 	log_q_theta_Z_tuta_x_curr = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_curr, detX, int_range = int_range)
-	log_pi_theta_curr =log(dnorm(theta_curr,0,vars))
+	log_pi_theta_curr =log(dnorm(theta_curr,0,sd=sqrt(vars_prior)))
+	log_pi_theta_curr = sum(log_pi_theta_curr)
 	log_q_theta_Z_curr_detmat = IsingOccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = detmat, detX, int_range = int_range)
 	log_q_theta_Z_prop_x_prop = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = x_prop, detX, int_range = int_range)
 	

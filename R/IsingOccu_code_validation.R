@@ -60,6 +60,7 @@ raster::plot(raster::raster(
      [401:800],
     nrow=20,ncol=20)))
 
+# Test the sampler Z function
 set.seed(12345)
 Zsample = rIsingOccu(X,distanceM,theta,method = "MH",nIter=300,n=1,int_range = "exp")
 
@@ -70,6 +71,7 @@ raster::plot(raster::raster(
     nrow=20,ncol=20)))
 #raster::plot(raster::raster(matrix(detmat[401:800,1],nrow = 20,ncol=20)))
 
+# Test the detection function
 detSample = IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
 detmat = detSample
 
@@ -79,32 +81,30 @@ raster::plot(raster::raster(
     [1:400,1],
     nrow=20,ncol=20)))
 
-# autooccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
+# log Pseudo-Likelihood 
+IsingOccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
 
-# optPLwithZ = optim(par=(theta),fn=autooccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
+optPLwithZ = optim(par=(theta),fn=autooccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
 
 optPLwithZ$par
 abs((theta-optPLwithZ$par)/theta)
 
+# Test MCMC helper functions
+## test negPotential
+envX = X
+distM=distanceM
+Z=Zsample
+int_range = "exp"
+IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
 
-### NOT RUN
+## test Moller ratio
+Moller.ratio(theta_curr=theta ,theta_prop=theta+runif(length(theta))
+                        ,Z_curr=Z ,Z_prop=(2*(runif(length(Z))>0.5)-1)
+                        ,x_curr=detmat,x_prop=1-detmat
+                        ,detmat
+                        ,vars_prior=1
+                        ,theta_tuta=theta,Z_tuta=Z
+                        ,envX, detX, distM,int_range="exp" )
 
-Zsample_MCEM = autooccuMCEM_sampleZ(theta, X, A, A1, A2, 1*(runif(length(Zsample))>=0.5), detmat, detX, 10000)
+## test sampler
 
-cl <- parallel::makePSOCKcluster(detectCores())
-ptm = proc.time()
-autooccu.ElogPL(theta, X, A, A1 , A2, Zsample_MCEM, detmat, detX)
-proc.time()-ptm
-ptm = proc.time()
-autooccu.ElogPLnotpr(theta, X, A, A1 , A2, Zsample_MCEM, detmat, detX)
-proc.time()-ptm
-#ptm = proc.time()
-#cl <- parallel::makePSOCKcluster(4)
-clusterExport(cl,list("Zsample_MCEM","theta","X","A","A1","A2","detmat","detX","autooccu.logPL"),envir = environment())
-www = parallel::parCapply(cl=cl,x=Zsample_MCEM,FUN='autooccu.logPL',theta = theta,
-                envX = X, A = A, A1 = A1, A2 = A2,  detmat = detmat, detX = detX)
-#proc.time()-ptm
-
-#cl <- parallel::makePSOCKcluster(detectCores())
-autooccu.fit(X, A, A1, A2, detSample, detX, MCEMsample = 5000 ,hessian = F, method = 'BFGS')
-#closeNode(cl)
