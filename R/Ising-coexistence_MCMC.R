@@ -2,7 +2,7 @@ require('gtools')
 require("IsingSampler")
 require("raster")
 set.seed(125)
-source('autooccu 20181001ver.R')
+source('IsingOccu.R')
 nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
