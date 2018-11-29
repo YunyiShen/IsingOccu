@@ -1,5 +1,5 @@
 
-getGraph = function(distM,theta,int_range = "exp")
+getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 {
 	p = length(theta)
 	sites = nrow(distM)
@@ -23,6 +23,7 @@ getGraph = function(distM,theta,int_range = "exp")
 		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
 		}
 	}
+	if(full){
 	I = matrix(0,nrow=sites,ncol=sites)
 	diag(I) = eta1
 	A = cbind(D1,I)
@@ -31,6 +32,10 @@ getGraph = function(distM,theta,int_range = "exp")
 	rm(B)
 	diag(A)=0
 	row.names(A)=colnames(A)
+	}
+	else{
+		A=list(D1=D1,D2=D2,eta1=eta1)
+	}
 	return(A)
 }
 
@@ -53,23 +58,7 @@ rIsingOccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "
 IsingOccu_sample.detection = function(theta, X, Z ,detmat, detX){
 	p = length(theta)
 	RN = matrix( runif(nrow(detmat)*ncol(detmat)),nrow = nrow(detmat),ncol = ncol(detmat) )
-	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
-	beta_det = theta[(2*ncol(X) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	detDesign = lapply(detX,function(x,y){cbind(y,x)},y = X) # This is the full design matrix list of detection probability p at time
-	npardet = ncol(detDesign[[1]])
-	Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
-	Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[(npardet+1):(2*npardet)])
-	P_det1 = lapply(Xbeta_det1,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
-	rm(Xbeta_det1)
-	
-	P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
-	rm(Xbeta_det2)
-	
-	P_det1 = (matrix(unlist(P_det1),nrow = nrow(X),ncol = nperiod)) # detection probability, row is site i col is period j
-	P_det2 = (matrix(unlist(P_det2),nrow = nrow(X),ncol = nperiod))
-	P_det = rbind(P_det1,P_det2)
-	rm(P_det1)
-	rm(P_det2)
+	P_det = Pdet(X, detmat, detX, theta)
 	occustatus = matrix(rep((Z+1)/2,nperiod),nrow = length(Z),ncol=nperiod)
 	P_det_occu = P_det * occustatus
 	
@@ -100,7 +89,7 @@ Pdet = function(envX, detmat, detX, theta) # likelihood given Z and detections
 
 IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of IsingOccu Model
     require(IsingSampler)
-  Z=matrix(Z,nrow=length(Z),ncol=1)
+    Z=matrix(Z,nrow=length(Z),ncol=1)
 	p = length(theta)
 	sites = nrow(distM)
 	ncov = ncol(envX)
@@ -109,8 +98,8 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 	Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
 	thr = Xfull%*%beta1
 	rm(Xfull)
-	A = getGraph(distM,theta,int_range = int_range)
-	negPot = t(thr)%*%Z + t(Z)%*%A%*%Z
+	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
+	negPot = t(thr)%*%Z + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
 	
 	P_det = Pdet(envX, detmat, detX, theta)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
