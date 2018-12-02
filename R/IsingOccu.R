@@ -144,6 +144,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 
 # THIS is the IsingOccu fitting function using Moller et al. 2006 sampler (if we can only use MCEM to do MPLE, then Baysian is much faster)
 # remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
+# detX should be a list, with every element is the design matrix WITHOUT 1s.
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345){
 	require(coda)
 	set.seed(seed)

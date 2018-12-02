@@ -108,3 +108,4 @@ Moller.ratio(theta_curr=theta ,theta_prop=theta+runif(length(theta))
 
 ## test sampler
 
+IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 1000, burn.in = 30 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345)
