@@ -49,7 +49,7 @@ IsingOccu_multispp.logL.innorm = function(beta,eta_intra,d,eta_inter, envX, dist
 	}
 	
 	beta_det = matrix(detbeta,nrow = length(detbeta),ncol = 1)
-	P_det = Pdet_multi(envX, detmat, detX, beta_det)
+	P_det = Pdet(envX, detmat, detX, beta_det)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
 	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
 	logLdata = sum(as.numeric((Z_vec+1)/2) * LP_Z1 + as.numeric(1-((Z_vec+1)/2)) * LP_Z0)
