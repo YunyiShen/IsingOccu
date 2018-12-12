@@ -14,13 +14,13 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	}
 	else{
 	if(int_range=="exp"){
-		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
-		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
+		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
+		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
 	}
 	else{
 	print("int_range must be exp or arth, will assume exp")
-		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
-		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
+		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
+		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
 		}
 	}
 	if(full){
@@ -94,12 +94,14 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 	sites = nrow(distM)
 	ncov = ncol(envX)
 	zeros = matrix(0,nrow=sites,ncol=ncov)
-	beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
-	Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr = Xfull%*%beta1
+	beta1 = as.numeric( matrix(c(theta[1:(ncov)])))
+	beta2 = as.numeric( matrix(c(theta[1:(ncov) + ncov])))
+	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
+	thr1 = X%*%beta1
+	thr2 = X%*%beta2
 	rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-	negPot = t(thr)%*%Z + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
+	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
 	
 	P_det = Pdet(envX, detmat, detX, theta)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
