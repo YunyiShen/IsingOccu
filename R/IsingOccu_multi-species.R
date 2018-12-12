@@ -49,7 +49,7 @@ IsingOccu_multispp.logL.innorm = function(beta,eta_intra,d,eta_inter, envX, dist
 	}
 	
 	beta_det = matrix(detbeta,nrow = length(detbeta),ncol = 1)
-	P_det = Pdet(envX, detmat, detX, beta_det)
+	P_det = Pdet_multi(envX, detmat, detX, beta_det)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
 	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
 	logLdata = sum(as.numeric((Z_vec+1)/2) * LP_Z1 + as.numeric(1-((Z_vec+1)/2)) * LP_Z0)
@@ -57,8 +57,9 @@ IsingOccu_multispp.logL.innorm = function(beta,eta_intra,d,eta_inter, envX, dist
 	return(negPot+logLdata)
 }
 
-Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detections
+Pdet_multi = function(envX, detmat, detX, beta_det) # likelihood given Z and detections
 {
+	# this is still 2 spp case, need to change to multi case
 	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
 	 # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
