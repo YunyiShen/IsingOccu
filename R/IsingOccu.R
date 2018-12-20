@@ -58,7 +58,7 @@ rIsingOccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "
 IsingOccu_sample.detection = function(theta, X, Z ,detmat, detX){
 	p = length(theta)
 	RN = matrix( runif(nrow(detmat)*ncol(detmat)),nrow = nrow(detmat),ncol = ncol(detmat) )
-	beta_det = theta[(2*ncol(envX) + 1):(p-5)]
+	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	P_det = Pdet(X, detmat, detX, beta_det)
 	occustatus = matrix(rep((Z+1)/2,nperiod),nrow = length(Z),ncol=nperiod)
 	P_det_occu = P_det * occustatus
@@ -71,7 +71,7 @@ IsingOccu_sample.detection = function(theta, X, Z ,detmat, detX){
 Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detections
 {
 	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
-	 # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
+	#beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
 	npardet = ncol(detDesign[[1]])
 	Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
@@ -82,7 +82,7 @@ Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detection
 	rm(Xbeta_det2)
 	P_det1 = (matrix(unlist(P_det1),nrow = nrow(X),ncol = nperiod)) # detection probability, row is site i col is period j
 	P_det2 = (matrix(unlist(P_det2),nrow = nrow(X),ncol = nperiod))
-	P_det = rbind(P_det1,P_det2) # col is period, row from 1:nsite for spp1 and nsite+1:nsite for spp2
+	P_det = rbind(P_det1,P_det2)
 	return(P_det)
 }
 
@@ -103,7 +103,8 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 	rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
 	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
-	beta_det = theta[(2*ncol(envX) + 1):(p-5)]
+	
+	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	P_det = Pdet(envX, detmat, detX, beta_det)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
 	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
