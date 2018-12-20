@@ -30,6 +30,7 @@ Mean field approximation is always the first to be tried to obtain simple proper
 ## Primary Results
 ### Mean Field Approximation in near Neutral Environment
 ![eq1](https://github.com/YunyiShen/IsingOccu/blob/master/Equations/MF.png)
+
 In which hs are the mean environmental reactions of sigma and tau species, JNs are the cumulated intralayer coupling strength, Jsigmatau is the intralayer coupling strength, in a competition setting, it is negative.
 
 It makes qualititive sense when the environment is nice enough, increasing dispersion will increase frequency but if its not good, increasing dispersion maybe not good (fugitive paradox). The asymmertric outcomes of frequency is because the external field though couplings are symmetric. This also has good ecological sense because niche overlap can be symmetric while the width and peak values are not, which causes some species to be stronger. This model cannot predict the frequency distribution in a total neutral environment which maybe a weak part of the theory. 
