@@ -39,8 +39,8 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	return(A)
 }
 
-rIsingOccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "exp") #distM is a distance matrix 
-{	
+rIsingOccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "exp") #distM is a distance matrix
+{
 	require(IsingSampler)
 	p = length(theta)
 	sites = nrow(distM)
@@ -55,14 +55,14 @@ rIsingOccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "
 }
 
 # sample detection given Z
-IsingOccu_sample.detection = function(theta, X, Z ,detmat, detX){
+IsingOccu_sample.detection = function(theta, envX, Z ,detmat, detX){
 	p = length(theta)
 	RN = matrix( runif(nrow(detmat)*ncol(detmat)),nrow = nrow(detmat),ncol = ncol(detmat) )
 	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	P_det = Pdet(X, detmat, detX, beta_det)
 	occustatus = matrix(rep((Z+1)/2,nperiod),nrow = length(Z),ncol=nperiod)
 	P_det_occu = P_det * occustatus
-	
+
 	sample_detHistory = 1 * (RN<P_det_occu)
 	sample_detHistory
 }
@@ -92,18 +92,18 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
     require(IsingSampler)
     Z=matrix(Z,nrow=length(Z),ncol=1)
 	p = length(theta)
-	sites = nrow(distM)
+	nsite = nrow(distM)
 	ncov = ncol(envX)
-	zeros = matrix(0,nrow=sites,ncol=ncov)
+	zeros = matrix(0,nrow=nsite,ncol=ncov)
 	beta1 = as.numeric( matrix(c(theta[1:(ncov)])))
 	beta2 = as.numeric( matrix(c(theta[1:(ncov) + ncov])))
-	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
+	# Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
 	thr1 = X%*%beta1
 	thr2 = X%*%beta2
-	rm(Xfull)
+	# rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
 	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
-	
+
 	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	P_det = Pdet(envX, detmat, detX, beta_det)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
@@ -121,7 +121,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 						,vars_prior
 						,theta_tuta,Z_tuta
 						,envX, detX, distM,int_range ){
-	log_q_theta_Z_tuta_x_prop = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_prop, detX, int_range = int_range) 
+	log_q_theta_Z_tuta_x_prop = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_prop, detX, int_range = int_range)
 	# then auxiliented variable x_prop is same to detmat, and proposed using likelihood function in the main sampler
 	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
 	log_pi_theta_prop = sum(log_pi_theta_prop)
@@ -129,15 +129,15 @@ Moller.ratio = function(theta_curr ,theta_prop
 	log_q_theta_Z_prop_detmat = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = detmat, detX, int_range = int_range)
 	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
 	log_q_theta_Z_curr_x_curr = IsingOccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = x_curr, detX, int_range = int_range)
-	
+
 	#### end of the upper part, start the lower
-	
+
 	log_q_theta_Z_tuta_x_curr = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_curr, detX, int_range = int_range)
 	log_pi_theta_curr =log(dnorm(theta_curr,0,sd=sqrt(vars_prior)))
 	log_pi_theta_curr = sum(log_pi_theta_curr)
 	log_q_theta_Z_curr_detmat = IsingOccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = detmat, detX, int_range = int_range)
 	log_q_theta_Z_prop_x_prop = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = x_prop, detX, int_range = int_range)
-	
+
 	log_MH_ratio = (log_q_theta_Z_tuta_x_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_q_theta_Z_curr_x_curr)-
 				   (log_q_theta_Z_tuta_x_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_q_theta_Z_prop_x_prop)
 
@@ -164,10 +164,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	Z_tuta = Z_absolute
 	Z_curr = Z_tuta
 	x_curr = detmat
-	for(i in 1:burn.in){# to burn in 
-		#propose theta 
+	for(i in 1:burn.in){# to burn in
+		#propose theta
 		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
-		#propose Z from uniform distribution 
+		#propose Z from uniform distribution
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
 		# propose x, from the likelihood
 		x_prop = IsingOccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
@@ -186,10 +186,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			x_curr = x_prop
 		}
 	}
-	for(i in 1:(mcmc.save)){ # for to save 
-		#propose theta 
+	for(i in 1:(mcmc.save)){ # for to save
+		#propose theta
 		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
-		#propose Z from uniform distribution 
+		#propose Z from uniform distribution
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
 		# propose x, from the likelihood
 		x_prop = IsingOccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
@@ -210,7 +210,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		theta.mcmc[i,]=theta_curr
 		Z.mcmc[i,]=Z_curr
 	}
-	
+
 	res = list(theta.mcmc = theta.mcmc,theta.mean = apply(theta.mcmc,1,mean),vars=vars, interaction.range = int_range, graph = graph, envX=X)
 	class(res)="IsingOccu.Moller"
 	return(res)
@@ -232,9 +232,9 @@ IsingOccu.Moller.bootstrap = function(X, distM, theta, detmat,detX,int_range="ex
 	  cat("\n")
 	  flush.console()
 	  gathered = pbapply::pblapply(1:bootit, IsingOccu.Moller.bootstrap.helper, X, distM,theta, theta, detmat,detX,int_range="exp",...)
-		
+
 	for (j in 1:bootit){
 		boot.sample[j, ] = gathered[[j]]
 	}
-    return(boot.sample)	
- } 
+    return(boot.sample)
+ }
