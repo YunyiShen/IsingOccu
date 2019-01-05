@@ -131,6 +131,7 @@ IsingOccu_multispp_sample.detection = function(theta, X, Z ,detmat, detX,nspp){
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 10000, burn.in = 10 , vars_prior = list(beta_occu = rep(1,ncol(X)),beta_det = rep(1,ncol(detX)),eta_intra = rep(1,nspp),d=rep(1,nspp),eta_inter=rep(1,nspp*(nspp-1)/2)),vars_prop = 2,int_range = "exp",seed = 42){
 	require(coda)
 	set.seed(seed)
+	# starting value has problem, should be multi species
 	beta_occu = glm(as.numeric(rowSums(detmat)>0) ~ X - 1, family = binomial)$coef
 	beta_det = glm(detmat[,1] ~ cbind(X,detX[[1]]) - 1,family = binomial)$coef
 	eta_intra = matrix(1,1,nspp)
