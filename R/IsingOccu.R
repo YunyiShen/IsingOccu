@@ -34,6 +34,8 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	row.names(A)=colnames(A)
 	}
 	else{
+	  diag(D1)=0
+	  diag(D2)=0
 		A=list(D1=D1,D2=D2,eta1=eta1)
 	}
 	return(A)
@@ -59,7 +61,7 @@ IsingOccu_sample.detection = function(theta, envX, Z ,detmat, detX){
 	p = length(theta)
 	RN = matrix( runif(nrow(detmat)*ncol(detmat)),nrow = nrow(detmat),ncol = ncol(detmat) )
 	beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	P_det = Pdet(X, detmat, detX, beta_det)
+	P_det = Pdet(envX, detmat, detX, beta_det)
 	occustatus = matrix(rep((Z+1)/2,nperiod),nrow = length(Z),ncol=nperiod)
 	P_det_occu = P_det * occustatus
 
@@ -114,6 +116,7 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 }
 
 # Moller MH ratio
+# bug detected 20190105
 Moller.ratio = function(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
 						,x_curr,x_prop
@@ -152,13 +155,19 @@ Moller.ratio = function(theta_curr ,theta_prop
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345){
 	require(coda)
 	set.seed(seed)
-	start = glm(as.numeric(rowSums(detmat)>0) ~ X - 1, family = binomial)$coef
-	start_det = glm(detmat[,1] ~ cbind(X,detX[[1]]) - 1,family = binomial)$coef
+	nsite = nrow(detmat)/2
+	datatemp = data.frame(r = rowSums(detmat)>0,rbind(X,X))
+	start =c( glm(r ~ . - 1, data = datatemp[1:nsite,],family = binomial)$coef
+	          , glm(r ~ . - 1, data = datatemp[1:nsite + nsite,],family = binomial)$coef)
+	datatemp = data.frame(r = detmat[,1],rbind(cbind(X,detX[[1]]),cbind(X,detX[[1]])))
+	start_det = c( glm(r ~ . - 1, data = datatemp[1:nsite,],family = binomial)$coef
+	               , glm(r ~ . - 1, data = datatemp[1:nsite+nsite,],family = binomial)$coef)
+	rm(datatemp)
 	theta_curr = c(start,start_det,1,0,1,0,1)
 	theta_tuta = theta_curr
-	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(start.theta)))
+	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(theta_curr)))
 	p = length(theta_tuta)
-	colname(theta.mcmc)[(p - 4):p] = c("eta_spatial_spc1","d_spatial_spc1","eta_spatial_spc2","d_spatial_spc2","eta_interspecies") # eta spatial
+	colnames(theta.mcmc)[(p - 4):p] = c("eta_spatial_spc1","d_spatial_spc1","eta_spatial_spc2","d_spatial_spc2","eta_interspecies") # eta spatial
 	Z.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = nrow(detmat)))
 	Z_absolute = (as.numeric(rowSums(detmat)>0)) * 2 - 1
 	Z_tuta = Z_absolute
@@ -211,10 +220,18 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		Z.mcmc[i,]=Z_curr
 	}
 
-	res = list(theta.mcmc = theta.mcmc,theta.mean = apply(theta.mcmc,1,mean),vars=vars, interaction.range = int_range, graph = graph, envX=X)
+	res = list(theta.mcmc = theta.mcmc
+	           ,theta.mean = apply(theta.mcmc,1,mean)
+	           ,vars_prior=vars_prior
+	           , interaction.range = int_range
+	           , graph = getGraph(distM,apply(theta.mcmc,1,mean),int_range = int_range,full=FALSE), envX=X)
 	class(res)="IsingOccu.Moller"
 	return(res)
 }
+
+
+
+
 ## bootstrap to see the CI
 IsingOccu.Moller.bootstrap.helper = function(dummy, X, distM, theta, detmat,detX,int_range="exp",...)
 {

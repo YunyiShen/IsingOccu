@@ -24,7 +24,7 @@ raster::plot(raster::raster(
 
 # 2 env var and 2 det var, 5 repeats
 detX = list()
-nperiod = 7
+nperiod = 10
 for (i in 1:nperiod){
   temp = matrix(runif(nlat^2 * 2),nrow = nlat^2,ncol = 2)
 	detX[[i]] = temp
@@ -107,18 +107,22 @@ distM=distanceM
 Z=Zsample
 int_range = "exp"
 IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
+IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
 
 ## test Moller ratio
-Moller.ratio(theta_curr=theta ,theta_prop=theta+runif(length(theta))
+Moller.ratio(theta_curr=theta 
+                        ,theta_prop=theta+runif(length(theta))
+                        #,theta_prop = theta
                         ,Z_curr=Z
                         #,Z_prop=(2*(runif(length(Z))>0.5)-1)
                         ,Z_prop = Z
-                        ,x_curr=detmat,x_prop=1-detmat
-                        ,detmat
+                        ,x_curr=detmat
+                        ,x_prop=IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
+                        ,detmat=detmat
                         ,vars_prior=1
                         ,theta_tuta=theta,Z_tuta=Z
                         ,envX, detX, distM,int_range="exp" )
 
 ## test sampler
 
-IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 1000, burn.in = 30 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345)
+kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 1, burn.in = 3 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345)
