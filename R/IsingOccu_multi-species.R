@@ -31,15 +31,14 @@ IsingOccu_multispp.logL.innorm = function(theta, envX, distM, Z ,detmat, detX,in
 	d = theta$d
 	eta_inter = theta$eta_inter
 # eta_inter should be a symmetric matrix, eta_intra should be vector
-# detmat here should be a matrix, with 1:nspp row for first spp, detmat = rbind(detmat1,detmat2,...,etc.)
+# detmat here should be a matrix, with 1:nspp row for first spp, detmat = rbind(detmat1,detmat2,...,etc.), i.e. rbind every detmat
 # beta_det is vector
     #require(IsingSampler)
-	#nspp = ncol(Z)
-    Z_vec=matrix(Z,nrow=length(Z),ncol=1) # Z can be a vector with 1:nsite be first species.
+    Z_vec=matrix(Z,nrow=length(Z),ncol=1) # Z can be a vector with 1:nsite be first species, should pass this way.
 	
-	sites = nrow(distM)
-	ncov = ncol(envX)
-	zeros = matrix(0,nrow=sites,ncol=ncov)
+	nsites = nrow(distM)
+	ncov = ncol(envX) # number of covs 
+	#zeros = matrix(0,nrow=nsites,ncol=ncov)
 	#beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
 	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
 	thr = X%*%beta # a matrix
