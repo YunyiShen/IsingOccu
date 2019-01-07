@@ -41,15 +41,15 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	return(A)
 }
 
-rIsingOccu = function(X, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "exp") #distM is a distance matrix
+rIsingOccu = function(envX, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "exp") #distM is a distance matrix
 {
 	require(IsingSampler)
 	p = length(theta)
 	sites = nrow(distM)
-	ncov = ncol(X)
+	ncov = ncol(envX)
 	zeros = matrix(0,nrow=sites,ncol=ncov)
-	beta1 = as.numeric( matrix(c(theta[1:(2*ncol(X))])))
-	Xfull = cbind(rbind(X,zeros),rbind(zeros,X))
+	beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
+	Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
 	thr = Xfull%*%beta1
 	rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range)
@@ -82,8 +82,8 @@ Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detection
 	rm(Xbeta_det1)
 	P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
 	rm(Xbeta_det2)
-	P_det1 = (matrix(unlist(P_det1),nrow = nrow(X),ncol = nperiod)) # detection probability, row is site i col is period j
-	P_det2 = (matrix(unlist(P_det2),nrow = nrow(X),ncol = nperiod))
+	P_det1 = (matrix(unlist(P_det1),nrow = nrow(envX),ncol = nperiod)) # detection probability, row is site i col is period j
+	P_det2 = (matrix(unlist(P_det2),nrow = nrow(envX),ncol = nperiod))
 	P_det = rbind(P_det1,P_det2)
 	return(P_det)
 }
@@ -96,6 +96,7 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 	p = length(theta)
 	nsite = nrow(distM)
 	ncov = ncol(envX)
+	
 	# zeros = matrix(0,nrow=nsite,ncol=ncov)
 	beta1 = as.numeric( matrix(c(theta[1:(ncov)])))
 	beta2 = as.numeric( matrix(c(theta[1:(ncov) + ncov])))
@@ -163,7 +164,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	start_det = c( glm(r ~ . - 1, data = datatemp[1:nsite,],family = binomial)$coef
 	               , glm(r ~ . - 1, data = datatemp[1:nsite+nsite,],family = binomial)$coef)
 	rm(datatemp)
-	theta_curr = c(start,start_det,1,0,1,0,1)
+	theta_curr = c(start,start_det,1,1,1,1,1)
 	theta_tuta = theta_curr
 	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(theta_curr)))
 	p = length(theta_tuta)
