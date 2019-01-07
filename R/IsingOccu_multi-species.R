@@ -1,22 +1,22 @@
 getintralayerGraph = function(distM,eta,d,int_range = "exp",nspp)
 {
 	#eta = eta[1:nspp]
-	A = list()
+	A = list() # intralayer graphs are passed using lists
 	if(int_range=="arth"){
 		for(i in 1:nspp){
-			A[i] = eta[i]*as.matrix(1/((distM)^(2+d[i])))
+			A[[i]] = eta[i]*as.matrix(1/((distM)^(2+d[i])))
 		}
 	}
 	else{
 		if(int_range=="exp"){
 			for(i in 1:nspp){
-				A[i] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
+				A[[i]] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
 			}
 		}
 		else{
 			print("int_range must be exp or arth, will assume exp")
 			for(i in 1:nspp){
-				A[i] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
+				A[[i]] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
 			}
 		}
 	}
@@ -131,15 +131,26 @@ IsingOccu_multispp_sample.detection = function(theta, X, Z ,detmat, detX,nspp){
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 10000, burn.in = 10 , vars_prior = list(beta_occu = rep(1,ncol(X)),beta_det = rep(1,ncol(detX)),eta_intra = rep(1,nspp),d=rep(1,nspp),eta_inter=rep(1,nspp*(nspp-1)/2)),vars_prop = 2,int_range = "exp",seed = 42){
 	require(coda)
 	set.seed(seed)
-	# starting value has problem, should be multi species
-	beta_occu = glm(as.numeric(rowSums(detmat)>0) ~ X - 1, family = binomial)$coef
-	beta_det = glm(detmat[,1] ~ cbind(X,detX[[1]]) - 1,family = binomial)$coef
+	nsite = (nrow(detmat)/nspp)
+	datatemp = data.frame(r = detmat[1:nsite,1],cbind(X,detX[[1]]))
+	beta_det = glm(r ~ . - 1, data = datatemp,family = binomial)$coef
+	datatemp = data.frame(r = as.numeric(rowSums(detmat[1:nsite,1])>0),X)
+	beta_occu = glm(r ~ . - 1, data = datatemp,family = binomial)$coef
+	
+	for(i in 2:nspp){ # initial value for all species, from logistic regression
+		datatemp = data.frame(r = detmat[1:nsite + (i-1)*nsite,1],cbind(X,detX[[1]]))
+		beta_det =c(beta_det ,glm(r ~ . - 1, data = datatemp,family = binomial)$coef)
+		datatemp = data.frame(r = as.numeric(rowSums(detmat[1:nsite + (i-1) * nsite,1])>0),X)
+		beta_occu =c(beta_occu , glm(r ~ . - 1, data = datatemp,family = binomial)$coef)
+	}
+	
+	
 	eta_intra = matrix(1,1,nspp)
 	d = matrix(1,1,nspp)
 	eta_inter = matrix(1,1,nspp*(nspp-1)/2)
-	theta_tuta = list(beta_occu,beta_det,eta_intra,d,eta_inter)
+	theta_tuta = list(beta_occu,beta_det,eta_intra,d,eta_inter) # pass theta using lists
 	names(theta_tuta) = ("beta_occu","beta_det","eta_intra","d","eta_inter")
-	theta.mcmc = list(
+	theta.mcmc = list( # for mcmc results
 		beta_occu.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(beta_occu))),
 		beta_det.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(beta_det))),
 		eta_intra.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(eta_intra))),
