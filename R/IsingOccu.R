@@ -232,7 +232,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 
 
 
-## bootstrap to see the CI
+## bootstrap to see the CI not really needed in Bayesian framework
 IsingOccu.Moller.bootstrap.helper = function(dummy, X, distM, theta, detmat,detX,int_range="exp",...)
 {
     Z = rIsingOccu(X, distM,theta,method,nIter,n=1,int_range) # sample a Z form the underlaying Ising model
