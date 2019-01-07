@@ -92,16 +92,16 @@ Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detection
 
 IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of IsingOccu Model
     require(IsingSampler)
-    Z=matrix(Z,nrow=length(Z),ncol=1)
+    Z=matrix(Z,nrow=length(Z),ncol=1) # make Z col vector
 	p = length(theta)
 	nsite = nrow(distM)
 	ncov = ncol(envX)
-	zeros = matrix(0,nrow=nsite,ncol=ncov)
+	# zeros = matrix(0,nrow=nsite,ncol=ncov)
 	beta1 = as.numeric( matrix(c(theta[1:(ncov)])))
 	beta2 = as.numeric( matrix(c(theta[1:(ncov) + ncov])))
 	# Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr1 = X%*%beta1
-	thr2 = X%*%beta2
+	thr1 = envX%*%beta1
+	thr2 = envX%*%beta2
 	# rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
 	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
