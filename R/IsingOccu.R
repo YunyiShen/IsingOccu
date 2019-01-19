@@ -186,6 +186,8 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	Z_tuta = Z_absolute
 	Z_curr = Z_tuta
 	x_curr = detmat
+	cat("Initializing...\n")
+	cat("Burn in...\n")
 	for(i in 1:burn.in){# to burn in
 		#propose theta
 		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
@@ -207,7 +209,9 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			Z_curr = Z_prop
 			x_curr = x_prop
 		}
+		if(i%%100 == 0) cat("Burn in iteration: #",i,"\n")
 	}
+	cat("Start sampling...\n")
 	for(i in 1:(mcmc.save)){ # for to save
 		#propose theta
 		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
@@ -231,6 +235,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		}
 		theta.mcmc[i,]=theta_curr
 		Z.mcmc[i,]=Z_curr
+		if(i%%100 == 0) cat("Sample iteration: #",i,"\n")
 	}
 
 	res = list(theta.mcmc = theta.mcmc
