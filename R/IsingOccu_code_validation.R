@@ -24,7 +24,7 @@ raster::plot(raster::raster(
 
 # 2 env var and 2 det var, 5 repeats
 detX = list()
-nperiod = 10
+nperiod = 30
 for (i in 1:nperiod){
   temp = matrix(runif(nlat^2 * 2),nrow = nlat^2,ncol = 2)
 	detX[[i]] = temp
@@ -67,7 +67,7 @@ raster::plot(raster::raster(
 
 # Test the sampler Z function
 set.seed(42)
-Zsample = rIsingOccu(X,distanceM,theta,method = "MH",nIter=300,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=300,n=1,int_range = "exp")
 
 raster::plot(raster::raster(
   matrix(
@@ -123,7 +123,7 @@ IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsa
 
 ## test Moller ratio
 #(2*(runif(length(Z))>0.5)-1)
-noise
+
 Moller.ratio(theta_curr=theta 
                         ,theta_prop=theta+1*runif(length(theta))
                         #,theta_prop = theta
@@ -139,4 +139,4 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 1, burn.in = 3 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345)
+kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 5000, burn.in = 300 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 42)
