@@ -106,12 +106,26 @@ envX = X
 distM=distanceM
 Z=Zsample
 int_range = "exp"
+
+# theta_simple = c(0,0,100,100,0,2,0,2,-1)
+# X_simple = matrix(1)
+# detX_simple = list() 
+# detX_simple[[1]]=NULL
+# Z_simple = matrix(c(1,-1),2,1)
+# detmat_simple = matrix(c(1,-1),2,1)
+# distM_simple = matrix(0)
+# IsingOccu.logL.innorm(theta_simple, envX=X_simple, distM=distM_simple, Z=Z_simple ,detmat_simple, detX_simple, int_range = "exp")
+
+
 IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
 IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
+# since normalizing function is different, is not campairable 
 
 ## test Moller ratio
+#(2*(runif(length(Z))>0.5)-1)
+noise
 Moller.ratio(theta_curr=theta 
-                        ,theta_prop=theta+runif(length(theta))
+                        ,theta_prop=theta+1*runif(length(theta))
                         #,theta_prop = theta
                         ,Z_curr=Z
                         #,Z_prop=(2*(runif(length(Z))>0.5)-1)
