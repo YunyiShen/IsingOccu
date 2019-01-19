@@ -24,18 +24,18 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 		}
 	}
 	if(full){
-	I = matrix(0,nrow=sites,ncol=sites)
-	diag(I) = eta1
-	A = cbind(D1,I)
-	B = cbind(I,D2)
-	A = rbind(A,B)
-	rm(B)
-	diag(A)=0
-	row.names(A)=colnames(A)
+		I = matrix(0,nrow=sites,ncol=sites)
+		diag(I) = eta1
+		A = cbind(D1,I)
+		B = cbind(I,D2)
+		A = rbind(A,B)
+		rm(B)
+		diag(A)=0
+		row.names(A)=colnames(A)
 	}
 	else{
-	  diag(D1)=0
-	  diag(D2)=0
+		diag(D1)=0
+		diag(D2)=0
 		A=list(D1=D1,D2=D2,eta1=eta1)
 	}
 	return(A)
@@ -48,10 +48,11 @@ rIsingOccu = function(envX, distM,theta,method = "MH",nIter=nIter,n=1,int_range 
 	sites = nrow(distM)
 	ncov = ncol(envX)
 	zeros = matrix(0,nrow=sites,ncol=ncov)
-	beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
-	Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr = Xfull%*%beta1
-	rm(Xfull)
+	beta1 = as.numeric( matrix(c(theta[1:(ncol(envX))])))
+	beta2 = as.numeric(matrix(theta[1:ncol(envX) + ncol(envX)]))
+	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
+	thr = rbind(envX %*% beta1,envX %*% beta2)
+	#rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range)
 	as.matrix(IsingSampler(n=n,graph = A,thresholds=thr, responses = c(-1L, 1L),nIter=nIter,method=method)) # use IsingSampler
 }
@@ -77,7 +78,7 @@ Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detection
 	detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
 	npardet = ncol(detDesign[[1]])
 	Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
-	Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[(npardet+1):(2*npardet)])
+	Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet + npardet])
 	P_det1 = lapply(Xbeta_det1,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
 	rm(Xbeta_det1)
 	P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
