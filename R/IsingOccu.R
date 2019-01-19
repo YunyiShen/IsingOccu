@@ -128,8 +128,7 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 }
 
 # Moller MH ratio
-# bug detected 20190105
-# multiple bugs
+# assume to be good 20190119
 Moller.ratio = function(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
 						,x_curr,x_prop
@@ -165,6 +164,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 # THIS is the IsingOccu fitting function using Moller et al. 2006 sampler (if we can only use MCEM to do MPLE, then Bayesian is much faster)
 # remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
 # detX should be a list, with every element is the design matrix WITHOUT 1s.
+# bug here, never accept??
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345){
 	require(coda)
 	set.seed(seed)
@@ -208,6 +208,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			theta_curr=theta_prop
 			Z_curr = Z_prop
 			x_curr = x_prop
+			#cat("accepted!")
 		}
 		if(i%%100 == 0) cat("Burn in iteration: #",i,"\n")
 	}
@@ -232,6 +233,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			theta_curr=theta_prop
 			Z_curr = Z_prop
 			x_curr = x_prop
+			#cat("accepted!")
 		}
 		theta.mcmc[i,]=theta_curr
 		Z.mcmc[i,]=Z_curr
@@ -239,10 +241,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	}
 
 	res = list(theta.mcmc = theta.mcmc
-	           ,theta.mean = apply(theta.mcmc,1,mean)
+	           ,theta.mean = apply(theta.mcmc,2,mean)
 	           ,vars_prior=vars_prior
 	           , interaction.range = int_range
-	           , graph = getGraph(distM,apply(theta.mcmc,1,mean),int_range = int_range,full=FALSE), envX=X)
+	           , graph = getGraph(distM,apply(theta.mcmc,2,mean),int_range = int_range,full=FALSE), envX=X)
 	class(res)="IsingOccu.Moller"
 	return(res)
 }
