@@ -71,24 +71,34 @@ IsingOccu_sample.detection = function(theta, envX, Z ,detmat, detX){
 }
 
 
-Pdet = function(envX, detmat, detX, beta_det) # likelihood given Z and detections
+Pdet = function(envX, detmat, detX, beta_det) # likelihood given detections if occupy
 {
 	nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
 	#beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
-	npardet = ncol(detDesign[[1]])
-	Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
-	Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet + npardet])
-	P_det1 = lapply(Xbeta_det1,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
-	rm(Xbeta_det1)
-	P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
-	rm(Xbeta_det2)
-	P_det1 = (matrix(unlist(P_det1),nrow = nrow(envX),ncol = nperiod)) # detection probability, row is site i col is period j
-	P_det2 = (matrix(unlist(P_det2),nrow = nrow(envX),ncol = nperiod))
-	P_det = rbind(P_det1,P_det2)
+	if(is.null(detX)){
+	  detDesign = envX
+	  P_det1 = envX %*% beta_det[1:npardet]
+	  P_det2 = envX %*% beta_det[1:npardet + npardet]
+	  P_det = rbind(P_det1,P_det2)
+	  P_det = matrix(P_det,nrow = nrow(envX),ncol = nperiod)
+	  
+	  }
+	else{
+	  detDesign = lapply(detX,function(x,y){cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
+	  npardet = ncol(detDesign[[1]])
+	  Xbeta_det1 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet]) # Xbeta for detections
+	  Xbeta_det2 = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = beta_det[1:npardet + npardet])
+	  P_det1 = lapply(Xbeta_det1,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
+	  rm(Xbeta_det1)
+	  P_det2 = lapply(Xbeta_det2,function(W){exp(W) / (1 + exp(W))})
+	  rm(Xbeta_det2)
+	  P_det1 = (matrix(unlist(P_det1),nrow = nrow(envX),ncol = nperiod)) # detection probability, row is site i col is period j
+	  P_det2 = (matrix(unlist(P_det2),nrow = nrow(envX),ncol = nperiod))
+	  P_det = rbind(P_det1,P_det2)
+	 }
 	return(P_det)
 }
-
+# This has no problem 20190118
 
 
 IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp"){ # the in-normalized log likelihood of IsingOccu Model
@@ -112,13 +122,14 @@ IsingOccu.logL.innorm = function(theta, envX, distM, Z ,detmat, detX, int_range 
 	P_det = Pdet(envX, detmat, detX, beta_det)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
 	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
-	logLdata = sum(as.numeric((Z+1)/2) * LP_Z1 + as.numeric(1-((Z+1)/2)) * LP_Z0)
+	logLdata = sum(as.numeric((Z+1)/2) * LP_Z1 + as.numeric(1-(Z+1)/2) * LP_Z0)
 
 	return(negPot+logLdata)
 }
 
 # Moller MH ratio
 # bug detected 20190105
+# multiple bugs
 Moller.ratio = function(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
 						,x_curr,x_prop
@@ -180,8 +191,8 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		#propose Z from uniform distribution
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
-		# propose x, from the likelihood
-		x_prop = IsingOccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
+		# propose x, from the likelihood using proposed theta and Z
+		x_prop = IsingOccu_sample.detection(theta_prop, X, Z_prop ,detmat, detX)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
@@ -202,8 +213,8 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		#propose Z from uniform distribution
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
-		# propose x, from the likelihood
-		x_prop = IsingOccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
+		# propose x, from the likelihood using proposed theta and Z
+		x_prop = IsingOccu_sample.detection(theta_prop, X, Z_prop ,detmat, detX)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
