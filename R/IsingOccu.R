@@ -164,19 +164,21 @@ Moller.ratio = function(theta_curr ,theta_prop
 # THIS is the IsingOccu fitting function using Moller et al. 2006 sampler (if we can only use MCEM to do MPLE, then Bayesian is much faster)
 # remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
 # detX should be a list, with every element is the design matrix WITHOUT 1s.
-# bug here, never accept??
+# bug here, never accept??, may need to try another way of propose change...
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345){
 	require(coda)
 	set.seed(seed)
 	nsite = nrow(detmat)/2
-	datatemp = data.frame(r = rowSums(detmat)>0,rbind(X,X))
-	start =c( glm(r ~ . - 1, data = datatemp[1:nsite,],family = binomial)$coef
-	          , glm(r ~ . - 1, data = datatemp[1:nsite + nsite,],family = binomial)$coef)
-	datatemp = data.frame(r = detmat[,1],rbind(cbind(X,detX[[1]]),cbind(X,detX[[1]])))
-	start_det = c( glm(r ~ . - 1, data = datatemp[1:nsite,],family = binomial)$coef
-	               , glm(r ~ . - 1, data = datatemp[1:nsite+nsite,],family = binomial)$coef)
-	rm(datatemp)
-	theta_curr = c(start,start_det,1,1,1,1,1)
+	#datatemp = data.frame(r = rowSums(detmat)>0,rbind(X,X))
+	start = c(glm.fit(X,rowSums(detmat[1:nsite,])>0,family = binomial())$coef
+	          ,glm.fit(X,rowSums(detmat[1:nsite + nsite,])>0,family = binomial())$coef)
+	#start =c( glm(r ~ . - 1, data = datatemp[1:nsite,],family = binomial)$coef
+	#          , glm(r ~ . - 1, data = datatemp[1:nsite + nsite,],family = binomial)$coef)
+	# datatemp = data.frame(r = detmat[,1],rbind(cbind(X,detX[[1]]),cbind(X,detX[[1]])))
+	start_det = c( glm.fit(cbind(X,detX[[1]]) , detmat[1:nsite,1],family = binomial())$coef
+	               , glm.fit(cbind(X,detX[[1]]) , detmat[1:nsite+nsite,1],family = binomial())$coef)
+	# rm(datatemp)
+	theta_curr = matrix( c(start,start_det,1,1,1,1,1))
 	theta_tuta = theta_curr
 	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(theta_curr)))
 	p = length(theta_tuta)
