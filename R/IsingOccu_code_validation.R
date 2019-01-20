@@ -130,6 +130,8 @@ Moller.ratio(theta_curr=theta
                         ,Z_curr=Z
                         #,Z_prop=(2*(runif(length(Z))>0.5)-1)
                         ,Z_prop = Z
+                        ,Z_temp_curr = Z
+                        ,Z_temp_prop = Z
                         ,x_curr=detmat
                         ,x_prop=IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
                         ,detmat=detmat
@@ -139,4 +141,4 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 5000, burn.in = 300 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 42)
+kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 50000, burn.in = 300 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+5),vars_prop = .0001,int_range = "exp",seed = 42)
