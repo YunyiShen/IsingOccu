@@ -138,7 +138,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 						,theta_tuta,Z_tuta
 						,envX, detX, distM,int_range ){
 	log_q_theta_tuta_Z_temp_x_prop = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_temp_prop ,detmat = x_prop, detX, int_range = int_range)
-	# then auxiliented variable x_prop is same to detmat, and proposed using likelihood function in the main sampler
+	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
 	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
 	log_pi_theta_prop = sum(log_pi_theta_prop)
 	#prior of proposed theta
