@@ -23,25 +23,18 @@ getintralayerGraph = function(distM,eta,d,int_range = "exp",nspp)
 	return(A)
 }
 
-IsingOccu_multispp.logL.innorm = function(theta, envX, distM, Z ,detmat, detX,int_range = "exp",nspp){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here
-
+Hamiltonian = function(theta,envX,distM,int_range="exp",Z,nspp){
 	beta_occu = theta$beta_occu
-	beta_det = theta$beta_det
 	eta_intra = theta$eta_intra
 	d = theta$d
 	eta_inter = theta$eta_inter
-# eta_inter should be a symmetric matrix, eta_intra should be vector
-# detmat here should be a matrix, with 1:nspp row for first spp, detmat = rbind(detmat1,detmat2,...,etc.), i.e. rbind every detmat
-# beta_det is vector
-    #require(IsingSampler)
-    Z_vec=matrix(Z,nrow=length(Z),ncol=1) # Z can be a vector with 1:nsite be first species, should pass this way.
 	
 	nsites = nrow(distM)
 	ncov = ncol(envX) # number of covs 
 	#zeros = matrix(0,nrow=nsites,ncol=ncov)
 	#beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
 	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr = X%*%beta # a matrix
+	thr = X%*%beta_occu # a matrix
 	#rm(Xfull)
 	A = getintralayerGraph(distM,eta_intra,d,int_range = int_range)
 	negPot = 0
@@ -53,7 +46,44 @@ IsingOccu_multispp.logL.innorm = function(theta, envX, distM, Z ,detmat, detX,in
 			negPot = negPot + eta_inter[i,j] * t(Z_vec[1:nsite + (i-1) * nsite])%*%(Z_vec[1:nsite + (j-1) * nsite])
 		}
 	}
-	
+	return(negPot)
+}
+
+rIsing_multispp = function(theta,envX,distM,int_range="exp",nspp,iter = 300,n){
+	beta_occu = theta$beta_occu # make it matrix
+	eta_intra = theta$eta_intra
+	d = theta$d
+	eta_inter = theta$eta_inter
+	nsite = nrow(envX)
+	Z_curr = (matrix(runif(nspp*nsite))>.5)*2-1
+	Res = matrix(nrow = nspp*nsite,ncol = n)
+	# burn in
+	for(i in 1:iter){
+		Z_prop = Z_curr
+		flip = sample(nspp*nsite)
+		Z_prop[flip] = -Z_prop[flip]
+		H_prop = Hamiltonian(theta,envX,distM,int_range,Z_prop,nspp)
+		H_curr = Hamiltonian(theta,envX,distM,int_range,Z_curr,nspp)
+		delta_H = H_prop-H_curr
+		MH = min(1,exp(delta_H))
+		if(runif(1)<MH) Z_curr = Z_prop
+	}
+	for(i in 1:n){
+		Z_prop = Z_curr
+		flip = sample(nspp*nsite)
+		Z_prop[flip] = -Z_prop[flip]
+		H_prop = Hamiltonian(theta,envX,distM,int_range,Z_prop,nspp)
+		H_curr = Hamiltonian(theta,envX,distM,int_range,Z_curr,nspp)
+		delta_H = H_prop-H_curr
+		MH = min(1,exp(delta_H))
+		if(runif(1)<MH) Z_curr = Z_prop
+		Res[,i] = Z_curr
+	}
+	return(Res)
+}
+
+IsingOccu_multispp.logL.innorm = function(theta, envX, distM, Z ,detmat, detX,int_range = "exp",nspp){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here
+	negPot = Hamiltonian(theta,envX,distM,int_range,Z,nspp)
 	#beta_det = matrix(detbeta,nrow = length(detbeta),ncol = 1)# 
 	P_det = Pdet_multi(envX, detmat, detX, beta_det,nspp)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
@@ -84,35 +114,38 @@ Pdet_multi = function(envX, detmat, detX, beta_det, nspp) # likelihood given Z a
 
 
 # Moller MH ratio
+# assume to be good 20190119
 Moller.ratio = function(theta_curr ,theta_prop
-						,Z_curr ,Z_prop
+						,Z_curr ,Z_prop, Z_temp_curr, Z_temp_prop
 						,x_curr,x_prop
 						,detmat
 						,vars_prior
 						,theta_tuta,Z_tuta
 						,envX, detX, distM,int_range ){
-	log_q_theta_Z_tuta_x_prop = IsingOccu_multispp.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_prop, detX, int_range = int_range) 
-	# then auxiliented variable x_prop is same to detmat, and proposed using likelihood function in the main sampler
+	log_q_theta_tuta_Z_temp_x_prop = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_temp_prop ,detmat = x_prop, detX, int_range = int_range)
+	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
 	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
 	log_pi_theta_prop = sum(log_pi_theta_prop)
 	#prior of proposed theta
-	log_q_theta_Z_prop_detmat = IsingOccu_multispp.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = detmat, detX, int_range = int_range)
+	log_q_theta_Z_prop_detmat = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = detmat, detX, int_range = int_range)
 	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-	log_q_theta_Z_curr_x_curr = IsingOccu_multispp.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = x_curr, detX, int_range = int_range)
-	
+	log_q_theta_Z_temp_curr_x_curr = IsingOccu.logL.innorm(theta_curr, envX, distM, Z_temp_curr ,detmat = x_curr, detX, int_range = int_range)
+
 	#### end of the upper part, start the lower
-	
-	log_q_theta_Z_tuta_x_curr = IsingOccu_multispp.logL.innorm(theta_tuta, envX, distM, Z_tuta ,detmat = x_curr, detX, int_range = int_range)
+
+	log_q_theta_tuta_Z_temp_x_curr = IsingOccu.logL.innorm(theta_tuta, envX, distM, Z_temp_curr ,detmat = x_curr, detX, int_range = int_range)
 	log_pi_theta_curr =log(dnorm(theta_curr,0,sd=sqrt(vars_prior)))
 	log_pi_theta_curr = sum(log_pi_theta_curr)
-	log_q_theta_Z_curr_detmat = IsingOccu_multispp.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = detmat, detX, int_range = int_range)
-	log_q_theta_Z_prop_x_prop = IsingOccu_multispp.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = x_prop, detX, int_range = int_range)
-	
-	log_MH_ratio = (log_q_theta_Z_tuta_x_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_q_theta_Z_curr_x_curr)-
-				   (log_q_theta_Z_tuta_x_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_q_theta_Z_prop_x_prop)
+	log_q_theta_Z_curr_detmat = IsingOccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = detmat, detX, int_range = int_range)
+	log_q_theta_Z_temp_prop_x_prop = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_temp_prop ,detmat = x_prop, detX, int_range = int_range)
+
+	log_MH_ratio = (log_q_theta_tuta_Z_temp_x_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_q_theta_Z_temp_curr_x_curr)-
+				   (log_q_theta_tuta_Z_temp_x_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_q_theta_Z_temp_prop_x_prop)
 
 	return(min(1,exp(log_MH_ratio)))
 }
+
+
 
 IsingOccu_multispp_sample.detection = function(theta, X, Z ,detmat, detX,nspp){
 	Pdet = Pdet_multi(envX, detmat, detX, theta$beta_det, nspp)
@@ -165,6 +198,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 	
 	Z_curr = Z_tuta
 	x_curr = detmat
+	Z_temp_curr = Z_tuta
 	
 	theta_curr = theta_tuta
 	for(i in 1:burn.in){# to burn in 
@@ -174,12 +208,13 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
 		}
 		#propose Z from uniform distribution 
+		Z_temp_prop = rIsing_multispp(theta_prop,X,distM,int_range,nspp,iter = 300,1)
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
 		# propose x, from the likelihood
-		x_prop = IsingOccu_multispp_sample.detection(theta_curr, X, Z_curr ,detmat, detX,nspp)
+		x_prop = IsingOccu_multispp_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX,nspp)
 		# MH ratio
 		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
-						,Z_curr ,Z_prop
+						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
 						,x_curr,x_prop
 						,detmat
 						,vars_prior
@@ -190,6 +225,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 			theta_curr=theta_prop
 			Z_curr = Z_prop
 			x_curr = x_prop
+			Z_temp_curr = Z_temp_prop
 		}
 	}
 	for(i in 1:(mcmc.save)){ # for to save 
@@ -198,13 +234,16 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		for(j in 1:5){
 			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
 		}
+		
 		#propose Z from uniform distribution 
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		#propose Z_temp from theta_prop's Ising
+		Z_temp_prop = rIsing_multispp(theta_prop,X,distM,int_range,nspp,iter = 300,1)
 		# propose x, from the likelihood
-		x_prop = IsingOccu_sample.detection(theta_curr, X, Z_curr ,detmat, detX)
+		x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 		# MH ratio
 		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
-						,Z_curr ,Z_prop
+						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
 						,x_curr,x_prop
 						,detmat
 						,vars_prior
@@ -215,9 +254,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 			theta_curr=theta_prop
 			Z_curr = Z_prop
 			x_curr = x_prop
+			Z_temp_curr = Z_temp_prop
 		}
 		for(j in 1:5){
-			theta_mcmc[[j]][i,] = theta_curr[[j]]
+			theta_mcmc[[j]][i,] =as.vector( theta_curr[[j]])
 		}
 		Z.mcmc[i,]=Z_curr
 	}
