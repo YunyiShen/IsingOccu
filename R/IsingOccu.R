@@ -202,7 +202,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "MH",nIter = 300,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
 	#x_curr = IsingOccu_sample.detection(theta_curr, X, Z_temp_curr ,detmat, detX)
-	
+	# try do Z and theta separtly!
 	cat("Burn in...\n")
 	accept = 0
 	for(i in 1:burn.in){# to burn in
