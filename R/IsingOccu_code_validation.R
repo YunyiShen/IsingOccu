@@ -1,7 +1,7 @@
 require('gtools')
 set.seed(42)
 source('IsingOccu.R')
-nlat = 20
+nlat = 25
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -24,7 +24,7 @@ raster::plot(raster::raster(
 
 # 2 env var and 2 det var, 5 repeats
 detX = list()
-nperiod = 30
+nperiod = 5
 for (i in 1:nperiod){
   temp = matrix(runif(nlat^2 * 2),nrow = nlat^2,ncol = 2)
 	detX[[i]] = temp
@@ -33,8 +33,8 @@ for (i in 1:nperiod){
 
 theta = matrix(c(-0.1,-1,-1, # env reaction of 1
                  -.15,1,1,  # env reaction of 2
-                 1,-1,1,-1,2,  # detection beta of 1
-                 1,1,1,-1,2,   # detection beta of 2
+                 0,-1,1,-1,1,  # detection beta of 1
+                 0,1,-1,1,-1,   # detection beta of 2
                  0.1,2,        # eta01 d1
                  0.1,2,		  # eta02 d2
                  -1))
@@ -125,20 +125,29 @@ IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsa
 #(2*(runif(length(Z))>0.5)-1)
 
 Moller.ratio(theta_curr=theta 
-                        ,theta_prop=theta+1*runif(length(theta))
+                        ,theta_prop=theta+.1*runif(length(theta))
                         #,theta_prop = theta
                         ,Z_curr=Z
-                        ,Z_prop=(2*(runif(length(Z))>0.5)-1)
-                        #,Z_prop = Z
+                        #,Z_prop=(2*(runif(length(Z))>0.5)-1)
+                        ,Z_prop = Z
                         ,Z_temp_curr = Z
                         ,Z_temp_prop = Z
                         #,x_curr=detmat
                         #,x_prop=IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
                         ,detmat=detmat
                         ,vars_prior=1
-                        ,theta_tuta=theta,Z_tuta=Z
+                        ,theta_tuta=theta
                         ,envX, detX, distM,int_range="exp" )
 
 ## test sampler
 
-kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM, detmat = detmat, detX=detX, mcmc.save = 150000, burn.in = 300 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+5),vars_prop = 1e-4,int_range = "exp",seed = 42)
+kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
+                                detmat = detmat, 
+                                detX=detX, 
+                                mcmc.save = 5000, burn.in = 100 , 
+                                vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+5),
+                                vars_prop = 1e-4,
+                                int_range = "exp",seed = 42
+                                ,init = theta
+                                )
+ 
