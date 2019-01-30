@@ -305,9 +305,9 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		  cat("Burn in iteration: #",i,"\n")
 		  cat("# of Z acceptance:" , accept_Z,"\n")
 		  cat("# of occupancy theta acceptance:" , accept_theta_occu,"\n")
-		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))])
+		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n")
 		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
-		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov])
+		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n")
 		  
 		  accept_Z = 0
 		  accept_theta_occu = 0
@@ -403,9 +403,9 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		  cat("Sampling iteration: #",i,"\n")
 		  cat("# of Z acceptance:" , accept_Z,"\n")
 		  cat("# of occupancy theta acceptance:" , accept_theta_occu,"\n")
-		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))])
+		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n")
 		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
-		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov])
+		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n")
 		  
 		  accept_Z = 0
 		  accept_theta_occu = 0
