@@ -192,6 +192,8 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	               , glm.fit(cbind(X,detX[[1]])[which(abs_pres[1:nsite+nsite]),] , detmat[which(abs_pres[1:nsite+nsite]),1],family = binomial())$coef)
 	cat("Initial detection theta:\n")
 	cat(start_det,"\n\n")
+	ncov = length(start)
+	ncov_det = length(start_det)
 	theta_curr = matrix( c(start,start_det,1,1,1,1,-1))
 	cat("Initial interactions:\n")
 	cat("eta_sigma:1 eta_tau:1 d_sigma:1 d_tau:1 eta:-1\n\n\n")
@@ -215,14 +217,16 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	# try do Z and theta separtly!
 	cat("Burn in...\n")
 	accept_Z = 0
-	accept_theta = 0
+	accept_theta_occu = 0
+	accept_theta_det = 0
 	for(i in 1:burn.in){# to burn in
 		#propose theta
 		# theta first
-		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		walk = rnorm(length(theta_curr),0,sd = sqrt(vars_prop))
 		theta_prop = theta_curr
-		#flip = sample(length(theta_curr),1)
-		#theta_prop[flip] = rnorm(1,theta_prop[flip],sd=sqrt(vars_prop))
+		theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
+		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		
 		# Aux Z
 		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 300,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
@@ -241,9 +245,40 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			#Z_curr = Z_prop
 			Z_temp_curr = Z_temp_prop
 			#x_curr = x_prop
-			accept_theta = accept_theta + 1
+			accept_theta_occu = accept_theta_occu + 1
 			#cat("accepted!\n")
 		}
+		
+		theta_prop = theta_curr
+		theta_prop[1:ncov_det + ncov] = walk [1:ncov_det + ncov] + theta_prop[1:ncov_det + ncov]
+		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		
+		# Aux Z
+		# Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 300,int_range = int_range)
+		# propose x, from the likelihood using proposed theta and sampled Z
+		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
+		# MH ratio
+		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_curr
+						,Z_temp_curr, Z_temp_curr						
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX=X, detX, distM,int_range)
+		r = runif(1)
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			#Z_curr = Z_prop
+			#Z_temp_curr = Z_temp_prop
+			#x_curr = x_prop
+			accept_theta_det = accept_theta_det + 1
+			#cat("accepted!\n")
+		}
+		
+		
+		
+		
+		
 		# propose Z by single flip, may try Gibbs
 		Z_prop = Z_curr
 		flip = sample(which(Z_absolute==-1),1)
@@ -269,21 +304,28 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		if(i%%100 == 0) {
 		  cat("Burn in iteration: #",i,"\n")
 		  cat("# of Z acceptance:" , accept_Z,"\n")
-		  cat("# of theta acceptance:" , accept_theta,"\n")
+		  cat("# of occupancy theta acceptance:" , accept_theta_occu,"\n")
+		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))])
+		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
+		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov])
+		  
 		  accept_Z = 0
-		  accept_theta = 0
+		  accept_theta_occu = 0
+		  accept_theta_det = 0
 		  }
 	}
 	cat("Start sampling...\n")
 	accept_Z = 0
-	accept_theta = 0
+	accept_theta_occu = 0
+	accept_theta_det = 0
 	for(i in 1:(mcmc.save)){ # to save
 		#propose theta
 		# theta first
-		theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
-		#theta_prop = theta_curr
-		#flip = sample(length(theta_curr),1)
-		#theta_prop[flip] = rnorm(1,theta_prop[flip],sd=sqrt(vars_prop))
+		walk = rnorm(length(theta_curr),0,sd = sqrt(vars_prop))
+		theta_prop = theta_curr
+		theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
+		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		
 		# Aux Z
 		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 300,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
@@ -291,7 +333,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
-						,Z_temp_curr, Z_temp_prop	#aux var 					
+						, Z_temp_curr, Z_temp_prop						
 						,detmat
 						,vars_prior
 						,theta_tuta
@@ -302,9 +344,36 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			#Z_curr = Z_prop
 			Z_temp_curr = Z_temp_prop
 			#x_curr = x_prop
-			accept_theta = accept_theta + 1
+			accept_theta_occu = accept_theta_occu + 1
 			#cat("accepted!\n")
 		}
+		
+		theta_prop = theta_curr
+		theta_prop[1:ncov_det + ncov] = walk [1:ncov_det + ncov] + theta_prop[1:ncov_det + ncov]
+		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		
+		# Aux Z
+		# Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 300,int_range = int_range)
+		# propose x, from the likelihood using proposed theta and sampled Z
+		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
+		# MH ratio
+		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_curr
+						,Z_temp_curr, Z_temp_curr						
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX=X, detX, distM,int_range)
+		r = runif(1)
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			#Z_curr = Z_prop
+			#Z_temp_curr = Z_temp_prop
+			#x_curr = x_prop
+			accept_theta_det = accept_theta_det + 1
+			#cat("accepted!\n")
+		}
+
 		# propose Z by single flip, may try Gibbs
 		Z_prop = Z_curr
 		flip = sample(which(Z_absolute==-1),1)
@@ -331,20 +400,24 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		Z.mcmc[i,]=Z_curr
 		
 		if(i%%100 == 0) {
-		  cat("Sample iteration: #",i,"\n")
+		  cat("Sampling iteration: #",i,"\n")
 		  cat("# of Z acceptance:" , accept_Z,"\n")
-		  cat("# of theta acceptance:" , accept_theta,"\n")
-		  if(accept_theta==0) cat(theta_curr,"\n")
+		  cat("# of occupancy theta acceptance:" , accept_theta_occu,"\n")
+		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))])
+		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
+		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov])
+		  
 		  accept_Z = 0
-		  accept_theta = 0
-		}
+		  accept_theta_occu = 0
+		  accept_theta_det = 0
+		  }
 	}
     theta.mcmc[,c(p-3,p-1)] = abs(theta.mcmc[,c(p-3,p-1)])
 	res = list(theta.mcmc = theta.mcmc
 	           ,theta.mean = apply(theta.mcmc,2,mean)
 	           ,vars_prior=vars_prior
-	           , interaction.range = int_range
-	           , graph = getGraph(distM,apply(theta.mcmc,2,mean),int_range = int_range,full=FALSE), envX=X)
+	           ,interaction.range = int_range
+	           ,graph = getGraph(distM,apply(theta.mcmc,2,mean),int_range = int_range,full=FALSE), envX=X)
 	class(res)="IsingOccu.Moller"
 	return(res)
 }
