@@ -122,7 +122,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 						,Z_temp_curr, Z_temp_prop
 						,detmat
 						,vars_prior
-						,theta_tuta,Z_tuta
+						,theta_tuta
 						,envX, detX, distM,int_range,nspp ){
 	log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta, envX, distM, int_range = int_range, Z_temp_prop , nspp)
 	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
@@ -217,10 +217,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		# MH ratio
 		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
 						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
-						,x_curr,x_prop
+						
 						,detmat
 						,vars_prior
-						,theta_tuta,Z_tuta
+						,theta_tuta
 						,envX=X, detX, distM,int_range,nspp = nspp)
 		r = runif(1)
 		if(r<=Moller_ratio){
@@ -246,10 +246,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		# MH ratio
 		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
 						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
-						,x_curr,x_prop
+						
 						,detmat
 						,vars_prior
-						,theta_tuta,Z_tuta
+						,theta_tuta
 						,envX=X, detX, distM,int_range, nspp)
 		r = runif(1)
 		if(r<=Moller_ratio){

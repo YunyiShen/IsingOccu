@@ -192,18 +192,19 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	               , glm.fit(cbind(X,detX[[1]])[which(abs_pres[1:nsite+nsite]),] , detmat[which(abs_pres[1:nsite+nsite]),1],family = binomial())$coef)
 	cat("Initial detection theta:\n")
 	cat(start_det,"\n\n")
-	ncov = length(start)
-	ncov_det = length(start_det)
+	#ncov = length(start)
+	#ncov_det = length(start_det)
 	theta_curr = matrix( c(start,start_det,1,1,1,1,-1))
 	cat("Initial interactions:\n")
 	cat("eta_sigma:1 eta_tau:1 d_sigma:1 d_tau:1 eta:-1\n\n\n")
 	}
 	else theta_curr = init
 	# rm(datatemp)
+	ncov = 2*ncol(X)
+	ncov_det = 2 * ncol(detX[[1]]) + ncov
 	
 	
-	
-	theta_tuta = theta_curr
+	theta_tuta = theta_curr # improvement possible here, make theta_tuta a better approximation of theta_post
 	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(theta_curr)))
 	p = length(theta_tuta)
 	colnames(theta.mcmc)[(p - 4):p] = c("eta_spatial_spc1","d_spatial_spc1","eta_spatial_spc2","d_spatial_spc2","eta_interspecies") # eta spatial
@@ -228,7 +229,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		
 		# Aux Z
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 300,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 500,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
 		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 		# MH ratio
@@ -308,7 +309,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n")
 		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
 		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n")
-		  
+		  cat("\n")
 		  accept_Z = 0
 		  accept_theta_occu = 0
 		  accept_theta_det = 0
@@ -327,13 +328,13 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		
 		# Aux Z
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 300,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 500,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
 		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
-						, Z_temp_curr, Z_temp_prop						
+						,Z_temp_curr, Z_temp_prop						
 						,detmat
 						,vars_prior
 						,theta_tuta
@@ -406,7 +407,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n")
 		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
 		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n")
-		  
+		  cat("\n")
 		  accept_Z = 0
 		  accept_theta_occu = 0
 		  accept_theta_det = 0

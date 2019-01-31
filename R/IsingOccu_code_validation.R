@@ -1,7 +1,7 @@
 require('gtools')
 set.seed(42)
 source('IsingOccu.R')
-nlat = 25
+nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -67,7 +67,7 @@ raster::plot(raster::raster(
 
 # Test the sampler Z function
 set.seed(42)
-Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=300,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=500,n=1,int_range = "exp")
 
 raster::plot(raster::raster(
   matrix(
@@ -141,12 +141,14 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
+var_prop = c(rep(5e-5,6),rep(1e-2,10),rep(5e-5,5))
+
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 50000, burn.in = 400 , 
-                                vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+5),
-                                vars_prop = 1e-4,
+                                mcmc.save = 10000, burn.in = 100 , 
+                                vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
+                                vars_prop = var_prop,
                                 int_range = "exp",seed = 42
                                 ,init = theta
                                 )
