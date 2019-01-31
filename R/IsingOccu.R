@@ -178,7 +178,8 @@ Moller.ratio = function(theta_curr ,theta_prop
 # bug here, never accept??, may need to try another way of propose change...
 IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345,init){
 	require(coda)
-  cat("Initializing...\n\n")
+	require(IsingSampler)
+    cat("Initializing...\n\n")
 	set.seed(seed)
 	nsite = nrow(detmat)/2
 	abs_pres = ((rowSums(detmat)>0)) # absolute present
@@ -212,7 +213,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	Z_absolute = as.numeric(abs_pres) * 2 - 1
 	# Z_absolute = Z_absolute
 	Z_curr = Z_absolute
-	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "MH",nIter = 300,int_range = int_range)
+	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "CFTP",nIter = 300,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
 	#x_curr = IsingOccu_sample.detection(theta_curr, X, Z_temp_curr ,detmat, detX)
 	# try do Z and theta separtly!
@@ -220,6 +221,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	accept_Z = 0
 	accept_theta_occu = 0
 	accept_theta_det = 0
+	low_acc_Z = 0
+	low_acc_theta_occu = 0
+	low_acc_theta_det = 0
+	timing = proc.time()
 	for(i in 1:burn.in){# to burn in
 		#propose theta
 		# theta first
@@ -229,7 +234,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		
 		# Aux Z
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 500,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 500,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
 		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 		# MH ratio
@@ -240,6 +245,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 						,vars_prior
 						,theta_tuta
 						,envX=X, detX, distM,int_range)
+		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 		r = runif(1)
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
@@ -266,6 +272,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 						,vars_prior
 						,theta_tuta
 						,envX=X, detX, distM,int_range)
+		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
 		r = runif(1)
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
@@ -292,6 +299,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 						,vars_prior
 						,theta_tuta
 						,envX=X, detX, distM,int_range)
+		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
 		r = runif(1)
 		if(r<=Moller_ratio){
 			#theta_curr=theta_prop
@@ -303,22 +311,36 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		}
 		
 		if(i%%100 == 0) {
+		  
 		  cat("Burn in iteration: #",i,"\n")
-		  cat("# of Z acceptance:" , accept_Z,"\n")
-		  cat("# of occupancy theta acceptance:" , accept_theta_occu,"\n")
-		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n")
+		  cat("# of Z acceptance: " , accept_Z,"\n")
+		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
+		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
+		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
+		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
 		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
-		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n")
-		  cat("\n")
+		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
+		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n\n")
+		  timing = proc.time()- timing
+		  cat("Time used in this 100:",timing[1],"s\n")
+		  cat("\n\n")
+		  timing = proc.time()
 		  accept_Z = 0
+		  low_acc_Z = 0
 		  accept_theta_occu = 0
+		  low_acc_theta_occu = 0
 		  accept_theta_det = 0
+		  low_acc_theta_det = 0
 		  }
 	}
 	cat("Start sampling...\n")
-	accept_Z = 0
-	accept_theta_occu = 0
-	accept_theta_det = 0
+		accept_Z = 0
+		low_acc_Z = 0
+		accept_theta_occu = 0
+		low_acc_theta_occu = 0
+		accept_theta_det = 0
+		low_acc_theta_det = 0
+	timing = proc.time()
 	for(i in 1:(mcmc.save)){ # to save
 		#propose theta
 		# theta first
@@ -328,7 +350,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		
 		# Aux Z
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "MH",nIter = 500,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 500,int_range = int_range)
 		# propose x, from the likelihood using proposed theta and sampled Z
 		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 		# MH ratio
@@ -348,7 +370,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 			accept_theta_occu = accept_theta_occu + 1
 			#cat("accepted!\n")
 		}
-		
+		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 		theta_prop = theta_curr
 		theta_prop[1:ncov_det + ncov] = walk [1:ncov_det + ncov] + theta_prop[1:ncov_det + ncov]
 		# theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
@@ -366,6 +388,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 						,theta_tuta
 						,envX=X, detX, distM,int_range)
 		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
 			#Z_curr = Z_prop
@@ -387,6 +410,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 						,vars_prior
 						,theta_tuta
 						,envX=X, detX, distM,int_range)
+		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
 		r = runif(1)
 		if(r<=Moller_ratio){
 			#theta_curr=theta_prop
@@ -402,15 +426,24 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		
 		if(i%%100 == 0) {
 		  cat("Sampling iteration: #",i,"\n")
-		  cat("# of Z acceptance:" , accept_Z,"\n")
-		  cat("# of occupancy theta acceptance:" , accept_theta_occu,"\n")
-		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n")
-		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
-		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n")
-		  cat("\n")
+		  cat("# of Z acceptance: " , accept_Z,"\n")
+		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
+		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
+		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
+		  if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
+		  cat("# of detection theta acceptance: " , accept_theta_det,"\n")
+		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
+		  if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n\n")
+		  timing = proc.time()-timing
+		  cat("Time used in this 100:",timing[1],"s\n")
+		  cat("\n\n")
+		  timing = proc.time()
 		  accept_Z = 0
+		  low_acc_Z = 0
 		  accept_theta_occu = 0
+		  low_acc_theta_occu = 0
 		  accept_theta_det = 0
+		  low_acc_theta_det = 0
 		  }
 	}
     theta.mcmc[,c(p-3,p-1)] = abs(theta.mcmc[,c(p-3,p-1)])
