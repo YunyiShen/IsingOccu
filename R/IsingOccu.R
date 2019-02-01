@@ -2,7 +2,7 @@
 # remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
 # detX should be a list, with every element is the design matrix WITHOUT 1s.
 # bug here, never accept??, may need to try another way of propose change...
-IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345,init){
+IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345,init,thin.by = 1){
 	require(coda)
 	require(IsingSampler)
 	source("misc.R")
@@ -31,10 +31,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	
 	
 	theta_tuta = theta_curr # improvement possible here, make theta_tuta a better approximation of theta_post
-	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(theta_curr)))
+	theta.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(theta_curr)),thin = thin.by)
 	p = length(theta_tuta)
 	colnames(theta.mcmc)[(p - 4):p] = c("eta_spatial_spc1","d_spatial_spc1","eta_spatial_spc2","d_spatial_spc2","eta_interspecies") # eta spatial
-	Z.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = nrow(detmat)))
+	Z.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = nrow(detmat)),thin = thin.by)
 	Z_absolute = as.numeric(abs_pres) * 2 - 1
 	# Z_absolute = Z_absolute
 	Z_curr = Z_absolute
