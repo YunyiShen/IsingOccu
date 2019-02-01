@@ -1,6 +1,7 @@
 require('gtools')
 set.seed(42)
 source('IsingOccu.R')
+source("misc.R")
 nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
@@ -35,8 +36,8 @@ theta = matrix(c(-0.1,-1,-1, # env reaction of 1
                  -.15,1,1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.1,2,        # eta01 d1
-                 0.1,2,		  # eta02 d2
+                 0.15,2,        # eta01 d1
+                 0.15,2,		  # eta02 d2
                  -1))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
@@ -141,7 +142,7 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(2.5e-6,6),rep(1e-2,10),rep(2.5e-6,5))
+var_prop = c(rep(2.5e-6,6),rep(1e-3,10),rep(2.5e-6,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
