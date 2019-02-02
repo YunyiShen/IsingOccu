@@ -38,7 +38,7 @@ theta = matrix(c(-0.1,-1,-1, # env reaction of 1
                  0,1,-1,1,-1,   # detection beta of 2
                  0.15,2,        # eta01 d1
                  0.15,2,		  # eta02 d2
-                 -1))
+                 -.1))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
 detmat = matrix(0,nrow = 2*nlat^2,ncol = nperiod) # a sample detection matrix
@@ -67,7 +67,7 @@ raster::plot(raster::raster(
     nrow=nlat,ncol=nlat)))
 
 # Test the sampler Z function
-set.seed(42)
+set.seed(12345)
 Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=500,n=1,int_range = "exp")
 
 raster::plot(raster::raster(
@@ -81,6 +81,13 @@ raster::plot(raster::raster(
     Zsample
     [1:nlat^2 + nlat^2],
     nrow=nlat,ncol=nlat)))
+
+raster::plot(raster::raster(matrix(
+  Zsample[1:nlat^2 + nlat^2] + 
+  Zsample[1:nlat^2] ,
+  nrow=nlat,ncol=nlat
+  
+)))
 #raster::plot(raster::raster(matrix(detmat[401:800,1],nrow = 20,ncol=20)))
 
 # Test the detection function
@@ -142,15 +149,16 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(2.5e-6,6),rep(1e-3,10),rep(2.5e-6,5))
+var_prop = c(rep(1e-6,6),rep(1e-3,10),rep(1e-6,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 1000, burn.in = 100 , 
+                                mcmc.save = 500, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
                                 ,init = theta, thin.by = 1
                                 )
  
+plot(kk$theta.mcmc[,21])
