@@ -7,7 +7,7 @@ IsingOccuMCEM_sampleZ = function(theta, X, A, A1, A2, Z0, detmat, detX, num_samp
 		#propose a new Z
 		flip_site = sample(which(Z_naive==0),1)
 		Znew = Zold
-		Znew[flip_site] = 1 - Znew[flip_site] # one spin flip MC
+		Znew[flip_site] =  - Znew[flip_site] # one spin flip MC
 		
 		#calculate the Metroplis ratio
 		Mratio = -IsingOccu.logPL(theta, X, A, A1, A2, Znew, detmat, detX) + IsingOccu.logPL(theta, X, A, A1, A2, Zold, detmat, detX)

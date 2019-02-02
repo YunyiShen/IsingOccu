@@ -87,7 +87,7 @@ Hamiltonian = function(theta, envX, distM, Z ,int_range = "exp"){
 	thr2 = envX%*%beta2
 	# rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + 0.5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + 0.5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
+	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + 2 * A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
 
 	return(negPot)
 
@@ -172,4 +172,52 @@ IsingOccu_sample.detection = function(theta, envX, Z ,detmat, detX){
 
 	sample_detHistory = 1 * (RN<P_det_occu)
 	sample_detHistory
+}
+
+## helper function for initialization
+Init_det = function(theta_det,detmat,envX,detX){
+	P_det = Pdet(envX, detmat, detX, beta_det)
+	loglik = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
+	-sum(loglik)
+}
+
+logPL = function(theta,Z,envX,distM,int_range){
+	Z = matrix(Z)
+	nsite = nrow(envX)
+	ncov = ncol(envX)
+	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
+	Xbeta1 = envX %*% matrix( theta[1:ncov])
+	Xbeta2 = envX %*% matrix(theta[1:ncov + ncov])
+	
+	logPL1 = Xbeta1 + A$D1%*%Z[1:nsite] + A$eta1*Z[1:nsite + nsite]
+	logPL1 = t(Z[1:nsite]) %*% logPL1 -sum(log(exp(-logPL1)+exp(logPL1)))
+	logPL2 = Xbeta2 + A$D2%*%Z[1:nsite] + A$eta1*Z[1:nsite]
+	logPL2 = t(Z[1:nsite + nsite]) %*% logPL2 -sum(log(exp(-logPL2)+exp(logPL2)))
+	
+	return(-logPL1-logPL2)
+
+
+
+}
+
+Initial_MPLE = function(detmat,envX,detX,distM,int_range){
+	ncov = ncol(envX)
+	ncov_det = ncol(detX[[1]])
+	Z_abs = apply(detmat,2,max)
+	detmat_abs = detmat[Z_abs]
+	n_Z_abs = sum(Z_abs)
+	envX_abs = envX[Z_abs,]
+	detX_abs = lapply(detX,function(M,sup){M[sup,]},sup = Z_abs)
+	beta_det_ini = runif(2*(ncov + ncov_det))
+	beta_det_ini = optim(theta_det_ini,Init_det,detmat = detmat,envX = envX_abs,)$par
+	P_det = Pdet(envX, detmat, detX, beta_det_ini)
+	no_det = rowSums(log(1-P_det))
+	thr = min(no_det[Z_abs])
+	Z_abs[1-Z_abs] = no_det[1-Z_abs]<=thr
+	
+	theta_occu_ini = runif(2*ncov+5)
+	theta_occu_ini = optim(theta_occu_ini,logPL,Z=Z_abs,envX = envX,distM=distM,int_range = int_range)
+
+	return(theta_occu_ini[1:(2*ncov)],theta_det_ini,theta_occu_ini[1:5 + 2*ncov])
+
 }

@@ -147,10 +147,10 @@ var_prop = c(rep(2.5e-6,6),rep(1e-3,10),rep(2.5e-6,5))
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 100000, burn.in = 100 , 
+                                mcmc.save = 1000, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
-                                ,init = theta, thin.by = 100
+                                ,init = theta, thin.by = 1
                                 )
  
