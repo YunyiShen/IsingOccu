@@ -123,6 +123,8 @@ int_range = "exp"
 # detmat_simple = matrix(c(1,-1),2,1)
 # distM_simple = matrix(0)
 # IsingOccu.logL.innorm(theta_simple, envX=X_simple, distM=distM_simple, Z=Z_simple ,detmat_simple, detX_simple, int_range = "exp")
+## Initial value
+Ini = Initial_MPLE(detmat,envX,detX,distM,"exp")
 
 
 IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
@@ -154,7 +156,7 @@ var_prop = c(rep(1e-6,6),rep(1e-3,10),rep(1e-6,5))
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 5000, burn.in = 100 , 
+                                mcmc.save = 500, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42

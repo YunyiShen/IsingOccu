@@ -144,7 +144,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 ######### sampling data functions ##########
 
 ## Take samples from the underlaying graph model
-rIsingOccu = function(envX, distM,theta,method = "MH",nIter=nIter,n=1,int_range = "exp") #distM is a distance matrix
+rIsingOccu = function(envX, distM,theta,method = "CFTP",nIter,n=1,int_range = "exp") #distM is a distance matrix
 {
 	require(IsingSampler)
 	p = length(theta)
@@ -203,13 +203,13 @@ logPL = function(theta,Z,envX,distM,int_range){
 Initial_MPLE = function(detmat,envX,detX,distM,int_range){
 	ncov = ncol(envX)
 	ncov_det = ncol(detX[[1]])
-	Z_abs = apply(detmat,2,max)
+	Z_abs = apply(detmat,1,max)
 	detmat_abs = detmat[Z_abs]
 	n_Z_abs = sum(Z_abs)
 	envX_abs = envX[Z_abs,]
 	detX_abs = lapply(detX,function(M,sup){M[sup,]},sup = Z_abs)
 	beta_det_ini = runif(2*(ncov + ncov_det))
-	beta_det_ini = optim(theta_det_ini,Init_det,detmat = detmat,envX = envX_abs,)$par
+	beta_det_ini = optim(theta_det_ini,Init_det,detmat = detmat,envX = envX_abs,detX = detX)$par
 	P_det = Pdet(envX, detmat, detX, beta_det_ini)
 	no_det = rowSums(log(1-P_det))
 	thr = min(no_det[Z_abs])
