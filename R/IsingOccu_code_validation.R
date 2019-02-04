@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('IsingOccu.R')
 source("misc.R")
-nlat = 20
+nlat = 30
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -105,7 +105,7 @@ raster::plot(raster::raster(
 
 optPLwithZ = optim(par=rnorm(length(theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
 optPLZ = optim(par=rnorm(length(theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",method = "SANN")
-
+logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "exp")
 #optPLwithZ$par
 #abs((theta-optPLwithZ$par)/theta)
 
@@ -157,7 +157,7 @@ var_prop = c(rep(1e-6,6),rep(1e-3,10),rep(1e-6,5))
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 500, burn.in = 100 , 
+                                mcmc.save = 15000, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
