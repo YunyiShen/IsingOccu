@@ -36,8 +36,8 @@ theta = matrix(c(-0.1,-1,-1, # env reaction of 1
                  -.15,1,1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.15,2,        # eta01 d1
-                 0.15,2,		  # eta02 d2
+                 0.15,3,        # eta01 d1
+                 0.15,3,		  # eta02 d2
                  -.1))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
@@ -104,6 +104,7 @@ raster::plot(raster::raster(
 #IsingOccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
 
 optPLwithZ = optim(par=rnorm(length(theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
+optPLZ = optim(par=rnorm(length(theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",method = "SANN")
 
 #optPLwithZ$par
 #abs((theta-optPLwithZ$par)/theta)
