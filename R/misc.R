@@ -141,7 +141,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 	return(min(1,exp(log_MH_ratio)))
 }
 
-######### sampling data functions ##########
+######### data sampling functions ##########
 
 ## Take samples from the underlaying graph model
 rIsingOccu = function(envX, distM,theta,method = "CFTP",nIter,n=1,int_range = "exp") #distM is a distance matrix
@@ -175,11 +175,49 @@ IsingOccu_sample.detection = function(theta, envX, Z ,detmat, detX){
 }
 
 ## helper function for initialization
-Init_det = function(theta_det,detmat,envX,detX){
+Init_det = function(beta_det,detmat,envX,detX){
+	ncov = ncol(envX)
+	ncov_det = ncol(detX[[1]])
+	nsite = nrow(envX)
+	Z_abs = apply(detmat,1,max)
+	#detmat_abs = detmat[Z_abs==1,]
+	#detmat_abs2 = detmat[Z_abs[1:nsite + nsite]==1,]
+	#n_Z_abs = sum(Z_abs)
+	
 	P_det = Pdet(envX, detmat, detX, beta_det)
 	loglik = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
-	-sum(loglik)
+	-sum(loglik[Z_abs==1])
 }
+
+# PSEUDO LIKELIHOOD of AUTOOCCU MODEL
+# Pseudo Likelihood here, first version with non perfect detection is done Sept/22/2018 and checked NOT CHECKED YET
+IsingOccu.logPL = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp") # assume known Z, data should form as nrow(data)==nrow(X),ncol(data)=# of periods. detX is design matrix of detections, WITHOUT 1s, should be a list. length(detX) = ncol(data) = # of periods # A1 is dist matrix for species 2, all about first spc1 should be 0
+{
+	# deal with the underlaying Ising model
+	# REMEMBER TO ADD 1s to envX, detX will automaticlly include 1s because envX in cbinded
+	# nsite = nrow(X)/2	
+	require(IsingSampler)
+	p = length(theta)
+	sites = nrow(distM)
+	ncov = ncol(envX)
+	ncov_det = ncol(detX[[1]])
+	#zeros = matrix(0,nrow=sites,ncol=ncov)
+	beta1 = as.numeric( matrix(c(theta[1:(2*ncov)])))
+	thr = rbind(envX %*% beta1[1:ncov],envX %*% beta1[1:ncov+ncov])
+	#rm(Xfull)
+	A = getGraph(distM,theta,int_range = int_range)
+	log_PL = ( IsingPL(x=Z, graph=A, thresholds=thr, beta=1, responses = c(-1L, 1L)))
+	rm(A)
+	
+	P_det = Pdet(envX, detmat, detX, theta[1:(2*ncov_det + 2*ncov)+2*ncov])
+	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
+	LP_Z0 = as.matrix(log(1*(rowSums(detmat)==0) + 1e-13 * (1-(rowSums(detmat)==0)))) # I(data = 0), do not want err for those have detections
+	logLdata = sum(as.numeric((Z+1)/2) * LP_Z1 + as.numeric(1-((Z+1)/2)) * LP_Z0) # likelihood of data 
+	
+	# total neg log likelihood
+	-log_PL-logLdata 
+}
+
 
 logPL = function(theta,Z,envX,distM,int_range){
 	Z = matrix(Z)
@@ -191,7 +229,7 @@ logPL = function(theta,Z,envX,distM,int_range){
 	
 	logPL1 = Xbeta1 + A$D1%*%Z[1:nsite] + A$eta1*Z[1:nsite + nsite]
 	logPL1 = t(Z[1:nsite]) %*% logPL1 -sum(log(exp(-logPL1)+exp(logPL1)))
-	logPL2 = Xbeta2 + A$D2%*%Z[1:nsite] + A$eta1*Z[1:nsite]
+	logPL2 = Xbeta2 + A$D2%*%Z[1:nsite+nsite] + A$eta1*Z[1:nsite]
 	logPL2 = t(Z[1:nsite + nsite]) %*% logPL2 -sum(log(exp(-logPL2)+exp(logPL2)))
 	
 	return(-logPL1-logPL2)
@@ -203,21 +241,20 @@ logPL = function(theta,Z,envX,distM,int_range){
 Initial_MPLE = function(detmat,envX,detX,distM,int_range){
 	ncov = ncol(envX)
 	ncov_det = ncol(detX[[1]])
-	Z_abs = apply(detmat,1,max)
-	detmat_abs = detmat[Z_abs]
-	n_Z_abs = sum(Z_abs)
-	envX_abs = envX[Z_abs,]
-	detX_abs = lapply(detX,function(M,sup){M[sup,]},sup = Z_abs)
 	beta_det_ini = runif(2*(ncov + ncov_det))
-	beta_det_ini = optim(theta_det_ini,Init_det,detmat = detmat,envX = envX_abs,detX = detX)$par
+	beta_det_ini = optim(beta_det_ini,Init_det,detmat = detmat,envX = envX,detX = detX,method = "SANN")$par
 	P_det = Pdet(envX, detmat, detX, beta_det_ini)
 	no_det = rowSums(log(1-P_det))
-	thr = min(no_det[Z_abs])
-	Z_abs[1-Z_abs] = no_det[1-Z_abs]<=thr
+	Z_abs = apply(detmat,1,max)
+	thr = min(no_det[Z_abs==1])
+	Z_abs[Z_abs==0] = no_det[Z_abs==0]<=thr
+	Z_abs = Z_abs * 2 -1
 	
-	theta_occu_ini = runif(2*ncov+5)
-	theta_occu_ini = optim(theta_occu_ini,logPL,Z=Z_abs,envX = envX,distM=distM,int_range = int_range)
+	theta_occu_ini = rnorm(4*ncov + 2*ncov_det+5)
+	#theta_occu_ini = optim(theta_occu_ini,IsingOccu.logPL,Z=Z_abs,detmat = detmat,envX = envX,distM=distM,int_range = int_range)
+	theta_occu_ini = optim(par=(theta_occu_ini),fn=IsingOccu.logPL,NULL,envX=envX,distM=distM,Z=Z_abs,detmat=detmat,detX=detX,int_range = int_range,method = "SANN")
 
-	return(theta_occu_ini[1:(2*ncov)],theta_det_ini,theta_occu_ini[1:5 + 2*ncov])
+  
+	return(theta_occu_ini)
 
 }
