@@ -12,17 +12,10 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	abs_pres = ((rowSums(detmat)>0)) # absolute present
 	#datatemp = data.frame(r = rowSums(detmat)>0,rbind(X,X))
 	if(missing(init)){
-		start = c(glm.fit(X,abs_pres[1:nsite],family = binomial())$coef
-	          ,glm.fit(X,abs_pres[1:nsite+nsite],family = binomial())$coef)
-		cat("Initial occupancy theta:\n")
-		cat(start,"\n\n")
-		start_det = c( glm.fit(cbind(X,detX[[1]])[which(abs_pres[1:nsite]),] , detmat[which(abs_pres[1:nsite]),1],family = binomial())$coef
-	               , glm.fit(cbind(X,detX[[1]])[which(abs_pres[1:nsite+nsite]),] , detmat[which(abs_pres[1:nsite+nsite]),1],family = binomial())$coef)
-		cat("Initial detection theta:\n")
-		cat(start_det,"\n\n")
-		theta_curr = matrix( c(start,start_det,1,1,1,1,-1))
-		cat("Initial interactions:\n")
-		cat("eta_sigma:1 eta_tau:1 d_sigma:1 d_tau:1 eta:-1\n\n\n")
+		theta_curr = Initial_MPLE(detmat,envX=X,detX,distM,int_range)
+		cat("Initial theta:\n")
+		cat(theta_curr,"\n\n")
+		
 	}
 	else theta_curr = init
 

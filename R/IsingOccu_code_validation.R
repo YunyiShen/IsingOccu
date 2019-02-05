@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('IsingOccu.R')
 source("misc.R")
-nlat = 30
+nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -32,7 +32,7 @@ for (i in 1:nperiod){
 }
 
 
-theta = matrix(c(-0.1,-1,-1, # env reaction of 1
+theta = matrix(c(-0.5,-1,-1, # env reaction of 1
                  -.15,1,1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
@@ -152,16 +152,17 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(1e-6,6),rep(1e-3,10),rep(1e-6,5))
+var_prop = c(rep(2.5e-7,6),rep(2.5e-3,10),rep(2.5e-7,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 15000, burn.in = 100 , 
+                                mcmc.save = 20000, burn.in = 500 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
-                                ,init = theta, thin.by = 1
+                                ,init = theta
+                                , thin.by = 1
                                 )
  
 plot(kk$theta.mcmc[,21])
