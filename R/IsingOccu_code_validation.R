@@ -157,7 +157,7 @@ var_prop = c(rep(2.5e-7,6),rep(2.5e-3,10),rep(2.5e-7,5))
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 20000, burn.in = 500 , 
+                                mcmc.save = 100000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
