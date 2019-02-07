@@ -32,12 +32,12 @@ for (i in 1:nperiod){
 }
 
 
-theta = matrix(c(-0.1,-1,-1, # env reaction of 1
+theta = matrix(c(-0.5,-1,-1, # env reaction of 1
                  -.15,1,1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.15,2,        # eta01 d1
-                 0.15,2,		  # eta02 d2
+                 0.15,3,        # eta01 d1
+                 0.15,3,		  # eta02 d2
                  -.1))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
@@ -104,7 +104,8 @@ raster::plot(raster::raster(
 #IsingOccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
 
 optPLwithZ = optim(par=rnorm(length(theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp")
-
+optPLZ = optim(par=rnorm(length(theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",method = "SANN")
+logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "exp")
 #optPLwithZ$par
 #abs((theta-optPLwithZ$par)/theta)
 
@@ -151,16 +152,17 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(1e-6,6),rep(1e-3,10),rep(1e-6,5))
+var_prop = c(rep(2.5e-7,6),rep(2.5e-3,10),rep(2.5e-7,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 500, burn.in = 100 , 
+                                mcmc.save = 100000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
-                                ,init = theta, thin.by = 1
+                                ,init = theta
+                                , thin.by = 1
                                 )
  
 plot(kk$theta.mcmc[,21])

@@ -205,9 +205,9 @@ IsingOccu.logPL = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp
 	beta1 = as.numeric( matrix(c(theta[1:(2*ncov)])))
 	thr = rbind(envX %*% beta1[1:ncov],envX %*% beta1[1:ncov+ncov])
 	#rm(Xfull)
-	A = getGraph(distM,theta,int_range = int_range)
-	log_PL = ( IsingPL(x=Z, graph=A, thresholds=thr, beta=1, responses = c(-1L, 1L)))
-	rm(A)
+	#A = getGraph(distM,theta,int_range = int_range)
+	log_PL = logPL(theta,Z,envX,distM,int_range)
+	#rm(A)
 	
 	P_det = Pdet(envX, detmat, detX, theta[1:(2*ncov_det + 2*ncov)+2*ncov])
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
@@ -252,9 +252,9 @@ Initial_MPLE = function(detmat,envX,detX,distM,int_range){
 	
 	theta_occu_ini = rnorm(4*ncov + 2*ncov_det+5)
 	#theta_occu_ini = optim(theta_occu_ini,IsingOccu.logPL,Z=Z_abs,detmat = detmat,envX = envX,distM=distM,int_range = int_range)
-	theta_occu_ini = optim(par=(theta_occu_ini),fn=IsingOccu.logPL,NULL,envX=envX,distM=distM,Z=Z_abs,detmat=detmat,detX=detX,int_range = int_range,method = "SANN")
+	theta_occu_ini = optim(par=(theta_occu_ini),fn=IsingOccu.logPL,envX=envX,distM=distM,Z=Z_abs,detmat=detmat,detX=detX,int_range = int_range,method = "SANN")
 
   
-	return(theta_occu_ini)
+	return(theta_occu_ini$par)
 
 }
