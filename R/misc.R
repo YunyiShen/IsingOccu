@@ -21,9 +21,9 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	}
 	else{
 	if(int_range=="nn"){
-		cat("assume distM is the graph")
+		#cat("assume distM is the graph")
 		D1=eta01 * distM
-		D1=eta02 * distM
+		D2=eta02 * distM
 	}
 	else{
 		print("int_range must be exp or arth, will assume exp")

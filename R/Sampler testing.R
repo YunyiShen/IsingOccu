@@ -6,7 +6,8 @@ nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
-distanceM = distanceM-1
+#distanceM = distanceM-1
+distanceM= 1*( distanceM==1)
 diag(distanceM) = 0
 
 ones = rep(1,times = nlat*nlat)
@@ -21,11 +22,11 @@ for (i in 1:nperiod){
 
 theta = matrix(c(-0, # env reaction of 1
                  -0,  # env reaction of 2
-                 0,-1,  # detection beta of 1
+                 0,1,  # detection beta of 1
                  0,1,   # detection beta of 2
-                 .1,3,        # eta01 d1
-                 0.1,3,		  # eta02 d2
-                 -0.1))
+                 .15,3,        # eta01 d1
+                 0.15,3,		  # eta02 d2
+                 -0))
 
 p = length(theta)
 sites = nrow(distanceM)
@@ -36,7 +37,7 @@ Xfull = cbind(rbind(X,zeros),rbind(zeros,X))
 thr = Xfull%*%beta1
 
 set.seed(12345)
-Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=500,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=500,n=1,int_range = "nn")
 
 raster::plot(raster::raster(
   matrix(
@@ -62,16 +63,16 @@ detmat = matrix(nrow = length(Zsample),ncol = nperiod)
 detSample = IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
 detmat = detSample
 
-var_prop = c(rep(4e-6,2),rep(2.5e-3,4),rep(4e-6,5))
+var_prop = c(rep(2.5e-5,2),rep(2.5e-3,4),rep(2.5e-5,5))
 
 kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 2000, burn.in = 100 , 
+                                mcmc.save = 1000, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
-                                int_range = "exp",seed = 42
+                                int_range = "nn",seed = 42
                                 ,init = theta
                                 , thin.by = 1)
 
