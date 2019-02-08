@@ -20,10 +20,18 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
 	}
 	else{
-	print("int_range must be exp or arth, will assume exp")
+	if(int_range=="nn"){
+		cat("assume distM is the graph")
+		D1=eta01 * distM
+		D1=eta02 * distM
+	}
+	else{
+		print("int_range must be exp or arth, will assume exp")
 		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
 		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
-		}
+	
+	}
+	}
 	}
 	if(full){
 		I = matrix(0,nrow=sites,ncol=sites)
@@ -87,11 +95,9 @@ Hamiltonian = function(theta, envX, distM, Z ,int_range = "exp"){
 	thr2 = envX%*%beta2
 	# rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-	negPot = t(thr1)%*%Z[1:nsite] + t(thr2)%*%Z[1:nsite+nsite] + t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + 2 * A$eta1*t(Z[1:nsite+nsite])%*%Z[1:nsite]
+	negPot = t(thr1) %*% Z[1:nsite] + t(thr2) %*%Z [1:nsite+nsite] + t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + 2 * A$eta1* t(Z[1:nsite+nsite]) %*% Z[1:nsite]
 
 	return(negPot)
-
-
 }
 
 ## Total non normalized log likelihood of the graph-detection model
