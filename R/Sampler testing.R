@@ -57,7 +57,7 @@ raster::plot(raster::raster(matrix(
   
 )))
 #raster::plot(raster::raster(matrix(detmat[401:800,1],nrow = 20,ncol=20)))
-
+detmat = matrix(nrow = length(Zsample),ncol = nperiod)
 # Test the detection function
 detSample = IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
 detmat = detSample
