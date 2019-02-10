@@ -68,7 +68,7 @@ raster::plot(raster::raster(
 
 # Test the sampler Z function
 set.seed(12345)
-Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=500,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=100,n=1,int_range = "exp")
 
 raster::plot(raster::raster(
   matrix(
@@ -152,7 +152,7 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(2.5e-7,6),rep(2.5e-3,10),rep(2.5e-7,5))
+var_prop = c(rep(2.5e-5,6),rep(2.5e-3,10),1e-6,1e-8,1e-6,1e-8,1e-6)
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 

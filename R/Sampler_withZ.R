@@ -28,7 +28,7 @@ IsingOccu.fit.Moller.sampler_withZ = function(X,distM, detmat, detX, Z,mcmc.save
 	p = length(theta_tuta)
 	colnames(theta.mcmc)[(p - 4):p] = c("eta_spatial_spc1","d_spatial_spc1","eta_spatial_spc2","d_spatial_spc2","eta_interspecies") # eta spatial
 	
-	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "CFTP",nIter = 300,int_range = int_range)
+	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "CFTP",nIter = 100,int_range = int_range)
   Z_curr = Z
 	# try do Z and theta separtly!
 	cat("Burn in...\n")
@@ -47,7 +47,7 @@ IsingOccu.fit.Moller.sampler_withZ = function(X,distM, detmat, detX, Z,mcmc.save
 		theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
 		
 		# Aux Z proposed from theta_prop and underlaying graph model to cancel out the normalizing constant
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 500,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,int_range = int_range)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
@@ -121,7 +121,7 @@ IsingOccu.fit.Moller.sampler_withZ = function(X,distM, detmat, detX, Z,mcmc.save
 		theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
 		
 		# Aux Z proposed from the proposal theta and underlaying graph model
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 500,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,int_range = int_range)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr

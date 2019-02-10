@@ -221,7 +221,7 @@ IsingOccu.logPL = function(theta, envX, distM, Z ,detmat, detX, int_range = "exp
 	logLdata = sum(as.numeric((Z+1)/2) * LP_Z1 + as.numeric(1-((Z+1)/2)) * LP_Z0) # likelihood of data 
 	
 	# total neg log likelihood
-	-log_PL-logLdata 
+	log_PL-logLdata 
 }
 
 
@@ -237,8 +237,8 @@ logPL = function(theta,Z,envX,distM,int_range){
 	logPL1 = t(Z[1:nsite]) %*% logPL1 -sum(log(exp(-logPL1)+exp(logPL1)))
 	logPL2 = Xbeta2 + A$D2%*%Z[1:nsite+nsite] + A$eta1*Z[1:nsite]
 	logPL2 = t(Z[1:nsite + nsite]) %*% logPL2 -sum(log(exp(-logPL2)+exp(logPL2)))
-	
-	return(-logPL1-logPL2)
+	log_PL = -logPL1-logPL2
+	return(log_PL)
 
 
 

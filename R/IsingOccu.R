@@ -31,7 +31,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 	Z_absolute = as.numeric(abs_pres) * 2 - 1
 	# Z_absolute = Z_absolute
 	Z_curr = Z_absolute
-	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "CFTP",nIter = 300,int_range = int_range)
+	Z_temp_curr = rIsingOccu(X,distM,theta = theta_curr,method = "CFTP",nIter = 100,int_range = int_range)
 
 	# try do Z and theta separtly!
 	cat("Burn in...\n")
@@ -50,7 +50,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
 		
 		# Aux Z proposed from theta_prop and underlaying graph model to cancel out the normalizing constant
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 500,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,int_range = int_range)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
@@ -145,7 +145,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, mcmc.save = 10000
 		theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
 		
 		# Aux Z proposed from the proposal theta and underlaying graph model
-		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 500,int_range = int_range)
+		Z_temp_prop = rIsingOccu(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,int_range = int_range)
 		# MH ratio
 		Moller_ratio = Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
