@@ -95,7 +95,7 @@ Hamiltonian = function(theta, envX, distM, Z ,int_range = "exp"){
 	thr2 = envX%*%beta2
 	# rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-	negPot = t(thr1) %*% Z[1:nsite] + t(thr2) %*%Z [1:nsite+nsite] + t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + 2 * A$eta1* t(Z[1:nsite+nsite]) %*% Z[1:nsite]
+	negPot = t(thr1) %*% Z[1:nsite] + t(thr2) %*%Z [1:nsite+nsite] + .5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + .5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1* t(Z[1:nsite+nsite]) %*% Z[1:nsite]
 
 	return(negPot)
 }

@@ -106,6 +106,7 @@ raster::plot(raster::raster(
 optPLwithZ = optim(par=((theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp",control=list(maxit=15000))
 #optPLZ = optim(par=((theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",control=list(maxit=5000))
 logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "exp")
+IsingOccu.logPL(theta = theta,envX = X,distanceM,Zsample,detmat,detX,"exp")
 #optPLwithZ$par
 #abs((theta-optPLwithZ$par)/theta)
 
@@ -152,16 +153,17 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(2.5e-5,6),rep(2.5e-3,10),1e-6,4e-8,1e-6,4e-8,1e-6)
+var_prop = c(rep(1e-6,6),rep(2.5e-3,10),1e-6,1e-8,1e-6,1e-8,1e-6)
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 20000, burn.in = 300 , 
+                                mcmc.save = 10000, burn.in = 300 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
                                 ,init = optPLwithZ$par
+                                , Zprop_rate = .15
                                 , thin.by = 1
                                 )
  
