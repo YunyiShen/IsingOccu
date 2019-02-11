@@ -163,7 +163,7 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
                                 ,init = optPLwithZ$par
-                                , Zprop_rate = .8
+                                , Zprop_rate = 1
                                 , thin.by = 1
                                 )
  
