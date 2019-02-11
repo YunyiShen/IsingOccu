@@ -153,12 +153,12 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(2.5e-5,6),rep(2.5e-3,10),rep(2.5e-5,5))
+var_prop = c(rep(4e-6,6),rep(2.5e-3,10),rep(4e-6,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 1000, burn.in = 100 , 
+                                mcmc.save = 10000, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
@@ -167,4 +167,4 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 , thin.by = 1
                                 )
  
-plot(kk$theta.mcmc[,6])
+plot(kk$theta.mcmc[,3])
