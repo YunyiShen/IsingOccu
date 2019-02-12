@@ -58,6 +58,7 @@ Pdet = function(envX, detmat, detX, beta_det) # likelihood given detections if o
 	#beta_det = theta[(2*ncol(envX) + 1):(p-5)] # length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
 	if(is.null(detX)){
 	  detDesign = envX
+	  npardet = ncol(detDesign)
 	  P_det1 = envX %*% beta_det[1:npardet]
 	  P_det2 = envX %*% beta_det[1:npardet + npardet]
 	  P_det = rbind(P_det1,P_det2)

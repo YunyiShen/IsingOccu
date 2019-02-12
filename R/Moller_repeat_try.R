@@ -21,7 +21,7 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 1000, burn.in = 100 , 
+                                      mcmc.save = 10000, burn.in = 100 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
@@ -29,3 +29,4 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       , thin.by = 1)
 plot(kk$theta.mcmc[,1])
 plot(kk$theta.mcmc[,2])
+sqrt(apply(kk$theta.mcmc,2,var))
