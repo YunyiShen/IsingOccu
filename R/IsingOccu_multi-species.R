@@ -14,16 +14,23 @@ getintralayerGraph = function(distM,eta,d,int_range = "exp",nspp)
 			}
 		}
 		else{
-			print("int_range must be exp or arth, will assume exp")
+			if(int_range=="nn"){
+			for(i in 1:nspp){
+				A[[i]] = eta[i]*as.matrix((*distM))
+			}
+			}
+			else{
+			#print("int_range must be exp or arth, will assume exp")
 			for(i in 1:nspp){
 				A[[i]] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
+			}
 			}
 		}
 	}
 	return(A)
 }
 
-Hamiltonian = function(theta,envX,distM,int_range="exp",Z,nspp){
+Hamiltonian = function(theta,envX,distM,distM_island  = NULL,int_range="exp",int_range_island=NULL,Z,nspp){
 	beta_occu = theta$beta_occu
 	eta_intra = theta$eta_intra
 	d = theta$d
@@ -46,10 +53,21 @@ Hamiltonian = function(theta,envX,distM,int_range="exp",Z,nspp){
 			negPot = negPot + eta_inter[i,j] * t(Z_vec[1:nsite + (i-1) * nsite])%*%(Z_vec[1:nsite + (j-1) * nsite])
 		}
 	}
+	if(!is.null(distM_island) & !is.null(theta$eta_island) & !is.null(int_range_island) & !is.null(theta$d_island)){
+		eta_island = theta$eta_island # assume there is a 
+		d_island = theta$d_island
+		A_island = getintralayerGraph(distM,eta_island,d_island,int_range = int_range_island) # graph within island, if apply, distM should only contain graph among different islands, here will be nn for within certain island
+		for(i in 1:nspp){ # intralayer terms:
+			negPot = negPot  + 0.5*t(Z_vec[1:nsite + (i-1) * nsite])%*%A_island[[i]]%*%Z_vec[1:nsite + (i-1) * nsite]
+		}
+	
+	}
+	
 	return(negPot)
+	
 }
 
-rIsing_multispp = function(theta,envX,distM,int_range="exp",nspp,iter = 300,n){
+rIsing_multispp = function(theta,envX,distM,distM_island  = NULL,int_range="exp",int_range_island=NULL,nspp,iter = 300,n){ # this should be rewrite in Cpp
 	beta_occu = theta$beta_occu # make it matrix
 	eta_intra = theta$eta_intra
 	d = theta$d
@@ -62,8 +80,8 @@ rIsing_multispp = function(theta,envX,distM,int_range="exp",nspp,iter = 300,n){
 		Z_prop = Z_curr
 		flip = sample(nspp*nsite)
 		Z_prop[flip] = -Z_prop[flip]
-		H_prop = Hamiltonian(theta,envX,distM,int_range,Z_prop,nspp)
-		H_curr = Hamiltonian(theta,envX,distM,int_range,Z_curr,nspp)
+		H_prop = Hamiltonian(theta,envX,distM,distM_island,int_range,int_range_island,Z_prop,nspp)
+		H_curr = Hamiltonian(theta,envX,distM,distM_island,int_range,int_range_island,Z_curr,nspp)
 		delta_H = H_prop-H_curr
 		MH = min(1,exp(delta_H))
 		if(runif(1)<MH) Z_curr = Z_prop
@@ -72,8 +90,8 @@ rIsing_multispp = function(theta,envX,distM,int_range="exp",nspp,iter = 300,n){
 		Z_prop = Z_curr
 		flip = sample(nspp*nsite)
 		Z_prop[flip] = -Z_prop[flip]
-		H_prop = Hamiltonian(theta,envX,distM,int_range,Z_prop,nspp)
-		H_curr = Hamiltonian(theta,envX,distM,int_range,Z_curr,nspp)
+		H_prop = Hamiltonian(theta,envX,distM,distM_island,int_range,int_range_island,Z_prop,nspp)
+		H_curr = Hamiltonian(theta,envX,distM,distM_island,int_range,int_range_island,Z_curr,nspp)
 		delta_H = H_prop-H_curr
 		MH = min(1,exp(delta_H))
 		if(runif(1)<MH) Z_curr = Z_prop
@@ -82,8 +100,8 @@ rIsing_multispp = function(theta,envX,distM,int_range="exp",nspp,iter = 300,n){
 	return(Res)
 }
 
-IsingOccu_multispp.logL.innorm = function(theta, envX, distM, Z ,detmat, detX,int_range = "exp",nspp){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here
-	negPot = Hamiltonian(theta,envX,distM,int_range,Z,nspp)
+IsingOccu_multispp.logL.innorm = function(theta, envX, distM,distM_island  = NULL,int_range="exp",int_range_island=NULL, Z ,detmat, detX,nspp){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here
+	negPot = Hamiltonian(theta,envX,distM,distM_island,int_range,int_range_island,Z,nspp)
 	#beta_det = matrix(detbeta,nrow = length(detbeta),ncol = 1)# 
 	P_det = Pdet_multi(envX, detmat, detX, beta_det,nspp)
 	LP_Z1 = as.matrix(rowSums(detmat * log(P_det) + (1-detmat) * log(1-P_det)))
@@ -124,22 +142,22 @@ Moller.ratio = function(theta_curr ,theta_prop
 						,vars_prior
 						,theta_tuta
 						,envX, detX, distM,int_range,nspp ){
-	log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta, envX, distM, int_range = int_range, Z_temp_prop , nspp)
+	log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta,envX,distM,distM_island,int_range,int_range_island,Z_temp_prop,nspp)
 	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
 	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
 	log_pi_theta_prop = sum(log_pi_theta_prop)
 	#prior of proposed theta
 	log_q_theta_Z_prop_detmat = IsingOccu.logL.innorm(theta_prop, envX, distM, Z_prop ,detmat = detmat, detX, int_range = int_range,nspp)
 	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-	log_H_theta_Z_temp_curr = Hamiltonian(theta_curr, envX, distM, Z_temp_curr , int_range = int_range)
+	log_H_theta_Z_temp_curr = Hamiltonian(theta_curr,envX,distM,distM_island,int_range,int_range_island,Z_temp_curr,nspp)
 
 	#### end of the upper part, start the lower
 
-	log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta, envX, distM, int_range = int_range, Z_temp_curr,nspp )
+	log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,distM_island,int_range,int_range_island,Z_temp_curr,nspp)
 	log_pi_theta_curr =log(dnorm(theta_curr,0,sd=sqrt(vars_prior)))
 	log_pi_theta_curr = sum(log_pi_theta_curr)
 	log_q_theta_Z_curr_detmat = IsingOccu.logL.innorm(theta_curr, envX, distM, Z_curr ,detmat = detmat, detX, int_range = int_range,nspp)
-	log_H_theta_Z_temp_prop = Hamiltonian(theta_prop, envX, distM, Z_temp_prop , int_range = int_range)
+	log_H_theta_Z_temp_prop = Hamiltonian(theta_prop,envX,distM,distM_island,int_range,int_range_island,Z_temp_prop,nspp)
 
 	log_MH_ratio = (log_H_theta_tuta_Z_temp_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_Z_temp_curr)-
 				   (log_H_theta_tuta_Z_temp_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_Z_temp_prop)
@@ -162,10 +180,11 @@ IsingOccu_multispp_sample.detection = function(theta, X, Z ,detmat, detX,nspp){
 # THIS is the IsingOccu fitting function using Moller et al. 2006 sampler (if we can only use MCEM to do MPLE, then Bayesian is much faster)
 # remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
 # detX should be a list, with every element is the design matrix WITHOUT 1s.
-IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 10000, burn.in = 10 , vars_prior = list(beta_occu = rep(1,ncol(X)),beta_det = rep(1,ncol(detX)),eta_intra = rep(1,nspp),d=rep(1,nspp),eta_inter=rep(1,nspp*(nspp-1)/2)),vars_prop = 2,int_range = "exp",seed = 42){
+IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 10000, burn.in = 10 , vars_prior = list(beta_occu = rep(10000,ncol(X)),beta_det = rep(1,ncol(detX)),eta_intra = rep(1,nspp),d=rep(1,nspp),eta_inter=rep(1,nspp*(nspp-1)/2)),vars_prop = 2,int_range = "exp",seed = 42,ini){
 	require(coda)
 	set.seed(seed)
 	nsite = (nrow(detmat)/nspp)
+	if(missing(ini)){
 	datatemp = data.frame(r = detmat[1:nsite,1],cbind(X,detX[[1]]))
 	beta_det = glm(r ~ . - 1, data = datatemp,family = binomial)$coef
 	datatemp = data.frame(r = as.numeric(rowSums(detmat[1:nsite,1])>0),X)
@@ -183,6 +202,8 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 	d = matrix(1,1,nspp)
 	eta_inter = matrix(1,1,nspp*(nspp-1)/2)
 	theta_tuta = list(beta_occu,beta_det,eta_intra,d,eta_inter) # pass theta using lists
+	}
+	else theta_tuta=ini
 	names(theta_tuta) = ("beta_occu","beta_det","eta_intra","d","eta_inter")
 	theta.mcmc = list( # for mcmc results
 		beta_occu.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(beta_occu))),
@@ -211,13 +232,11 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		}
 		#propose Z from uniform distribution 
 		Z_temp_prop = rIsing_multispp(theta_prop,X,distM,int_range,nspp,iter = 300,1)
-		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
 		# propose x, from the likelihood
 		# x_prop = IsingOccu_multispp_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX,nspp)
 		# MH ratio
 		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
-						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
-						
+						,Z_curr ,Z_curr, Z_temp_curr,Z_temp_prop						
 						,detmat
 						,vars_prior
 						,theta_tuta
@@ -225,11 +244,28 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		r = runif(1)
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
-			Z_curr = Z_prop
+			#Z_curr = Z_prop
 			# x_curr = x_prop
 			Z_temp_curr = Z_temp_prop
 		}
+		
+		
+		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_curr
+						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_curr						
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX=X, detX, distM,int_range,nspp = nspp)
+		r = runif(1)
+		if(r<=Moller_ratio){
+			#theta_curr=theta_prop
+			Z_curr = Z_prop
+			# x_curr = x_prop
+			#Z_temp_curr = Z_temp_prop
+		}
 	}
+	
 	for(i in 1:(mcmc.save)){ # for to save 
 		#propose theta 
 		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
@@ -238,7 +274,7 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		}
 		
 		#propose Z from uniform distribution 
-		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		
 		#propose Z_temp from theta_prop's Ising
 		Z_temp_prop = rIsing_multispp(theta_prop,X,distM,int_range,nspp,iter = 300,1)
 		# propose x, from the likelihood
@@ -254,13 +290,31 @@ IsingOccu.fit.Moller.sampler = function(X,distM, detmat, detX, nspp,mcmc.save = 
 		r = runif(1)
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
-			Z_curr = Z_prop
+			# Z_curr = Z_prop
 			# x_curr = x_prop
 			Z_temp_curr = Z_temp_prop
 		}
 		for(j in 1:5){
 			theta_mcmc[[j]][i,] =as.vector( theta_curr[[j]])
 		}
+		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
+						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
+						
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX=X, detX, distM,int_range, nspp)
+		r = runif(1)
+		if(r<=Moller_ratio){
+			# theta_curr=theta_prop
+			Z_curr = Z_prop
+			# x_curr = x_prop
+			Z_temp_curr = Z_temp_prop
+		}
+		
+		
+		
 		Z.mcmc[i,]=Z_curr
 	}
 	
