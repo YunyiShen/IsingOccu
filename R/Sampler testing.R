@@ -75,7 +75,7 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 1000, burn.in = 100 , 
+                                mcmc.save = 15000, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "exp",seed = 42
