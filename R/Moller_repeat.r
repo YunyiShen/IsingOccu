@@ -35,13 +35,16 @@ Hamiltonian = function(theta, envX, distM, Z){
   ncov = ncol(envX)
   
   # zeros = matrix(0,nrow=nsite,ncol=ncov)
-  beta1 = theta[-p]
-  eta = theta[p]
+  d = theta[p]
+  beta1 = theta[-c(p,p-1)]
+  eta = theta[p-1]
   # Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
   thr1 = envX%*%beta1
+  G = eta*(exp(-abs(d)*distM))
+  diag(G)=0
   # rm(Xfull)
   #A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-  negPot = t(thr1) %*% Z  + .5* eta*t(Z)%*%distM%*%Z
+  negPot = t(thr1) %*% Z  + .5* eta*t(Z)%*%G%*%Z
   
   return(negPot)
 }
@@ -50,9 +53,13 @@ Hamiltonian = function(theta, envX, distM, Z){
 rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1){
   require(IsingSampler)
   p = length(theta)
-  beta1 = theta[-p]
+  beta1 = theta[-c(p,p-1)]
+  d=theta[p]
+  eta = theta[p-1]
   thr = X%*%beta1
-  Z = IsingSampler(n=n,graph = theta[p]*distM,thresholds = thr,nIter = nIter,responses = c(-1L,1L),method = method)
+  G = eta*(exp(-abs(d)*distM))
+  diag(G)=0
+  Z = IsingSampler(n=n,graph = G,thresholds = thr,nIter = nIter,responses = c(-1L,1L),method = method)
   return(Z)
 }
 
