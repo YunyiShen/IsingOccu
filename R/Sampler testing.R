@@ -69,7 +69,7 @@ IsingOccu.logPL(theta, X, distM, Zsample ,detmat, detX, int_range = "exp")
 
 
 
-var_prop = c(rep(1e-6,2),rep(2.5e-3,4),rep(1e-6,5))
+var_prop = c(rep(1e-6,2),rep(2.5e-3,4),rep(2.5e-7,5))
 
 kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
