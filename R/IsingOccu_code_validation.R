@@ -25,7 +25,7 @@ raster::plot(raster::raster(
 
 # 2 env var and 2 det var, 5 repeats
 detX = list()
-nperiod = 5
+nperiod = 10
 for (i in 1:nperiod){
   temp = matrix(runif(nlat^2 * 2),nrow = nlat^2,ncol = 2)
 	detX[[i]] = temp
@@ -126,7 +126,7 @@ int_range = "exp"
 # distM_simple = matrix(0)
 # IsingOccu.logL.innorm(theta_simple, envX=X_simple, distM=distM_simple, Z=Z_simple ,detmat_simple, detX_simple, int_range = "exp")
 ## Initial value
-Ini = Initial_MPLE(detmat,envX,detX,distM,"exp")
+#Ini = Initial_MPLE(detmat,envX,detX,distM,"exp")
 
 
 IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
