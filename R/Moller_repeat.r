@@ -3,23 +3,23 @@ Moller.ratio = function(theta_curr ,theta_prop
                         ,Z_temp_curr, Z_temp_prop
                         ,vars_prior
                         ,theta_tuta
-                        ,envX, distM ){
-  log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta, envX, distM, Z_temp_prop )
+                        ,envX, distM ,dist_thr){
+  log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta, envX, distM, Z_temp_prop ,dist_thr)
   # then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
   log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
   log_pi_theta_prop = sum(log_pi_theta_prop)
   #prior of proposed theta
-  log_q_theta_Z_prop_detmat = Hamiltonian(theta_prop, envX, distM, Z_prop )
+  log_q_theta_Z_prop_detmat = Hamiltonian(theta_prop, envX, distM, Z_prop ,dist_thr)
   # theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-  log_H_theta_Z_temp_curr = Hamiltonian(theta_curr, envX, distM, Z_temp_curr )
+  log_H_theta_Z_temp_curr = Hamiltonian(theta_curr, envX, distM, Z_temp_curr ,dist_thr)
   
   #### end of the upper part, start the lower
   
-  log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta, envX, distM, Z_temp_curr )
+  log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta, envX, distM, Z_temp_curr ,dist_thr)
   log_pi_theta_curr =log(dnorm(theta_curr,0,sd=sqrt(vars_prior)))
   log_pi_theta_curr = sum(log_pi_theta_curr)
-  log_q_theta_Z_curr_detmat = Hamiltonian(theta_curr, envX, distM, Z_curr )
-  log_H_theta_Z_temp_prop = Hamiltonian(theta_prop, envX, distM, Z_temp_prop )
+  log_q_theta_Z_curr_detmat = Hamiltonian(theta_curr, envX, distM, Z_curr ,dist_thr)
+  log_H_theta_Z_temp_prop = Hamiltonian(theta_prop, envX, distM, Z_temp_prop ,dist_thr)
   
   log_MH_ratio = (log_H_theta_tuta_Z_temp_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_Z_temp_curr)-
     (log_H_theta_tuta_Z_temp_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_Z_temp_prop)
@@ -28,7 +28,7 @@ Moller.ratio = function(theta_curr ,theta_prop
 }
 
 
-Hamiltonian = function(theta, envX, distM, Z){
+Hamiltonian = function(theta, envX, distM, Z,dist_thr){
   Z=matrix(Z,nrow=length(Z),ncol=1) # make Z col vector
   p = length(theta)
   nsite = nrow(distM)
@@ -41,6 +41,7 @@ Hamiltonian = function(theta, envX, distM, Z){
   # Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
   thr1 = envX%*%beta1
   G = eta*(exp(-abs(d)*distM))
+  G = G * (distM<=dist_thr)
   diag(G)=0
   # rm(Xfull)
   #A = getGraph(distM,theta,int_range = int_range,full=FALSE)
@@ -50,7 +51,7 @@ Hamiltonian = function(theta, envX, distM, Z){
 }
 
 
-rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1){
+rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1,dist_thr){
   require(IsingSampler)
   p = length(theta)
   beta1 = theta[-c(p,p-1)]
@@ -58,6 +59,8 @@ rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1){
   eta = theta[p-1]
   thr = X%*%beta1
   G = eta*(exp(-abs(d)*distM))
+  G = G * (distM<=dist_thr)
+  #G = G*(G>=0.001)
   diag(G)=0
   Z = IsingSampler(n=n,graph = G,thresholds = thr,nIter = nIter,responses = c(-1L,1L),method = method)
   return(Z)
@@ -67,7 +70,7 @@ rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1){
 # remember, X contains 1 col while detX doesn't because the design matrix of det is actually cbind(X,detX)
 # detX should be a list, with every element is the design matrix WITHOUT 1s.
 # bug here, never accept??, may need to try another way of propose change...
-Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345,init,thin.by = 1){
+Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , vars_prior = rep(1,4*ncol(X)+2*ncol(detX[[1]])+9),vars_prop = 2,int_range = "exp",seed = 12345,init,thin.by = 1,dist_thr=(max(distM))/2){
   require(coda)
   require(IsingSampler)
   #source("misc.R")
@@ -87,7 +90,7 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
   p = length(theta_tuta)
   #colnames(theta.mcmc)[(p - 4):p] = c("eta_spatial_spc1","d_spatial_spc1","eta_spatial_spc2","d_spatial_spc2","eta_interspecies") # eta spatial
   
-  Z_temp_curr = rIsing(X,distM,theta = theta_curr,method = "CFTP",nIter = 100)
+  Z_temp_curr = rIsing(X,distM,theta = theta_curr,method = "CFTP",nIter = 100,1,dist_thr)
   Z_curr = Z
   # try do Z and theta separtly!
   cat("Burn in...\n")
@@ -107,14 +110,14 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
     #theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
     
     # Aux Z proposed from theta_prop and underlaying graph model to cancel out the normalizing constant
-    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100)
+    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,1,dist_thr)
     # MH ratio
     Moller_ratio = Moller.ratio(theta_curr ,theta_prop
                                 ,Z_curr ,Z_curr
                                 ,Z_temp_curr, Z_temp_prop						
                                 ,vars_prior
                                 ,theta_tuta # this is important, which control the importance sampling 
-                                ,envX=X, distM=distM)
+                                ,envX=X, distM=distM,dist_thr)
     if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
     r = runif(1)
     if(r<=Moller_ratio){
@@ -160,7 +163,7 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
     #theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
     
     # Aux Z proposed from the proposal theta and underlaying graph model
-    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100)
+    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,1,dist_thr)
     # MH ratio
     Moller_ratio = Moller.ratio(theta_curr ,theta_prop
                                 ,Z_curr ,Z_curr
@@ -168,7 +171,7 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
                                 
                                 ,vars_prior
                                 ,theta_tuta
-                                ,envX=X, distM=distM)
+                                ,envX=X, distM=distM,dist_thr)
     r = runif(1)
     if(r<=Moller_ratio){
       theta_curr=theta_prop

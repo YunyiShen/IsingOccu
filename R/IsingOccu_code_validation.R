@@ -6,7 +6,8 @@ nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
-distanceM = distanceM-1
+#distanceM = distanceM-1
+distanceM = 1* distanceM==1
 diag(distanceM) = 0
 
 set.seed(42)
@@ -36,9 +37,9 @@ theta = matrix(c(-0.35,-1,-1, # env reaction of 1
                  -.15,1,1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.2,3,        # eta01 d1
-                 0.2,3,		  # eta02 d2
-                 -.2))
+                 0.1,3,        # eta01 d1
+                 0.1,3,		  # eta02 d2
+                 -.1))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
 detmat = matrix(0,nrow = 2*nlat^2,ncol = nperiod) # a sample detection matrix
@@ -68,7 +69,7 @@ raster::plot(raster::raster(
 
 # Test the sampler Z function
 set.seed(12345)
-Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=100,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=100,n=1,int_range = "nn")
 
 raster::plot(raster::raster(
   matrix(
@@ -105,8 +106,8 @@ raster::plot(raster::raster(
 
 optPLwithZ = optim(par=((theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp",control=list(maxit=15000))
 #optPLZ = optim(par=((theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",control=list(maxit=5000))
-logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "exp")
-IsingOccu.logPL(theta = theta,envX = X,distanceM,Zsample,detmat,detX,"exp")
+logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "nn")
+IsingOccu.logPL(theta = theta,envX = X,distanceM,Zsample,detmat,detX,"nn")
 #optPLwithZ$par
 #abs((theta-optPLwithZ$par)/theta)
 
@@ -115,7 +116,7 @@ IsingOccu.logPL(theta = theta,envX = X,distanceM,Zsample,detmat,detX,"exp")
 envX = X
 distM=distanceM
 Z=Zsample
-int_range = "exp"
+int_range = "nn"
 
 # theta_simple = c(0,0,100,100,0,2,0,2,-1)
 # X_simple = matrix(1)
@@ -137,7 +138,7 @@ IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsa
 #(2*(runif(length(Z))>0.5)-1)
 
 Moller.ratio(theta_curr=theta 
-                        ,theta_prop=theta+.1*runif(length(theta))
+                        ,theta_prop=theta+.01*runif(length(theta))
                         #,theta_prop = theta
                         ,Z_curr=Z
                         #,Z_prop=(2*(runif(length(Z))>0.5)-1)
@@ -149,20 +150,20 @@ Moller.ratio(theta_curr=theta
                         ,detmat=detmat
                         ,vars_prior=1
                         ,theta_tuta=theta
-                        ,envX, detX, distM,int_range="exp" )
+                        ,envX, detX, distM,int_range="nn" )
 
 ## test sampler
 
-var_prop = c(rep(1e-6,6),rep(2.5e-3,10),rep(2.5e-7,5))
+var_prop = c(rep(1e-6,6),rep(2.5e-3,10),rep(1e-6,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 100000, burn.in = 3000 , 
+                                mcmc.save = 15000, burn.in = 300 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
-                                int_range = "exp",seed = 42
-                                ,init = optPLwithZ$par
+                                int_range = "nn",seed = 42
+                                ,init = theta
                                 , Zprop_rate = .1
                                 , thin.by = 1
                                 )
