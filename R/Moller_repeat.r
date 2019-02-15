@@ -44,7 +44,7 @@ Hamiltonian = function(theta, envX, distM, Z){
   diag(G)=0
   # rm(Xfull)
   #A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-  negPot = t(thr1) %*% Z  + .5* eta*t(Z)%*%G%*%Z
+  negPot = t(thr1) %*% Z  + .5* t(Z)%*%G%*%Z
   
   return(negPot)
 }

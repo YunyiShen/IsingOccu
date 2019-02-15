@@ -17,7 +17,7 @@ theta = matrix(c(-0,0.1,2.5))
 set.seed(12345)
 Zsample = rIsing(X,distM,theta,method = "CFTP",nIter=100,n=1)
 
-var_prop = c(rep(2.5e-5,2),1e-8)
+var_prop = c(2.5e-5,1e-6,1e-6)
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
