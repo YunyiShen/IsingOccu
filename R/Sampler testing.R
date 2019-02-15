@@ -6,8 +6,8 @@ nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
-distanceM = distanceM-1
-#distanceM= 1*( distanceM==1)
+#distanceM = distanceM-1
+distanceM= 1*( distanceM==1)
 diag(distanceM) = 0
 
 ones = rep(1,times = nlat*nlat)
@@ -37,7 +37,7 @@ Xfull = cbind(rbind(X,zeros),rbind(zeros,X))
 thr = Xfull%*%beta1
 
 set.seed(12345)
-Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=100,n=1,int_range = "exp")
+Zsample = rIsingOccu(X,distanceM,theta,method = "CFTP",nIter=100,n=1,int_range = "nn")
 
 raster::plot(raster::raster(
   matrix(
@@ -65,20 +65,20 @@ detmat = detSample
 
 distM = distanceM
 MPLE = optim(((theta)),IsingOccu.logPL,envX=X, distM=distanceM, Z=Zsample ,detmat=detmat, detX=detX, int_range = "exp",control  = list(maxit=5000))
-IsingOccu.logPL(theta, X, distM, Zsample ,detmat, detX, int_range = "exp")
+IsingOccu.logPL(theta, X, distM, Zsample ,detmat, detX, int_range = "nn")
 
 
 
-var_prop = c(rep(1e-6,2),rep(2.5e-3,4),rep(2.5e-7,5))
+var_prop = c(rep(1e-6,2),rep(2.5e-3,4),rep(1e-6,5))
 
 kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 100000, burn.in = 3000 , 
+                                mcmc.save = 1000, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
-                                int_range = "exp",seed = 42
+                                int_range = "nn",seed = 42
                                 ,init = theta
                                 , thin.by = 1)
 
