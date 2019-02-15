@@ -26,7 +26,7 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 15000, burn.in = 100 , 
+                                      mcmc.save = 50000, burn.in = 1000 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42

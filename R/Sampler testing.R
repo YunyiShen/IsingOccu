@@ -26,7 +26,7 @@ theta = matrix(c(-0.1, # env reaction of 1
                  0,1,   # detection beta of 2
                  .1,3,        # eta01 d1
                  0.1,3,		  # eta02 d2
-                 -0.1))
+                 -0.05))
 
 p = length(theta)
 sites = nrow(distanceM)
