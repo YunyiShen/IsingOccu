@@ -17,13 +17,13 @@ theta = matrix(c(-0,0.1,2.5))
 set.seed(12345)
 Zsample = rIsing(X,distM,theta,method = "CFTP",nIter=100,n=1)
 
-var_prop = c(rep(2.5e-5,2),1e-6)
+var_prop = c(rep(2.5e-5,2),1e-8)
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 500, burn.in = 100 , 
+                                      mcmc.save = 5000, burn.in = 100 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
