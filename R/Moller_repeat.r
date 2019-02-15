@@ -131,7 +131,7 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
       cat("Burn in iteration: #",i,"\n")
       cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
       cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
-      if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
+      #if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
       timing = proc.time()- timing
       cat("Time used in this 100:",timing[1],"s\n")
       cat("\n\n")

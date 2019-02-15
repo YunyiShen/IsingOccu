@@ -12,18 +12,20 @@ diag(distM)=0
 
 ones = rep(1,times = nlat*nlat)
 X = cbind(ones)
-theta = matrix(c(-0,0.1,2.5))
+theta = matrix(c(-0,0.1,5))
 
-set.seed(12345)
+
+set.seed(42)
 Zsample = rIsing(X,distM,theta,method = "CFTP",nIter=100,n=1)
+raster::plot(raster::raster(matrix(Zsample,nlat,nlat)))
 
-var_prop = c(2.5e-5,1e-6,1e-6)
+var_prop = c(2.5e-5,2.5e-5,2.5e-5)
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 5000, burn.in = 100 , 
+                                      mcmc.save = 15000, burn.in = 1000 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
@@ -31,4 +33,5 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       , thin.by = 1)
 plot(kk$theta.mcmc[,1])
 plot(kk$theta.mcmc[,2])
+plot(kk$theta.mcmc[,3])
 sqrt(apply(kk$theta.mcmc,2,var))
