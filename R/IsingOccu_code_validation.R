@@ -104,7 +104,7 @@ raster::plot(raster::raster(
 # log Pseudo-Likelihood
 #IsingOccu.logPL(theta, X, distanceM, Z=Zsample, detmat, detX,int_range = "exp")
 
-optPLwithZ = optim(par=((theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "exp",control=list(maxit=15000))
+optPLwithZ = optim(par=((theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "nn",control=list(maxit=15000))
 #optPLZ = optim(par=((theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",control=list(maxit=5000))
 logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "nn")
 IsingOccu.logPL(theta = theta,envX = X,distanceM,Zsample,detmat,detX,"nn")
