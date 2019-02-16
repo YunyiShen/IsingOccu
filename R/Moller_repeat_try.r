@@ -20,7 +20,7 @@ set.seed(42)
 Zsample = rIsing(X,distM,theta,method = "CFTP",nIter=100,n=1,dist_thr)
 raster::plot(raster::raster(matrix(Zsample,nlat,nlat)))
 
-var_prop = c(2.5e-5,2.5e-5,2.5e-5)
+var_prop = c(2.5e-5,2.5e-5,1e-4)
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
