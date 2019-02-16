@@ -24,8 +24,8 @@ theta = matrix(c(-0, # env reaction of 1
                  -0,  # env reaction of 2
                  0,1,  # detection beta of 1
                  0,1,   # detection beta of 2
-                 .15,3,        # eta01 d1
-                 0.15,3,		  # eta02 d2
+                 .2,3,        # eta01 d1
+                 0.2,3,		  # eta02 d2
                  -0.5))
 
 p = length(theta)
@@ -75,7 +75,7 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 15000, burn.in = 100 , 
+                                mcmc.save = 50000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42

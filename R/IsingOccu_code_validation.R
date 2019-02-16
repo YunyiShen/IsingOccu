@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('IsingOccu.R')
 source("misc.R")
-nlat = 20
+nlat = 25
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -37,8 +37,8 @@ theta = matrix(c(-0,.1,-.1, # env reaction of 1
                  -0,-.1,.1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.15,3,        # eta01 d1
-                 0.15,3,		  # eta02 d2
+                 0.2,3,        # eta01 d1
+                 0.2,3,		  # eta02 d2
                  -.5))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
@@ -159,7 +159,7 @@ var_prop = c(rep(2.5e-7,6),rep(2.5e-3,10),rep(2.5e-7,5))
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 50000, burn.in = 300 , 
+                                mcmc.save = 50000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
