@@ -8,7 +8,7 @@ siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 distM = as.matrix((dist(siteposi)))
 distM=distM-1
 diag(distM)=0
-dist_thr = 10
+dist_thr = 8
 #distM = 1*(distM==1)
 
 ones = rep(1,times = nlat*nlat)

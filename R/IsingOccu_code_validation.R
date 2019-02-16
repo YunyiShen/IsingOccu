@@ -13,8 +13,8 @@ diag(distanceM) = 0
 set.seed(42)
 #x = rep(0:(nlat - 1) / (nlat - 1), times = nlat) - 0.5
 #y = rep(0:(nlat - 1) / (nlat - 1), each = nlat) - 0.5
-x = runif(nlat^2,-1,1)
-y = runif(nlat^2,-1,1)
+x = runif(nlat^2,0,1)
+y = runif(nlat^2,0,1)
 ones = rep(1,times = nlat*nlat)
 X = cbind(ones,x,y)
 
@@ -33,13 +33,13 @@ for (i in 1:nperiod){
 }
 
 
-theta = matrix(c(-0.35,-1,-1, # env reaction of 1
-                 -.15,1,1,  # env reaction of 2
+theta = matrix(c(-0,.1,-.1, # env reaction of 1
+                 -0,-.1,.1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.1,3,        # eta01 d1
-                 0.1,3,		  # eta02 d2
-                 -.05))
+                 0.15,3,        # eta01 d1
+                 0.15,3,		  # eta02 d2
+                 -.2))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
 detmat = matrix(0,nrow = 2*nlat^2,ncol = nperiod) # a sample detection matrix
@@ -130,7 +130,7 @@ int_range = "nn"
 #Ini = Initial_MPLE(detmat,envX,detX,distM,"exp")
 
 
-IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
+IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "nn")
 IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
 # since normalizing function is different, is not campairable 
 
@@ -154,12 +154,12 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(2.5e-5,6),rep(2.5e-3,10),rep(2.5e-5,5))
+var_prop = c(rep(2.5e-7,6),rep(2.5e-3,10),rep(2.5e-7,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 15000, burn.in = 300 , 
+                                mcmc.save = 1500, burn.in = 300 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
@@ -169,4 +169,4 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 )
  
 
-plot(kk$theta.mcmc[,19])
+plot(kk$theta.mcmc[,21])

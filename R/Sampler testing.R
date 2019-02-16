@@ -14,19 +14,19 @@ ones = rep(1,times = nlat*nlat)
 X = cbind(ones)
 
 detX = list()
-nperiod = 5
+nperiod = 10
 for (i in 1:nperiod){
   temp = matrix(runif(nlat^2),nrow = nlat^2,ncol = 1)
 	detX[[i]] = temp
 }
 
-theta = matrix(c(-0.1, # env reaction of 1
-                 -0.1,  # env reaction of 2
+theta = matrix(c(-0, # env reaction of 1
+                 -0,  # env reaction of 2
                  0,1,  # detection beta of 1
                  0,1,   # detection beta of 2
-                 .1,3,        # eta01 d1
-                 0.1,3,		  # eta02 d2
-                 -0.05))
+                 .15,3,        # eta01 d1
+                 0.15,3,		  # eta02 d2
+                 -0.3))
 
 p = length(theta)
 sites = nrow(distanceM)
@@ -64,7 +64,7 @@ detSample = IsingOccu_sample.detection(theta, X,  Z=Zsample, detmat, detX)
 detmat = detSample
 
 distM = distanceM
-MPLE = optim(((theta)),IsingOccu.logPL,envX=X, distM=distanceM, Z=Zsample ,detmat=detmat, detX=detX, int_range = "exp",control  = list(maxit=5000))
+MPLE = optim(((theta)),IsingOccu.logPL,envX=X, distM=distanceM, Z=Zsample ,detmat=detmat, detX=detX, int_range = "nn",control  = list(maxit=5000))
 IsingOccu.logPL(theta, X, distM, Zsample ,detmat, detX, int_range = "nn")
 
 
@@ -75,12 +75,12 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 15000, burn.in = 1000 , 
+                                mcmc.save = 5000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
-                                ,init = theta
+                                ,init = MPLE$par
                                 , thin.by = 1)
 
 
-plot(kk$theta.mcmc[,7])
+plot(kk$theta.mcmc[,1])
