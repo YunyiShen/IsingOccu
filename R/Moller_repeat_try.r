@@ -13,7 +13,7 @@ dist_thr = 5
 
 ones = rep(1,times = nlat*nlat)
 X = cbind(ones)
-theta = matrix(c(-0,0.1,5))
+theta = matrix(c(-0,0.15,2))
 
 
 set.seed(42)
@@ -26,7 +26,7 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 50000, burn.in = 1000 , 
+                                      mcmc.save = 1500, burn.in = 1000 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42

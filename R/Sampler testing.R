@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('Sampler_withZ.R')
 source("misc.R")
-nlat = 20
+nlat = 25
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -69,13 +69,13 @@ IsingOccu.logPL(theta, X, distM, Zsample ,detmat, detX, int_range = "nn")
 
 
 
-var_prop = c(rep(1e-6,2),rep(2.5e-3,4),rep(1e-6,5))
+var_prop = c(rep(1e-4,2),rep(2.5e-3,4),rep(1e-4,5))
 
 kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 50000, burn.in = 1000 , 
+                                mcmc.save = 1500, burn.in = 100 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
@@ -83,4 +83,4 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 , thin.by = 1)
 
 
-plot(kk$theta.mcmc[,2])
+plot(kk$theta.mcmc[,11])
