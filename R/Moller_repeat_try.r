@@ -13,7 +13,7 @@ dist_thr = 8
 
 ones = rep(1,times = nlat*nlat)
 X = cbind(ones)
-theta = matrix(c(-0,0.1,5))
+theta = matrix(c(-0,0.1,3))
 
 
 set.seed(42)
