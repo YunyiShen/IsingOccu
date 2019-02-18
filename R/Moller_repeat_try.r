@@ -6,14 +6,14 @@ nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distM = as.matrix((dist(siteposi)))
-distM=distM-1
+distM=distM
 diag(distM)=0
-dist_thr = 25
+dist_thr = 5
 #distM = 1*(distM==1)
 
 ones = rep(1,times = nlat*nlat)
 X = cbind(ones)
-theta = matrix(c(-0,0.15,2))
+theta = matrix(c(-.0,0.15,.7))
 
 
 set.seed(42)
@@ -26,7 +26,7 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 5000, burn.in = 1000 , 
+                                      mcmc.save = 1500, burn.in = 100 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
