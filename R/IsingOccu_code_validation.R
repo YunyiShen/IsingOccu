@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('IsingOccu.R')
 source("misc.R")
-nlat = 25
+nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -37,9 +37,9 @@ theta = matrix(c(-0,.1,-.1, # env reaction of 1
                  -0,-.1,.1,  # env reaction of 2
                  0,-1,1,-1,1,  # detection beta of 1
                  0,1,-1,1,-1,   # detection beta of 2
-                 0.2,3,        # eta01 d1
-                 0.2,3,		  # eta02 d2
-                 -.5))
+                 0.25,3,        # eta01 d1
+                 0.25,3,		  # eta02 d2
+                 -.3))
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
 detmat = matrix(0,nrow = 2*nlat^2,ncol = nperiod) # a sample detection matrix
@@ -106,7 +106,7 @@ raster::plot(raster::raster(
 
 optPLwithZ = optim(par=((theta)),fn=IsingOccu.logPL,NULL,envX=X,distM=distanceM,Z=Zsample,detmat=detmat,detX=detX,int_range = "nn",control=list(maxit=15000))
 #optPLZ = optim(par=((theta)),fn=logPL,NULL,envX=X,distM=distanceM,Z=Zsample,int_range = "exp",control=list(maxit=5000))
-logPL(theta,envX=X,distM=distanceM,Z=Zsample,int_range = "nn")
+logPL(optPLwithZ$par,envX=X,distM=distanceM,Z=Zsample,int_range = "nn")
 IsingOccu.logPL(theta = theta,envX = X,distanceM,Zsample,detmat,detX,"nn")
 #optPLwithZ$par
 #abs((theta-optPLwithZ$par)/theta)
@@ -131,7 +131,7 @@ int_range = "nn"
 
 
 IsingOccu.logL.innorm(theta, envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "nn")
-IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "exp")
+IsingOccu.logL.innorm(theta+runif(length(theta)), envX=X, distM=distanceM, Z=Zsample ,detmat, detX, int_range = "nn")
 # since normalizing function is different, is not campairable 
 
 ## test Moller ratio
@@ -169,4 +169,4 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 )
  
 
-plot(kk$theta.mcmc[,2])
+plot(kk$theta.mcmc[,1])

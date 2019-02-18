@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('Sampler_withZ.R')
 source("misc.R")
-nlat = 25
+nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distanceM = as.matrix((dist(siteposi)))
@@ -24,9 +24,9 @@ theta = matrix(c(-0, # env reaction of 1
                  -0,  # env reaction of 2
                  0,1,  # detection beta of 1
                  0,1,   # detection beta of 2
-                 .2,3,        # eta01 d1
-                 0.2,3,		  # eta02 d2
-                 -0.5))
+                 .25,3,        # eta01 d1
+                 0.25,3,		  # eta02 d2
+                 -0.3))
 
 p = length(theta)
 sites = nrow(distanceM)
@@ -83,4 +83,4 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 , thin.by = 1)
 
 
-plot(kk$theta.mcmc[,11])
+plot(kk$theta.mcmc[,6])

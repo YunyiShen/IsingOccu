@@ -8,7 +8,7 @@ siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 distM = as.matrix((dist(siteposi)))
 distM=distM-1
 diag(distM)=0
-dist_thr = 5
+dist_thr = 25
 #distM = 1*(distM==1)
 
 ones = rep(1,times = nlat*nlat)
@@ -26,12 +26,12 @@ kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 50000, burn.in = 1000 , 
+                                      mcmc.save = 5000, burn.in = 1000 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
                                       ,init = theta
-                                      , thin.by = 1,dist_thr = 5)
+                                      , thin.by = 1,dist_thr)
 plot(kk$theta.mcmc[,1])
 plot(kk$theta.mcmc[,2])
 plot(kk$theta.mcmc[,3])
