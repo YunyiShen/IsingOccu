@@ -2,7 +2,7 @@ require('gtools')
 set.seed(42)
 source('Moller_repeat.R')
 #source("misc.R")
-nlat = 30
+nlat = 20
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
 distM = as.matrix((dist(siteposi)))
