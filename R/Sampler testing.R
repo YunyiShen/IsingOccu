@@ -75,7 +75,7 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save =15000, burn.in = 1000 , 
+                                mcmc.save =20000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
@@ -83,4 +83,4 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 , thin.by = 1)
 
 
-plot(kk$theta.mcmc[,2])
+plot(kk$theta.mcmc[,11])

@@ -16,7 +16,8 @@ set.seed(42)
 x = runif(nlat^2,0,1)
 y = runif(nlat^2,0,1)
 ones = rep(1,times = nlat*nlat)
-X = cbind(ones,x,y)
+#X = cbind(ones,x,y)
+X = cbind(ones)
 
 raster::plot(raster::raster(
   matrix(
@@ -33,13 +34,22 @@ for (i in 1:nperiod){
 }
 
 
-theta = matrix(c(-0,.1,-.1, # env reaction of 1
-                 -0,.11,-.11,  # env reaction of 2
-                 0,-1,1,-1,1,  # detection beta of 1
-                 0,1,-1,1,-1,   # detection beta of 2
-                 0.25,3,        # eta01 d1
-                 0.25,3,		  # eta02 d2
-                 -.3))
+# theta = matrix(c(-0,.1,-.1, # env reaction of 1
+#                  -0,.11,-.11,  # env reaction of 2
+#                  0,-1,1,-1,1,  # detection beta of 1
+#                  0,1,-1,1,-1,   # detection beta of 2
+#                  0.2,3,        # eta01 d1
+#                  0.2,3,		  # eta02 d2
+#                  -.1))
+
+theta = matrix(c(-0, # env reaction of 1
+                 -0,  # env reaction of 2
+                 0,-1,1,  # detection beta of 1
+                 0,1,-1,   # detection beta of 2
+                 0.2,3,        # eta01 d1
+                 0.2,3,		  # eta02 d2
+                 -.1))
+
 # first 3, all environmental factor for spc.1, 4-6, environment for spc.2, 7-11, detection for spc.1
 #   12-16 detection for spc.2, 17, spatial for spc.1, 18 spatial for spc.2, 19 interspecies
 detmat = matrix(0,nrow = 2*nlat^2,ncol = nperiod) # a sample detection matrix
@@ -154,12 +164,13 @@ Moller.ratio(theta_curr=theta
 
 ## test sampler
 
-var_prop = c(rep(1e-4,6),rep(2.5e-3,10),rep(4e-6,5))
+#var_prop = c(rep(4e-6,6),rep(2.5e-3,10),rep(1e-6,5))
+var_prop = c(rep(1e-4,2),rep(2.5e-3,6),rep(1e-5,5))
 
 kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
-                                mcmc.save = 15000, burn.in = 1000 , 
+                                mcmc.save = 20000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
@@ -169,4 +180,4 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 )
  
 
-plot(kk$theta.mcmc[,17])
+plot(kk$theta.mcmc[,1])
