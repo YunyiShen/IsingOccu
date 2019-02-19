@@ -24,9 +24,9 @@ theta = matrix(c(-0, # env reaction of 1
                  -0,  # env reaction of 2
                  0,1,  # detection beta of 1
                  0,1,   # detection beta of 2
-                 .25,3,        # eta01 d1
-                 0.25,3,		  # eta02 d2
-                 -0.3))
+                 0.2,3,        # eta01 d1
+                 0.2,3,		  # eta02 d2
+                 -0.1))
 
 p = length(theta)
 sites = nrow(distanceM)
@@ -69,13 +69,13 @@ IsingOccu.logPL(theta, X, distM, Zsample ,detmat, detX, int_range = "nn")
 
 
 
-var_prop = c(rep(1e-4,2),rep(2.5e-3,4),rep(1e-4,5))
+var_prop = c(rep(1e-4,2),rep(2.5e-3,4),rep(1e-5,5))
 
 kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 detmat = detmat, 
                                 detX=detX, 
                                 Z=Zsample,
-                                mcmc.save = 50000, burn.in = 1000 , 
+                                mcmc.save =15000, burn.in = 1000 , 
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
@@ -83,4 +83,4 @@ kk=IsingOccu.fit.Moller.sampler_withZ(X=X,distM=distanceM,
                                 , thin.by = 1)
 
 
-plot(kk$theta.mcmc[,6])
+plot(kk$theta.mcmc[,2])
