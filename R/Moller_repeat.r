@@ -42,7 +42,7 @@ Hamiltonian = function(theta, envX, distM, Z,dist_thr){
   thr1 = envX%*%beta1
   G = eta*(exp(-abs(d)*distM))
   G = G * (distM<=dist_thr)
-  G = G*(G>=0.001)
+  #G = G*(G>=0.001)
   diag(G)=0
   # rm(Xfull)
   #A = getGraph(distM,theta,int_range = int_range,full=FALSE)
@@ -61,7 +61,7 @@ rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1,dist_thr){
   thr = X%*%beta1
   G = eta*(exp(-abs(d)*distM))
   G = G * (distM<=dist_thr)
-  G = G*(G>=0.001)
+  #G = G*(G>=0.001)
   diag(G)=0
   Z = IsingSampler(n=n,graph = G,thresholds = thr,nIter = nIter,responses = c(-1L,1L),method = method)
   return(Z)
