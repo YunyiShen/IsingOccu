@@ -180,4 +180,4 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 )
  
 
-plot(kk$theta.mcmc[,1])
+plot(kk$theta.mcmc[,11])
