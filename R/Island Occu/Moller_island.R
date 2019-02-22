@@ -9,14 +9,16 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 												,d_intra=rep(1,nspp)
 												,d_inter = rep(1,nspp)
 												,spp_mat = 1e-5
-												
 												)
 												)
-										,vars_prop = 2,
-										distM,distM_island
+										,vars_prop = 2000
+										,Zprop_rate = .1
+										,distM,distM_island
 										,int_range_intra="nn",int_range_inter="exp"
 										,Z,seed = 42,ini){ # ini has same formate of theta
 	require(coda)
+	source("misc_island.R")
+	cat("Initializing...\n\n")
 	set.seed(seed)
 	nsite = (nrow(distM))
 	nspp = nrow(spp_neig)
@@ -54,99 +56,235 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 	Z_temp_curr = Z_tuta
 	
 	theta_curr = theta_tuta
+	cat("Burn in...\n")
+	accept_Z = 0
+	accept_theta_occu = 0
+	accept_theta_det = 0
+	low_acc_Z = 0
+	low_acc_theta_occu = 0
+	low_acc_theta_det = 0
+	propose_Z = 0
+	timing = proc.time()
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 
 		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
-		for(j in 1:5){
+		for(j in c(1:length(theta_prop))[-2]){
 			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
 		}
+		theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 		#propose Z from uniform distribution 
-		Z_temp_prop = rIsing_multispp(theta_prop,X,distM,int_range,nspp,iter = 300,1)
+		Z_temp_prop = rIsingOccu_multi = function(theta_prop,envX,distM,distM_island,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
 		# propose x, from the likelihood
 		# x_prop = IsingOccu_multispp_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX,nspp)
 		# MH ratio
-		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
-						,Z_curr ,Z_curr, Z_temp_curr,Z_temp_prop						
+		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_curr
+						,Z_temp_curr, Z_temp_prop
 						,detmat
 						,vars_prior
 						,theta_tuta
-						,envX=X, detX, distM,int_range,nspp = nspp)
+						,envX, detX
+						,distM,distM_island
+						,int_range_intra,int_range_inter)
 		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
 			#Z_curr = Z_prop
 			# x_curr = x_prop
 			Z_temp_curr = Z_temp_prop
+			accept_theta_occu = accept_theta_occu + 1
+		}
+		
+		theta_prop[[2]] = rnorm(length(theta_curr[[2]]),mean = theta_curr[[2]],sd = sqrt(vars_prop[[2]]))
+		
+		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_curr
+						,Z_temp_curr, Z_temp_curr
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX, detX
+						,distM,distM_island
+						,int_range_intra,int_range_inter)
+		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			#Z_curr = Z_prop
+			# x_curr = x_prop
+			Z_temp_curr = Z_temp_prop
+			accept_theta_det = accept_theta_det + 1
+		}
+		
+		Z_prop = Z_curr
+		flip = sample(which(Z_absolute==-1),1)
+		
+		if(runif(1)<Zprop_rate) {
+			Z_prop[flip]=-Z_prop[flip]
+			propose_Z = propose_Z + 1
 		}
 		
 		
 		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
-		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_curr
-						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_curr						
+		Moller_ratio=Moller.ratio(theta_curr ,theta_curr
+						,Z_curr ,Z_prop
+						,Z_temp_curr, Z_temp_prop
 						,detmat
 						,vars_prior
 						,theta_tuta
-						,envX=X, detX, distM,int_range,nspp = nspp)
+						,envX, detX
+						,distM,distM_island
+						,int_range_intra,int_range_inter)
 		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
+		if(r<=Moller_ratio){
+			#theta_curr=theta_prop
+			Z_curr = Z_prop
+			accept_Z = accept_Z + 1
+		}
+		if(i%%100 == 0) {
+		  
+		  cat("Burn in iteration: #",i,"\n")
+		  cat("# of Z proposed: ",propose_Z,"\n")
+		  cat("# of Z acceptance: " , accept_Z-(100-propose_Z),"\n")
+		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
+		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
+		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
+		  #if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
+		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
+		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
+		  #if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n\n")
+		  timing = proc.time()- timing
+		  cat("Time used in this 100:",timing[1],"s\n")
+		  cat("\n\n")
+		  timing = proc.time()
+		  accept_Z = 0
+		  low_acc_Z = 0
+		  accept_theta_occu = 0
+		  low_acc_theta_occu = 0
+		  accept_theta_det = 0
+		  low_acc_theta_det = 0
+		  propose_Z = 0
+		  }
+	}
+	cat("Start sampling...\n")
+	accept_Z = 0
+	low_acc_Z = 0
+	accept_theta_occu = 0
+	low_acc_theta_occu = 0
+	accept_theta_det = 0
+	low_acc_theta_det = 0
+	timing = proc.time()
+	
+	for(i in 1:(mcmc.save)){ # for to save 
+		#propose theta 
+		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
+		for(j in c(1:length(theta_prop))[-2]){
+			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
+		}
+		theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
+		#propose Z from uniform distribution 
+		Z_temp_prop = rIsingOccu_multi = function(theta_prop,envX,distM,distM_island,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
+		# propose x, from the likelihood
+		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
+		# MH ratio
+		
+		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_curr
+						,Z_temp_curr, Z_temp_prop
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX, detX
+						,distM,distM_island
+						,int_range_intra,int_range_inter)
+		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			#Z_curr = Z_prop
+			# x_curr = x_prop
+			Z_temp_curr = Z_temp_prop
+			accept_theta_occu = accept_theta_occu + 1
+		}
+		
+		
+		theta_prop[[2]] = rnorm(length(theta_curr[[2]]),mean = theta_curr[[2]],sd = sqrt(vars_prop[[2]]))
+		
+		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
+						,Z_curr ,Z_curr
+						,Z_temp_curr, Z_temp_curr
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX, detX
+						,distM,distM_island
+						,int_range_intra,int_range_inter)
+		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
+		if(r<=Moller_ratio){
+			theta_curr=theta_prop
+			#Z_curr = Z_prop
+			# x_curr = x_prop
+			Z_temp_curr = Z_temp_prop
+			accept_theta_det = accept_theta_det + 1
+		}
+		
+		
+		
+		for(j in 1:length(theta_curr)){
+			theta_mcmc[[j]][i,] =as.vector( theta_curr[[j]])
+		}
+		
+		
+		
+		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
+		Moller_ratio=Moller.ratio(theta_curr ,theta_curr
+						,Z_curr ,Z_prop
+						,Z_temp_curr, Z_temp_prop
+						,detmat
+						,vars_prior
+						,theta_tuta
+						,envX, detX
+						,distM,distM_island
+						,int_range_intra,int_range_inter)
+		r = runif(1)
+		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
 		if(r<=Moller_ratio){
 			#theta_curr=theta_prop
 			Z_curr = Z_prop
 			# x_curr = x_prop
 			#Z_temp_curr = Z_temp_prop
 		}
-	}
-	
-	for(i in 1:(mcmc.save)){ # for to save 
-		#propose theta 
-		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
-		for(j in 1:5){
-			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
-		}
-		
-		#propose Z from uniform distribution 
-		
-		#propose Z_temp from theta_prop's Ising
-		Z_temp_prop = rIsing_multispp(theta_prop,X,distM,int_range,nspp,iter = 300,1)
-		# propose x, from the likelihood
-		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
-		# MH ratio
-		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
-						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
-						
-						,detmat
-						,vars_prior
-						,theta_tuta
-						,envX=X, detX, distM,int_range, nspp)
-		r = runif(1)
-		if(r<=Moller_ratio){
-			theta_curr=theta_prop
-			# Z_curr = Z_prop
-			# x_curr = x_prop
-			Z_temp_curr = Z_temp_prop
-		}
-		for(j in 1:5){
-			theta_mcmc[[j]][i,] =as.vector( theta_curr[[j]])
-		}
-		Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
-		Moller_ratio = Moller.ratio_multi(theta_curr ,theta_prop
-						,Z_curr ,Z_prop, Z_temp_curr,Z_temp_prop
-						
-						,detmat
-						,vars_prior
-						,theta_tuta
-						,envX=X, detX, distM,int_range, nspp)
-		r = runif(1)
-		if(r<=Moller_ratio){
-			# theta_curr=theta_prop
-			Z_curr = Z_prop
-			# x_curr = x_prop
-			Z_temp_curr = Z_temp_prop
-		}
-		
 		
 		
 		Z.mcmc[i,]=Z_curr
+		if(i%%100 == 0) { # reporting
+		  cat("Sampling iteration: #",i,"\n")
+		  cat("# of Z proposed: ",propose_Z,"\n")
+		  cat("# of Z acceptance: " , accept_Z-(100-propose_Z),"\n")
+		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
+		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
+		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
+		  #if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
+		  cat("# of detection theta acceptance: " , accept_theta_det,"\n")
+		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
+		  #if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n\n")
+		  timing = proc.time()-timing
+		  cat("Time used in this 100:",timing[1],"s\n")
+		  cat("\n\n")
+		  timing = proc.time()
+		  accept_Z = 0
+		  low_acc_Z = 0
+		  accept_theta_occu = 0
+		  low_acc_theta_occu = 0
+		  accept_theta_det = 0
+		  low_acc_theta_det = 0
+		  propose_Z=0
+		  }
 	}
+
 	
 	res = list(theta.mcmc = theta.mcmc,theta.mean = apply(theta.mcmc,1,mean),vars=vars, interaction.range = int_range, graph = graph, envX=X)
 	class(res)="IsingOccu_multispp.Moller"
