@@ -16,8 +16,8 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	}
 	else{
 	if(int_range=="exp"){
-		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
-		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
+		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
+		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
 	}
 	else{
 	if(int_range=="nn"){
@@ -27,8 +27,8 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	}
 	else{
 		print("int_range must be exp or arth, will assume exp")
-		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
-		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
+		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
+		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
 	
 	}
 	}

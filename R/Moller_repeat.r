@@ -40,7 +40,7 @@ Hamiltonian = function(theta, envX, distM, Z,dist_thr){
   eta = theta[p-1]
   # Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
   thr1 = envX%*%beta1
-  G = eta*(exp(-abs(d)*distM))
+  G = eta*(exp(-exp(d)*distM))
   G = G * (distM<=dist_thr)
   #G = G*(G>=0.001)
   diag(G)=0
@@ -59,7 +59,7 @@ rIsing=function(X,distM,theta,method = "CFTP",nIter = 100,n=1,dist_thr){
   d=theta[p]
   eta = theta[p-1]
   thr = X%*%beta1
-  G = eta*(exp(-abs(d)*distM))
+  G = eta*(exp(-exp(d)*distM))
   G = G * (distM<=dist_thr)
   #G = G*(G>=0.001)
   diag(G)=0

@@ -174,7 +174,7 @@ kk=IsingOccu.fit.Moller.sampler(X=X,distM=distanceM,
                                 vars_prior = rep(1000000,4*ncol(X)+2*ncol(detX[[1]])+5),
                                 vars_prop = var_prop,
                                 int_range = "nn",seed = 42
-                                ,init = optPLwithZ$par
+                                ,init = theta
                                 , Zprop_rate = .1
                                 , thin.by = 1
                                 )
