@@ -24,7 +24,7 @@ raster::plot(raster::raster(matrix(Zsample,nlat,nlat)))
 
 Hamiltonian(theta, X, distM, Zsample)
 
-var_prop = c(1e-4,1e-4,1e-4,1e-4,1e-4)
+var_prop = c(2.5e-5,2.5e-5,2.5e-5,2.5e-5,2.5e-5)
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
