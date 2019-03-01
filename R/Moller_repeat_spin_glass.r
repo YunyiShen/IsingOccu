@@ -73,7 +73,7 @@ Hamiltonian = function(theta, envX, distM, Z){
   diag(G)=0
   # rm(Xfull)
   #A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-  negPot = t(thr1) %*% Z  + .5* apply(Z,2,function(Z,G){ .5*t(Z)%*%G%*%Z},G=G)
+  negPot = t(thr1) %*% Z  + apply(Z,2,function(Z,G){ .5*t(Z)%*%G%*%Z},G=G)
   negPot = sum(negPot)
   return(negPot)
 }
@@ -139,7 +139,7 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
     #theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
     
     # Aux Z proposed from theta_prop and underlaying graph model to cancel out the normalizing constant
-    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,1)
+    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,nrep)
     # MH ratio
     Moller_ratio = Moller.ratio(theta_curr ,theta_prop
                                 ,Z_curr ,Z_curr
@@ -192,7 +192,7 @@ Moller.sampler_repeat = function(X,distM, Z,mcmc.save = 10000, burn.in = 10 , va
     #theta_prop[c(1:ncov,1:5+(ncov+ncov_det))] = walk [c(1:ncov,1:5+(ncov+ncov_det))] + theta_prop[c(1:ncov,1:5+(ncov+ncov_det))]
     
     # Aux Z proposed from the proposal theta and underlaying graph model
-    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,1)
+    Z_temp_prop = rIsing(X,distM,theta = theta_prop,method = "CFTP",nIter = 100,nrep)
     # MH ratio
     Moller_ratio = Moller.ratio(theta_curr ,theta_prop
                                 ,Z_curr ,Z_curr
