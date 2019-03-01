@@ -69,11 +69,12 @@ Hamiltonian = function(theta,envX,distM,distM_island,int_range_intra="nn",int_ra
 	A = getintralayerGraph(distM,eta_intra,d,int_range = int_range_intra)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
-		negPot = negPot + t(thr[,i])%*%Z_vec[1:nsite + (i-1) * nsite,] + 0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
+		negPot = negPot + t(thr[,i])%*%Z_vec[1:nsite + (i-1) * nsite,] + 
+			apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A)
 	}
 	for(i in 2:nspp-1){
 		for (j in (i+1):nspp){
-			negPot = negPot + spp_mat[i,j] * t(Z_vec[1:nsite + (i-1) * nsite,])%*%(Z_vec[1:nsite + (j-1) * nsite,])
+			negPot = negPot + spp_mat[i,j] * diag(t(Z_vec[1:nsite + (i-1) * nsite,])%*%(Z_vec[1:nsite + (j-1) * nsite,]))
 		}
 	}
 	if(!is.null(distM_island) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
@@ -81,7 +82,9 @@ Hamiltonian = function(theta,envX,distM,distM_island,int_range_intra="nn",int_ra
 		d_inter = theta$d_inter
 		A_inter = getintralayerGraph(distM,eta_inter,d_inter,int_range = int_range_inter) # graph among islands, if apply, distM should only contain graph among different islands, here will be exp for between two island
 		for(i in 1:nspp){ # intralayer terms:
-			negPot = negPot  + 0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A_inter[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
+			negPot = negPot  + 
+				apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter)
+				#0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A_inter[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
 		}
 	
 	}
@@ -110,7 +113,7 @@ rIsingOccu_multi = function(theta,envX,distM,distM_island,int_range_intra="nn",i
 	thr = matrix(thr,length(thr),1)
 	
 	Z = IsingSampler(n=n,graph = A,thresholds=thr, responses = c(-1L, 1L),nIter=nIter,method=method)
-	return(Z)
+	return(t(Z))
 }
 
 Pdet_multi = function(detmat, envX,detX, beta_det, nspp){ # likelihood given Z and detections If have repeat, use this multiple times.
