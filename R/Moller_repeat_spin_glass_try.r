@@ -4,7 +4,7 @@ source('Moller_repeat_spin_glass.r')
 #source("misc.R")
 nlat = 12
 
-nrep = 6
+nrep = 4
 
 siteposi = 1.00 * permutations(n=nlat,r=2,v=(1:nlat),repeats.allowed = T)
 
@@ -24,13 +24,16 @@ raster::plot(raster::raster(matrix(Zsample,nlat,nlat)))
 
 Hamiltonian(theta, X, distM, Zsample)
 
-var_prop = c(2.5e-5,2.5e-5,2.5e-5,2.5e-5,2.5e-5)
+#var_prop = c(2.5e-5,2.5e-5,2.5e-5,2.5e-5,2.5e-5)
+var_prop = c(7e-5,7e-5,7e-5,7e-5,4e-4)
+
+#var_prop = 6.4e-5
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 5000, burn.in = 1000 , 
+                                      mcmc.save = 1500, burn.in = 100 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
