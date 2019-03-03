@@ -25,15 +25,15 @@ raster::plot(raster::raster(matrix(Zsample,nlat,nlat)))
 Hamiltonian(theta, X, distM, Zsample)
 
 #var_prop = c(2.5e-5,2.5e-5,2.5e-5,2.5e-5,2.5e-5)
-var_prop = c(7e-5,7e-5,7e-5,7e-5,4e-4)
+#var_prop = c(5e-5,5e-5,7e-5,7e-5,4e-4)
 
-#var_prop = 6.4e-5
+var_prop = c(rep(5e-5,2),rep(1e-4,2),5e-4)
 
 kk=Moller.sampler_repeat(X=X,distM=distM,
                                       #detmat = detmat, 
                                       #detX=detX, 
                                       Z=Zsample,
-                                      mcmc.save = 1500, burn.in = 100 , 
+                                      mcmc.save = 5000, burn.in = 1000 , 
                                       vars_prior = 100000,
                                       vars_prop = var_prop
                                       ,seed = 42
