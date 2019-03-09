@@ -11,19 +11,21 @@ getintralayerGraph = function(distM,eta,d,int_range = "exp",spp_mat) #it can be 
 	else{
 		if(int_range=="exp"){
 			for(i in 1:nspp){
-				A[[i]] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
+				A[[i]] = eta[i]*as.matrix(exp(-exp(d[i])*distM)) * (distM>0)
+				diag(A[[i]])=0
 			}
 		}
 		else{
 			if(int_range=="nn"){
 			for(i in 1:nspp){
-				A[[i]] = eta[i]*as.matrix((*distM))
+				A[[i]] = eta[i]*as.matrix((distM))
 			}
 			}
 			else{
 			#print("int_range must be exp or arth, will assume exp")
 			for(i in 1:nspp){
-				A[[i]] = eta[i]*as.matrix(exp(-abs(d[i])*distM))
+				A[[i]] = eta[i]*as.matrix(exp(-exp(d[i])*distM)) * (distM>0)
+				diag(A[[i]])=0
 			}
 			}
 		}
