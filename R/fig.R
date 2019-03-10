@@ -9,7 +9,7 @@ BI.high.par = apply(kk$theta.mcmc,2,quantile,probs = .975)
 #              ,"J_spp2","useless2"
 #              ,"eta_12")
 
-par_name = c("env","J","log(d)")
+par_name = c("env1","env2","J1","J2","eta")
 temp1 = data.frame(point = "model fit"
                    , mean = mean.par
                    , low=BI.low.par
@@ -21,7 +21,7 @@ temp2 = data.frame(point="simulation"
                    ,high=theta
                    ,name=par_name)
 
-temp = rbind(temp1[-c(10,12),],temp2[-c(10,12),])
+temp = rbind(temp1,temp2)
 
 
 require(ggplot2)
