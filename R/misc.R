@@ -16,8 +16,8 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	}
 	else{
 	if(int_range=="exp"){
-		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
-		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
+		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
+		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
 	}
 	else{
 	if(int_range=="nn"){
@@ -27,8 +27,8 @@ getGraph = function(distM,theta,int_range = "exp",full=TRUE)
 	}
 	else{
 		print("int_range must be exp or arth, will assume exp")
-		D1 = eta01*as.matrix(exp(-abs(d01)*distM))
-		D2 = eta02*as.matrix(exp(-abs(d02)*distM))
+		D1 = eta01*as.matrix(exp(-exp(d01)*distM))
+		D2 = eta02*as.matrix(exp(-exp(d02)*distM))
 	
 	}
 	}
@@ -83,7 +83,7 @@ Pdet = function(envX, detmat, detX, beta_det) # likelihood given detections if o
 
 ## Hamiltonian of the underlaying graph model
 Hamiltonian = function(theta, envX, distM, Z ,int_range = "exp"){
-	Z=matrix(Z,nrow=length(Z),ncol=1) # make Z col vector
+	#Z=matrix(Z,nrow=length(Z),ncol=1) # make Z col vector
 	p = length(theta)
 	nsite = nrow(distM)
 	ncov = ncol(envX)
@@ -96,7 +96,7 @@ Hamiltonian = function(theta, envX, distM, Z ,int_range = "exp"){
 	thr2 = envX%*%beta2
 	# rm(Xfull)
 	A = getGraph(distM,theta,int_range = int_range,full=FALSE)
-	negPot = t(thr1) %*% Z[1:nsite] + t(thr2) %*%Z [1:nsite+nsite] + .5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + .5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1* t(Z[1:nsite+nsite]) %*% Z[1:nsite]
+	negPot = sum( t(thr1) %*% Z[1:nsite] + t(thr2) %*%Z [1:nsite+nsite] + .5*t(Z[1:nsite])%*%A$D1%*%Z[1:nsite] + .5*t(Z[1:nsite+nsite])%*%A$D2%*%Z[1:nsite+nsite] + A$eta1* t(Z[1:nsite+nsite]) %*% Z[1:nsite] )
 
 	return(negPot)
 }

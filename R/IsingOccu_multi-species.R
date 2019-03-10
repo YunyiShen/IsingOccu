@@ -1,4 +1,4 @@
-getintralayerGraph = function(distM,eta,d,int_range = "exp",nspp)
+getintralayerGraph = function(distM,eta,d,int_range = "exp",nspp) #it can be used multiple times for interislan and intra-island
 {
 	#eta = eta[1:nspp]
 	A = list() # intralayer graphs are passed using lists
@@ -63,7 +63,7 @@ Hamiltonian = function(theta,envX,distM,distM_island  = NULL,int_range="exp",int
 	
 	}
 	
-	return(negPot)
+	return( sum(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
 }
 
@@ -111,7 +111,7 @@ IsingOccu_multispp.logL.innorm = function(theta, envX, distM,distM_island  = NUL
 	return(negPot+logLdata)
 }
 
-Pdet_multi = function(envX, detmat, detX, beta_det, nspp) # likelihood given Z and detections
+Pdet_multi = function(detmat, envX,detX, beta_det, nspp) # likelihood given Z and detections
 {
 
 	# this is still 2 spp case, need to change to multi case
