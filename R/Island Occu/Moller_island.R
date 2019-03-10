@@ -1,4 +1,4 @@
-IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat)
+IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 										,mcmc.save = 10000, burn.in = 10 
 										, vars_prior = 
 											list(
@@ -13,7 +13,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 												)
 										,vars_prop = 2000
 										,Zprop_rate = .1
-										,distM,distM_island
+										,distM,link_map
 										,int_range_intra="nn",int_range_inter="exp"
 										,Z,seed = 42,ini){ # ini has same formate of theta
 	require(coda)
@@ -21,7 +21,8 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 	cat("Initializing...\n\n")
 	set.seed(seed)
 	nsite = (nrow(distM))
-	nspp = nrow(spp_neig)
+	
+	theta = ini
 	
 	beta_occu = theta$beta_occu # this will be a matrix for cols are species
 	beta_det = theta$beta_det
@@ -31,9 +32,13 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 	d_inter = theta$d_inter # inter island scaling factor
 	spp_mat = theta$spp_mat
 	
+	spp_neig = 1 *( spp_mat>0 )
+	
+	nspp = nrow(spp_mat)
 	nrep = ncol(Z_vec)
 	
     theta_tuta=ini
+	theta_tuta = lapply(theta_tuta,as.matrix)
 	#names(theta_tuta) = ("beta_occu","beta_det","eta_intra","d","eta_inter")
 	theta.mcmc = list( # for mcmc results
 		beta_occu.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = length(beta_occu))),
@@ -67,13 +72,13 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 	timing = proc.time()
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 
-		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
-		for(j in c(1:length(theta_prop))[-2]){
-			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
+		theta_prop = list()
+		for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
+			theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
 		}
 		theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 		#propose Z from uniform distribution 
-		Z_temp_prop = rIsingOccu_multi = function(theta_prop,envX,distM,distM_island,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
+		Z_temp_prop = rIsingOccu_multi = function(theta_prop,envX,distM,link_map,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
 		# propose x, from the likelihood
 		# x_prop = IsingOccu_multispp_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX,nspp)
 		# MH ratio
@@ -84,7 +89,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 						,vars_prior
 						,theta_tuta
 						,envX, detX
-						,distM,distM_island
+						,distM,link_map
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
@@ -96,7 +101,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 			accept_theta_occu = accept_theta_occu + 1
 		}
 		
-		theta_prop[[2]] = rnorm(length(theta_curr[[2]]),mean = theta_curr[[2]],sd = sqrt(vars_prop[[2]]))
+		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
 		
 		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
@@ -105,7 +110,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 						,vars_prior
 						,theta_tuta
 						,envX, detX
-						,distM,distM_island
+						,distM,link_map
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
@@ -134,7 +139,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 						,vars_prior
 						,theta_tuta
 						,envX, detX
-						,distM,distM_island
+						,distM,link_map
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
@@ -181,11 +186,11 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 		#propose theta 
 		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 		for(j in c(1:length(theta_prop))[-2]){
-			theta_prop[[j]] = rnorm(length(theta_curr[[j]]),mean = theta_curr[[j]],sd = sqrt(vars_prop[[j]]))
+			theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
 		}
 		theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 		#propose Z from uniform distribution 
-		Z_temp_prop = rIsingOccu_multi = function(theta_prop,envX,distM,distM_island,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
+		Z_temp_prop = rIsingOccu_multi = function(theta_prop,envX,distM,link_map,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
 		# propose x, from the likelihood
 		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 		# MH ratio
@@ -197,7 +202,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 						,vars_prior
 						,theta_tuta
 						,envX, detX
-						,distM,distM_island
+						,distM,link_map
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
@@ -210,7 +215,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 		}
 		
 		
-		theta_prop[[2]] = rnorm(length(theta_curr[[2]]),mean = theta_curr[[2]],sd = sqrt(vars_prop[[2]]))
+		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
 		
 		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
@@ -219,7 +224,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 						,vars_prior
 						,theta_tuta
 						,envX, detX
-						,distM,distM_island
+						,distM,link_map
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
@@ -247,7 +252,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX,spp_neig,nspp=nrow(spp_mat
 						,vars_prior
 						,theta_tuta
 						,envX, detX
-						,distM,distM_island
+						,distM,link_map
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
