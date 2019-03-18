@@ -51,8 +51,20 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   return(A)
 }
 
+mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp"){
+	A = 0*dist_mainland
+	if(int_range=="arth"){
+			A = eta*as.matrix(1/((dist_mainland)^(2+d)))
+	}
+	else{
+		if(int_range=="exp"){
+			A = eta*as.matrix(exp(-exp(d)*dist_mainland)) * (link_mainland)
+		}
+	}
+	return(A)
+}
 
-Hamiltonian = function(theta,envX,distM,link_map,int_range_intra="nn",int_range_inter="exp",Z_vec){
+Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
 	beta_occu = theta$beta_occu # this will be a matrix for cols are species
 	beta_det = theta$beta_det
 	eta_intra = theta$eta_intra # intra spp, intra island if apply
@@ -72,7 +84,7 @@ Hamiltonian = function(theta,envX,distM,link_map,int_range_intra="nn",int_range_
 	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
-		negPot = negPot + t(thr[,i])%*%Z_vec[1:nsite + (i-1) * nsite,] + 
+		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsite + (i-1) * nsite,] + 
 			apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A)
 	}
 	for(i in 2:nspp-1){
@@ -80,15 +92,16 @@ Hamiltonian = function(theta,envX,distM,link_map,int_range_intra="nn",int_range_
 			negPot = negPot + spp_mat[i,j] * diag(t(Z_vec[1:nsite + (i-1) * nsite,])%*%(Z_vec[1:nsite + (j-1) * nsite,]))
 		}
 	}
-	if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
+	#if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
 		eta_inter = theta$eta_inter # assume there is a 
 		d_inter = theta$d_inter
 		A_inter = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter) # graph among islands, if apply, distM should only contain graph among different islands, here will be exp for between two island
 		for(i in 1:nspp){ # intralayer terms:
-			negPot = negPot  + 
-				apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter)
+			thr_mainland = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+			negPot = negPot  + t(as.matrix(thr_mainland))%*%Z_vec[1:nsite + (i-1) * nsite,] + #mainland part
+				apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter) + 
 				#0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A_inter[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
-		}
+	#	}
 	
 	}
 	
@@ -96,8 +109,9 @@ Hamiltonian = function(theta,envX,distM,link_map,int_range_intra="nn",int_range_
 	
 }
 
-rIsingOccu_multi = function(theta,envX,distM,link_map,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
+rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
 	require(IsingSampler)
+	nsite = nrow(envX)
 	beta_occu = theta$beta_occu
 	eta_intra = theta$eta_intra # intra spp, intra island if apply
 	d_intra = theta$d_intra
@@ -105,17 +119,26 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,int_range_intra="nn",int_r
 	spp_mat = theta$spp_mat
 	nspp = nrow(spp_mat)
 	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra)
-	if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
+	#if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
 		eta_inter = theta$eta_inter # assume there is a 
 		d_inter = theta$d_inter
 		A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter) # graph among islands, if apply, distM should only contain graph 
-		}
+	#	}
+	#else{
+	#	A_ex=0*A_in
+		
+		
+	#	}
 	A=getfullGraph(A_ex,A_in,spp_mat)
 	
 	thr = envX %*% beta_occu
 	thr = matrix(thr,length(thr),1)
+	thr_mainland = 0*thr
+	for(i in 1:nspp){
+		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	}
 	
-	Z = IsingSampler(n=n,graph = A,thresholds=thr, responses = c(-1L, 1L),nIter=nIter,method=method)
+	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method)
 	return(t(Z))
 }
 
@@ -138,10 +161,10 @@ Pdet_multi = function(detmat, envX,detX, beta_det, nspp){ # likelihood given Z a
 	return(P_det)
 }
 
-IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
+IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
 	nspp = nrow(theta$spp_mat)
 	beta_det = theta$beta_det
-	negPot = Hamiltonian(theta,envX,distM,link_map,int_range,int_range_island,Z)
+	negPot = Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)
 	nrep = ncol(Z)
 	#beta_det = matrix(detbeta,nrow = length(detbeta),ncol = 1)#
 	logLdata=0
@@ -162,23 +185,24 @@ Moller.ratio = function(theta_curr ,theta_prop
 						,theta_tuta
 						,envX, detX
 						,distM,link_map
+						,dist_mainland,link_mainland
 						,int_range_intra="nn",int_range_inter="exp"){
-	log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta,envX,distM,link_map,int_range_intra,int_range_inter,Z_temp_prop)
+	log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_prop)
 	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
 	log_pi_theta_prop =log(dnorm(theta_prop,0,sd=sqrt(vars_prior)))
 	log_pi_theta_prop = sum(log_pi_theta_prop)
 	#prior of proposed theta
-	log_q_theta_Z_prop_detmat = IsingOccu_multi.logL.innorm(theta_prop, envX, distM, link_map,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+	log_q_theta_Z_prop_detmat = IsingOccu_multi.logL.innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
 	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-	log_H_theta_Z_temp_curr = Hamiltonian(theta_curr,envX,distM,link_map,int_range_intra,int_range_inter,Z_temp_curr)
+	log_H_theta_Z_temp_curr = Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
 
 	#### end of the upper part, start the lower
 
-	log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,int_range_intra,int_range_inter,Z_temp_curr)
+	log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
 	log_pi_theta_curr =log(dnorm(theta_curr,0,sd=sqrt(vars_prior)))
 	log_pi_theta_curr = sum(log_pi_theta_curr)
-	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, link_map,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
-	log_H_theta_Z_temp_prop = Hamiltonian(theta_prop,envX,distM,link_map,int_range_intra,int_range_inter,Z_temp_prop)
+	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, dist_mainland,link_mainland,link_map,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+	log_H_theta_Z_temp_prop = Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_prop)
 
 	log_MH_ratio = (log_H_theta_tuta_Z_temp_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_Z_temp_curr)-
 				   (log_H_theta_tuta_Z_temp_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_Z_temp_prop)
