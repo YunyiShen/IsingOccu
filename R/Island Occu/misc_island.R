@@ -31,7 +31,8 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
     }
   }
   return(A)
-}
+} 
+  # passed
 
 getfullGraph = function(A_ex,A_in,spp_mat){
   nspp = nrow(spp_mat)
@@ -49,20 +50,23 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   i=nspp
   A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]]
   return(A)
-}
+} 
+  # passed
 
 mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp"){
 	A = 0*dist_mainland
-	if(int_range=="arth"){
+	if(int_range_inter=="arth"){
 			A = eta*as.matrix(1/((dist_mainland)^(2+d)))
 	}
 	else{
-		if(int_range=="exp"){
+		if(int_range_inter=="exp"){
 			A = eta*as.matrix(exp(-exp(d)*dist_mainland)) * (link_mainland)
 		}
 	}
 	return(A)
+	# test for 2spp passed 3/18/2019
 }
+  # passed
 
 Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
 	beta_occu = theta$beta_occu # this will be a matrix for cols are species
@@ -79,27 +83,27 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	#zeros = matrix(0,nrow=nsites,ncol=ncov)
 	#beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
 	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr = X%*%beta_occu # a matrix
+	thr = envX%*%beta_occu # a matrix
 	#rm(Xfull)
-	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra)
+	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra,spp_mat)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
-		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsite + (i-1) * nsite,] + 
-			apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A)
+		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsites+ (i-1) * nsites,] + 
+			apply(Z_vec[1:nsites + (i-1) * nsites,],2,function(Z,A){.5*t(Z)%*%A%*%(Z)},A=A[[i]])
 	}
 	for(i in 2:nspp-1){
 		for (j in (i+1):nspp){
-			negPot = negPot + spp_mat[i,j] * diag(t(Z_vec[1:nsite + (i-1) * nsite,])%*%(Z_vec[1:nsite + (j-1) * nsite,]))
+			negPot = negPot + spp_mat[i,j] * diag(t(Z_vec[1:nsites + (i-1) * nsites,])%*%(Z_vec[1:nsites + (j-1) * nsites,]))
 		}
 	}
 	#if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
-		eta_inter = theta$eta_inter # assume there is a 
-		d_inter = theta$d_inter
-		A_inter = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter) # graph among islands, if apply, distM should only contain graph among different islands, here will be exp for between two island
-		for(i in 1:nspp){ # intralayer terms:
+	eta_inter = theta$eta_inter # assume there is a 
+	d_inter = theta$d_inter
+	A_inter = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph among different islands, here will be exp for between two island
+	for(i in 1:nspp){ # intralayer terms:
 			thr_mainland = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-			negPot = negPot  + t(as.matrix(thr_mainland))%*%Z_vec[1:nsite + (i-1) * nsite,] + #mainland part
-				apply(Z_vec[1:nsite + (i-1) * nsite,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter) + 
+			negPot = negPot  + t(as.matrix(thr_mainland))%*%Z_vec[1:nsites + (i-1) * nsites,] + #mainland part
+				apply(Z_vec[1:nsites + (i-1) * nsites,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter[[i]])  
 				#0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A_inter[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
 	#	}
 	
@@ -108,6 +112,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	return(sum(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
 }
+  # passed
 
 rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
 	require(IsingSampler)
@@ -118,11 +123,11 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	#eta_inter = theta$eta_inter
 	spp_mat = theta$spp_mat
 	nspp = nrow(spp_mat)
-	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra)
+	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
 	#if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
 		eta_inter = theta$eta_inter # assume there is a 
 		d_inter = theta$d_inter
-		A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter) # graph among islands, if apply, distM should only contain graph 
+		A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	#	}
 	#else{
 	#	A_ex=0*A_in
@@ -140,7 +145,9 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	
 	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method)
 	return(t(Z))
+	# test for 2spp case, passed 3/18/2019
 }
+  # passed
 
 Pdet_multi = function(detmat, envX,detX, beta_det, nspp){ # likelihood given Z and detections If have repeat, use this multiple times.
 
