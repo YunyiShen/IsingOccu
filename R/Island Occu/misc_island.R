@@ -32,7 +32,7 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
   }
   return(A)
 } 
-  # passed
+  # passed 2019/3/18
 
 getfullGraph = function(A_ex,A_in,spp_mat){
   nspp = nrow(spp_mat)
@@ -51,7 +51,7 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]]
   return(A)
 } 
-  # passed
+  # passed 2019/3/18
 
 mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp"){
 	A = 0*dist_mainland
@@ -66,7 +66,7 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 	return(A)
 	# test for 2spp passed 3/18/2019
 }
-  # passed
+  # passed 2019/3/18
 
 Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
 	beta_occu = theta$beta_occu # this will be a matrix for cols are species
@@ -112,7 +112,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	return(sum(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
 }
-  # passed
+  # passed 2019/3/18
 
 rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
 	require(IsingSampler)
@@ -147,7 +147,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
-  # passed
+  # passed 2019/3/18
 
 Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z and detections If have repeat, use this multiple times.
 	# this is still 2 spp case, need to change to multi case
@@ -183,7 +183,7 @@ Sample_detection = function(nrep,nperiod,envX,detX,beta_det,nspp){
   }
   return(detmat)
 }
-  # passed
+  # passed 2019/3/18
 
 IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
 	nspp = nrow(theta$spp_mat)
@@ -200,7 +200,7 @@ IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland
 	}
 	return(negPot+logLdata)
 }
-  # passed
+  # passed 2019/3/18
 
 Moller.ratio = function(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
@@ -235,4 +235,5 @@ Moller.ratio = function(theta_curr ,theta_prop
 
 	return(min(1,exp(log_MH_ratio)))
 }
+  # passed 2019/3/18
 
