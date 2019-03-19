@@ -83,7 +83,8 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	#zeros = matrix(0,nrow=nsites,ncol=ncov)
 	#beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
 	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	thr = envX%*%beta_occu # a matrix
+	#thr = envX%*%beta_occu # a matrix
+	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#rm(Xfull)
 	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra,spp_mat)
 	negPot = matrix(0,1,nrep)
@@ -136,8 +137,8 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	#	}
 	A=getfullGraph(A_ex,A_in,spp_mat)
 	
-	thr = envX %*% beta_occu
-	thr = matrix(thr,length(thr),1)
+	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
+	#thr = matrix(thr,length(thr),1)
 	thr_mainland = 0*thr
 	for(i in 1:nspp){
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
@@ -173,17 +174,17 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
   # passed, will return a matrix, with nrow = nspp*nsite, ncol = nperiod,
   #  1:nsite for species 1 and 1:nsite+(i-1)*nsite rows for species i.
 
-Sample_detection = function(nrep,nperiod,envX,detX,beta_det,nspp){
+Sample_detection = function(nrep,nperiod,envX,detX,beta_det,nspp,Z){
   detmat = list()
   nsite = nrow(envX)
   for(i in 1:nrep){
     r = matrix( runif(nperiod * nspp * nsite) , nspp * nsite,nperiod )
     Pdet = Pdet_multi(nperiod, envX,detX[[i]], beta_det, nspp)
-    detmat[[i]] = 1.0 * (Pdet<=r)
+    detmat[[i]] = apply(  1.0 * (Pdet<=r),1,function(det,Z){det*Z},Z=(Z[,i]==1) )  
   }
   return(detmat)
 }
-  # passed 2019/3/18
+  # passed 2019/3/19
 
 IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
 	nspp = nrow(theta$spp_mat)
