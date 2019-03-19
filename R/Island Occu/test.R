@@ -77,8 +77,8 @@ detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_
 
 
 tempdata = data.frame(island[,6:7],
-                      Z_1 = detmat[[1]][1:155,1],
-                      Z_2 = detmat[[1]][156:310,1])
+                      Z_1 = detmat[[1]][1:155,2],
+                      Z_2 = detmat[[1]][156:310,2])
 
 ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
   geom_point()
@@ -121,7 +121,7 @@ vars_prop = list( beta_occu = rep(1e-5,2 * ncol(envX))
 
 
 kk = IsingOccu.fit.Moller.sampler(envX,detmat,detX
-                              , mcmc.save = 2000, burn.in = 100 
+                              , mcmc.save = 500, burn.in = 100 
                               , vars_prop = vars_prop
                               , vars_prior = 2000
                               , Zprop_rate = 0

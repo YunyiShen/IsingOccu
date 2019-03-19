@@ -86,6 +86,10 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	#thr = envX%*%beta_occu # a matrix
 	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#rm(Xfull)
+	thr_mainland = 0*thr
+	for(i in 1:nspp){
+	  thr_mainland[,i ] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	}
 	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra,spp_mat)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
@@ -113,7 +117,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	return(sum(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
 }
-  # passed 2019/3/18
+  # passed 2019/3/19
 
 rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
 	require(IsingSampler)
@@ -137,7 +141,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	#	}
 	A=getfullGraph(A_ex,A_in,spp_mat)
 	
-	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
+	thr = apply(matrix(1:nspp),2, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#thr = matrix(thr,length(thr),1)
 	thr_mainland = 0*thr
 	for(i in 1:nspp){
@@ -180,7 +184,7 @@ Sample_detection = function(nrep,nperiod,envX,detX,beta_det,nspp,Z){
   for(i in 1:nrep){
     r = matrix( runif(nperiod * nspp * nsite) , nspp * nsite,nperiod )
     Pdet = Pdet_multi(nperiod, envX,detX[[i]], beta_det, nspp)
-    detmat[[i]] = apply(  1.0 * (Pdet<=r),1,function(det,Z){det*Z},Z=(Z[,i]==1) )  
+    detmat[[i]] = apply(  1.0 * (r<Pdet),2,function(det,Z){det*Z},Z=(Z[,i]==1) )  
   }
   return(detmat)
 }
