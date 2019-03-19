@@ -121,7 +121,7 @@ vars_prop = list( beta_occu = rep(1e-6,2 * ncol(envX))
 
 
 kk = IsingOccu.fit.Moller.sampler(envX,detmat,detX
-                              , mcmc.save = 200, burn.in = 200
+                              , mcmc.save = 5000, burn.in = 500
                               , vars_prop = vars_prop
                               , vars_prior = 2000
                               , Zprop_rate = 0
