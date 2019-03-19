@@ -67,38 +67,39 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	timing = proc.time()
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 
-		theta_prop = theta_curr
-		for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
-			theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
-		}
-
-		theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
-		theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-		#propose Z from uniform distribution 
-		Z_temp_prop = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
-		# propose x, from the likelihood
-		# x_prop = IsingOccu_multispp_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX,nspp)
-		# MH ratio
-		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
-						,Z_curr ,Z_curr
-						,Z_temp_curr, Z_temp_prop
-						,detmat
-						,vars_prior
-						,theta_tuta
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
-		r = runif(1)
-		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
-		if(r<=Moller_ratio){
-			theta_curr=theta_prop
-			#Z_curr = Z_prop
-			# x_curr = x_prop
-			Z_temp_curr = Z_temp_prop
-			accept_theta_occu = accept_theta_occu + 1
-		}
-		
+	  theta_prop = theta_curr
+	  for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
+	    theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
+	  }
+	  
+	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
+	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
+	  #propose Z from uniform distribution 
+	  Z_temp_prop = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
+	  # propose x, from the likelihood
+	  # x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
+	  # MH ratio
+	  
+	  Moller_ratio=Moller.ratio(theta_curr ,theta_prop
+	                            ,Z_curr ,Z_curr
+	                            ,Z_temp_curr, Z_temp_prop
+	                            ,detmat
+	                            ,vars_prior
+	                            ,theta_tuta
+	                            ,X, detX
+	                            ,distM,link_map
+	                            ,dist_mainland , link_mainland
+	                            ,int_range_intra,int_range_inter)
+	  r = runif(1)
+	  if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
+	  if(r<=Moller_ratio){
+	    theta_curr=theta_prop
+	    #Z_curr = Z_prop
+	    # x_curr = x_prop
+	    Z_temp_curr = Z_temp_prop
+	    accept_theta_occu = accept_theta_occu + 1
+	  }
+	  
 		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
 		
 		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
@@ -239,7 +240,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		  theta_curr=theta_prop
 		  #Z_curr = Z_prop
 		  # x_curr = x_prop
-		  Z_temp_curr = Z_temp_prop
+		  #Z_temp_curr = Z_temp_prop
 		  accept_theta_det = accept_theta_det + 1
 		}
 		

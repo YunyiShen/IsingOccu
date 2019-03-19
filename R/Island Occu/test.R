@@ -31,7 +31,7 @@ envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(0,0),
              beta_det = c(0,1,-1,0,1,-1),
-             eta_intra = c(.15,.15),
+             eta_intra = c(.2,.2),
              eta_inter = c(.3,.3),
              d_inter = c(.2,.2),
              spp_mat = -0.1 * spp_mat)
@@ -58,7 +58,7 @@ tempdata = data.frame(island[,6:7],
 ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
   geom_point()
 
-Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_sample)
+Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",matrix(Z_sample[,2]))
 
 
 detX = list()
@@ -87,12 +87,12 @@ ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
 
 H = IsingOccu_multi.logL.innorm(theta, envX, distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z_sample ,detmat, detX)
 
-theta_prop = list(beta_occu = c(0.01,0.01),
+theta_prop = list(beta_occu = c(0.012,0.01),
                   beta_det = c(0,1,-1,0,1,-1),
-                  eta_intra = c(.15,.151),
+                  eta_intra = c(.21,.2),
                   eta_inter = c(.31,.3),
                   d_inter = c(.21,.2),
-                  spp_mat = -0.12 * spp_mat)
+                  spp_mat = -0.15 * spp_mat)
 Z_temp_prop = rIsingOccu_multi(theta_prop,
                                envX,
                                distM_full,link_map ,
@@ -111,17 +111,17 @@ M_ratio = Moller.ratio(theta_curr = theta ,theta_prop
                         ,int_range_intra="nn",int_range_inter="exp")
 
 nspp = 2
-vars_prop = list( beta_occu = rep(2.5e-5,2 * ncol(envX))
+vars_prop = list( beta_occu = rep(1e-6,2 * ncol(envX))
     ,beta_det = rep(1e-4,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
-    ,eta_intra = rep(2.5e-5,nspp)
-    ,eta_inter = rep(2.5e-5,nspp*(nspp-1)/2)
-    ,d_intra=rep(2.5e-5,nspp)
-    ,d_inter = rep(2.5e-5,nspp)
-    ,spp_mat = 2.5e-5)
+    ,eta_intra = rep(1e-6,nspp)
+    ,eta_inter = rep(1e-6,nspp*(nspp-1)/2)
+    #,d_intra=rep(2.5e-5,nspp)
+    ,d_inter = rep(1e-6,nspp)
+    ,spp_mat = 1e-6)
 
 
 kk = IsingOccu.fit.Moller.sampler(envX,detmat,detX
-                              , mcmc.save = 5000, burn.in = 1000 
+                              , mcmc.save = 200, burn.in = 200
                               , vars_prop = vars_prop
                               , vars_prior = 2000
                               , Zprop_rate = 0

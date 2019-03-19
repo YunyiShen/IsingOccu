@@ -86,15 +86,12 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	#thr = envX%*%beta_occu # a matrix
 	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#rm(Xfull)
-	thr_mainland = 0*thr
-	for(i in 1:nspp){
-	  thr_mainland[,i ] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	}
+	#thr_mainland = 0*thr
 	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra,spp_mat)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
 		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsites+ (i-1) * nsites,] + 
-			apply(Z_vec[1:nsites + (i-1) * nsites,],2,function(Z,A){.5*t(Z)%*%A%*%(Z)},A=A[[i]])
+			apply(as.matrix(Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%(Z)},A=A[[i]])
 	}
 	for(i in 2:nspp-1){
 		for (j in (i+1):nspp){
@@ -108,7 +105,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	for(i in 1:nspp){ # intralayer terms:
 			thr_mainland = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 			negPot = negPot  + t(as.matrix(thr_mainland))%*%Z_vec[1:nsites + (i-1) * nsites,] + #mainland part
-				apply(Z_vec[1:nsites + (i-1) * nsites,],2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter[[i]])  
+				apply(as.matrix( Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter[[i]])  
 				#0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A_inter[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
 	#	}
 	
