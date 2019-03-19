@@ -1,6 +1,6 @@
 IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 										,mcmc.save = 10000, burn.in = 10 
-										, vars_prior = 
+										, vars_prop = 
 											list(
 												beta_occu = rep(10000,ncol(X))
 												,beta_det = rep(1,ncol(detX))
@@ -11,7 +11,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 												,spp_mat = 1e-5
 												)
 												)
-										,vars_prop = 2000
+										,vars_prior = 2000
 										,Zprop_rate = .1
 										,distM,link_map
 										,dist_mainland , link_mainland
