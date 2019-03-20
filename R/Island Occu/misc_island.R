@@ -62,6 +62,10 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 		if(int_range_inter=="exp"){
 			A = eta*as.matrix(exp(-exp(d)*dist_mainland)) * (link_mainland)
 		}
+	  else{
+	    if(int_range_inter=="nn")
+	    A = eta * as.matrix(link_mainland)
+	  }
 	}
 	return(A)
 	# test for 2spp passed 3/18/2019
@@ -87,10 +91,10 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#rm(Xfull)
 	#thr_mainland = 0*thr
-	A = getintralayerGraph(distM,link_map$intra,eta_intra,d,int_range = int_range_intra,spp_mat)
+	A = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
-		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsites+ (i-1) * nsites,] + 
+		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsites + (i-1) * nsites,] + 
 			apply(as.matrix(Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%(Z)},A=A[[i]])
 	}
 	for(i in 2:nspp-1){
@@ -102,7 +106,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	eta_inter = theta$eta_inter # assume there is a 
 	d_inter = theta$d_inter
 	A_inter = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph among different islands, here will be exp for between two island
-	for(i in 1:nspp){ # intralayer terms:
+	for(i in 1:nspp){ # intralayer, inter island terms:
 			thr_mainland = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 			negPot = negPot  + t(as.matrix(thr_mainland))%*%Z_vec[1:nsites + (i-1) * nsites,] + #mainland part
 				apply(as.matrix( Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter[[i]])  
@@ -126,18 +130,10 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	spp_mat = theta$spp_mat
 	nspp = nrow(spp_mat)
 	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	#if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
-		eta_inter = theta$eta_inter # assume there is a 
-		d_inter = theta$d_inter
-		A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
-	#	}
-	#else{
-	#	A_ex=0*A_in
-		
-		
-	#	}
+	eta_inter = theta$eta_inter # assume there is a 
+	d_inter = theta$d_inter
+	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
-	
 	thr = apply(matrix(1:nspp),2, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#thr = matrix(thr,length(thr),1)
 	thr_mainland = 0*thr

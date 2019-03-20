@@ -20,15 +20,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	nsite = (nrow(distM))
 	
 	theta = ini
-	
-	# beta_occu = theta$beta_occu # this will be a matrix for cols are species
-	# beta_det = theta$beta_det
-	# eta_intra = theta$eta_intra # intra spp, intra island if apply
-	# d_intra = theta$d_intra
-	# eta_inter = theta$eta_inter
-	# d_inter = theta$d_inter # inter island scaling factor
-	# spp_mat = theta$spp_mat
-	
 	spp_neig = 1 *( spp_mat!=0 )
 	
 	nspp = nrow(spp_mat)
@@ -36,7 +27,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	
     theta_tuta=ini
 	theta_tuta = lapply(theta_tuta,as.matrix)
-	#names(theta_tuta) = ("beta_occu","beta_det","eta_intra","d","eta_inter")
 	theta.mcmc = list()
 	for(i in 1:length(ini)){
 	  theta.mcmc[[i]] = mcmc(matrix(nrow = (mcmc.save),ncol = length(ini[[i]])))
@@ -48,12 +38,10 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	
 	Z.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = nrow(Z)*nrep))
 	Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
-	Z_tuta = Z
 	
 	
-	Z_curr = Z_tuta
-	# x_curr = detmat
-	Z_temp_curr = Z_tuta
+	Z_curr = Z
+	Z_temp_curr = Z
 	
 	theta_curr = theta_tuta
 	cat("Burn in...\n")
@@ -74,10 +62,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	  
 	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-	  #propose Z from uniform distribution 
 	  Z_temp_prop = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
-	  # propose x, from the likelihood
-	  # x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
 	  # MH ratio
 	  
 	  Moller_ratio=Moller.ratio(theta_curr ,theta_prop
@@ -94,12 +79,12 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	  if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 	  if(r<=Moller_ratio){
 	    theta_curr=theta_prop
-	    #Z_curr = Z_prop
-	    # x_curr = x_prop
 	    Z_temp_curr = Z_temp_prop
 	    accept_theta_occu = accept_theta_occu + 1
 	  }
-	  
+	    
+		
+		theta_prop = theta_curr
 		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
 		
 		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
@@ -116,9 +101,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
-			#Z_curr = Z_prop
-			# x_curr = x_prop
-			#Z_temp_curr = Z_temp_prop
 			accept_theta_det = accept_theta_det + 1
 		}
 		
@@ -133,7 +115,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		}
 		
 		
-		#Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
 		Moller_ratio=Moller.ratio(theta_curr ,theta_curr
 						,Z_curr ,Z_prop
 						,Z_temp_curr, Z_temp_curr
@@ -147,7 +128,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		r = runif(1)
 		if(Moller_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
 		if(r<=Moller_ratio){
-			#theta_curr=theta_prop
 			Z_curr = Z_prop
 			accept_Z = accept_Z + 1
 		}
@@ -159,10 +139,8 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
-		  #if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
 		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
 		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
-		  #if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n\n")
 		  timing = proc.time()- timing
 		  cat("Time used in this 100:",timing[1],"s\n")
 		  cat("\n\n")
@@ -187,7 +165,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	
 	for(i in 1:(mcmc.save)){ # for to save 
 		#propose theta 
-		#theta_prop = rnorm(length(theta_curr),mean = theta_curr,sd = sqrt(vars_prop))
 	  theta_prop = theta_curr
 	  for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
 	    theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
@@ -195,12 +172,10 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	  
 	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-	  #propose Z from uniform distribution 
 		Z_temp_prop = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
-		# propose x, from the likelihood
-		# x_prop = IsingOccu_sample.detection(theta_prop, X, Z_temp_prop ,detmat, detX)
-		# MH ratio
+
 		
+		# MH ratio
 		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp_curr, Z_temp_prop
@@ -215,13 +190,12 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		if(Moller_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 		if(r<=Moller_ratio){
 			theta_curr=theta_prop
-			#Z_curr = Z_prop
-			# x_curr = x_prop
 			Z_temp_curr = Z_temp_prop
 			accept_theta_occu = accept_theta_occu + 1
 		}
 		
 		
+		theta_prop = theta_curr
 		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
 		
 		Moller_ratio=Moller.ratio(theta_curr ,theta_prop
@@ -238,9 +212,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		if(Moller_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
 		if(r<=Moller_ratio){
 		  theta_curr=theta_prop
-		  #Z_curr = Z_prop
-		  # x_curr = x_prop
-		  #Z_temp_curr = Z_temp_prop
 		  accept_theta_det = accept_theta_det + 1
 		}
 		
@@ -260,7 +231,6 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		}
 		
 		
-		#Z_prop = (Z_absolute==1) + (Z_absolute==-1) * ((runif(length(Z_absolute))>=0.5) * 2 - 1)
 		Moller_ratio=Moller.ratio(theta_curr ,theta_curr
 		                          ,Z_curr ,Z_prop
 		                          ,Z_temp_curr, Z_temp_curr

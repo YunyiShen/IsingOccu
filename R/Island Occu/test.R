@@ -31,13 +31,13 @@ envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(0,0),
              beta_det = c(0,1,-1,0,1,-1),
-             eta_intra = c(.2,.2),
-             eta_inter = c(.3,.3),
-             d_inter = c(.2,.2),
-             spp_mat = -0.1 * spp_mat)
+             eta_intra = c(.15,.15),
+             eta_inter = c(.2,.2),
+             #d_inter = c(.2,.2),
+             spp_mat = -0.15 * spp_mat)
 
 link_map = 
-  list(inter = link_outer,
+  list(inter = link_outer * exp(-distM_full),
        intra = link_inner)
 
 nrep = 4
@@ -45,8 +45,8 @@ set.seed(42)
 Z_sample = rIsingOccu_multi(theta,
                             envX,
                             distM_full,link_map ,
-                            distM_mainland,link_mainland,
-                            int_range_intra="nn",int_range_inter="exp",
+                            distM_mainland,link_mainland * exp(-distM_mainland) ,
+                            int_range_intra="nn",int_range_inter="nn",
                             n=nrep,method = "CFTP",nIter = 100)
 
 require(ggplot2)
@@ -55,10 +55,10 @@ tempdata = data.frame(island[,6:7],
                       Z_1 = Z_sample[1:155,1],
                       Z_2 = Z_sample[156:310,1])
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_2))+
   geom_point()
 
-Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",matrix(Z_sample[,2]))
+Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland*exp(-distM_mainland),int_range_intra="nn",int_range_inter="nn",(Z_sample))
 
 
 detX = list()
@@ -85,19 +85,19 @@ ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
 
 
 
-H = IsingOccu_multi.logL.innorm(theta, envX, distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z_sample ,detmat, detX)
+H = IsingOccu_multi.logL.innorm(theta, envX, distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="nn", Z_sample ,detmat, detX)
 
 theta_prop = list(beta_occu = c(0.012,0.01),
                   beta_det = c(0,1,-1,0,1,-1),
                   eta_intra = c(.21,.2),
-                  eta_inter = c(.31,.3),
-                  d_inter = c(.21,.2),
-                  spp_mat = -0.15 * spp_mat)
+                  eta_inter = c(.15,.15),
+                  #d_inter = c(.21,.2),
+                  spp_mat = -0.18 * spp_mat)
 Z_temp_prop = rIsingOccu_multi(theta_prop,
                                envX,
                                distM_full,link_map ,
-                               distM_mainland,link_mainland,
-                               int_range_intra="nn",int_range_inter="exp",
+                               distM_mainland,link_mainland * exp(-distM_mainland),
+                               int_range_intra="nn",int_range_inter="nn",
                                n=nrep,method = "CFTP",nIter = 100)
 M_ratio = Moller.ratio(theta_curr = theta ,theta_prop
                         ,Z_curr = Z_sample ,Z_prop = Z_sample
@@ -107,27 +107,27 @@ M_ratio = Moller.ratio(theta_curr = theta ,theta_prop
                         ,theta_tuta = theta
                         ,envX, detX
                         ,distM_full,link_map
-                        ,distM_mainland,link_mainland
-                        ,int_range_intra="nn",int_range_inter="exp")
+                        ,distM_mainland,link_mainland * exp(-distM_mainland)
+                        ,int_range_intra="nn",int_range_inter="nn")
 
 nspp = 2
-vars_prop = list( beta_occu = rep(1e-6,2 * ncol(envX))
-    ,beta_det = rep(1e-4,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
-    ,eta_intra = rep(1e-6,nspp)
-    ,eta_inter = rep(1e-6,nspp*(nspp-1)/2)
+vars_prop = list( beta_occu = rep(6.4e-6,2 * ncol(envX))
+    ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
+    ,eta_intra = rep(6.4e-6,nspp)
+    ,eta_inter = rep(6.4e-6,nspp*(nspp-1)/2)
     #,d_intra=rep(2.5e-5,nspp)
-    ,d_inter = rep(1e-6,nspp)
-    ,spp_mat = 1e-6)
+    #,d_inter = rep(1e-4,nspp)
+    ,spp_mat = 6.4e-6)
 
 
 kk = IsingOccu.fit.Moller.sampler(envX,detmat,detX
-                              , mcmc.save = 5000, burn.in = 500
+                              , mcmc.save = 5000, burn.in = 1000
                               , vars_prop = vars_prop
-                              , vars_prior = 2000
+                              , vars_prior = 200000
                               , Zprop_rate = 0
                               , distM=distM_full,link_map=link_map
-                              , distM_mainland , link_mainland
-                              , int_range_intra="nn",int_range_inter="exp"
+                              , distM_mainland , link_mainland * exp(-distM_mainland)
+                              , int_range_intra="nn",int_range_inter="nn"
                               , Z = Z_sample
                               , seed = 42
                               , ini = theta)
