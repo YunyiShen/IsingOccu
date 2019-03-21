@@ -111,17 +111,17 @@ M_ratio = Moller.ratio(theta_curr = theta ,theta_prop
                         ,int_range_intra="nn",int_range_inter="nn")
 
 nspp = 2
-vars_prop = list( beta_occu = rep(6.4e-6,2 * ncol(envX))
+vars_prop = list( beta_occu = rep(1e-6,2 * ncol(envX))
     ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
-    ,eta_intra = rep(6.4e-6,nspp)
-    ,eta_inter = rep(6.4e-6,nspp*(nspp-1)/2)
+    ,eta_intra = rep(1e-5,nspp)
+    ,eta_inter = rep(1e-5,nspp*(nspp-1)/2)
     #,d_intra=rep(2.5e-5,nspp)
     #,d_inter = rep(1e-4,nspp)
-    ,spp_mat = 6.4e-6)
+    ,spp_mat = 1e-5)
 
 
 kk = IsingOccu.fit.Moller.sampler(envX,detmat,detX
-                              , mcmc.save = 5000, burn.in = 1000
+                              , mcmc.save = 50000, burn.in = 1000
                               , vars_prop = vars_prop
                               , vars_prior = 200000
                               , Zprop_rate = 0
