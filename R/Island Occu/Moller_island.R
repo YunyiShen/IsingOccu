@@ -1,5 +1,5 @@
 IsingOccu.fit.Moller.sampler = function(X,detmat,detX
-										,mcmc.save = 10000, burn.in = 10 
+										,mcmc.iter = 10000, burn.in = 10 
 										, vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
 										                    ,beta_det = rep(1e-5,2 * (ncol(detX[[1]][[1]]) + ncol(X)) )
 										                    ,eta_intra = rep(1e-5,nspp)
@@ -12,7 +12,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 										,distM,link_map
 										,dist_mainland , link_mainland
 										,int_range_intra="nn",int_range_inter="exp"
-										,Z,seed = 42,ini){ # ini has same formate of theta
+										,Z,seed = 42,ini,thin.by = 100){ # ini has same formate of theta
 	require(coda)
 	source("misc_island.R")
 	cat("Initializing...\n\n")
@@ -29,14 +29,14 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	theta_tuta = lapply(theta_tuta,as.matrix)
 	theta.mcmc = list()
 	for(i in 1:length(ini)){
-	  theta.mcmc[[i]] = mcmc(matrix(nrow = (mcmc.save),ncol = length(ini[[i]])))
+	  theta.mcmc[[i]] = mcmc(matrix(nrow = floor(mcmc.iter/thin.by),ncol = length(ini[[i]])),thin = thin.by)
 	  
 	}
 	
 	names(theta.mcmc) = names(ini)
 	
 	
-	Z.mcmc = mcmc(matrix(nrow = (mcmc.save),ncol = nrow(Z)*nrep))
+	Z.mcmc = mcmc(matrix(nrow = floor(mcmc.iter/thin.by),ncol = nrow(Z)*nrep),thin = thin.by)
 	Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
 	
 	
@@ -163,7 +163,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 	low_acc_theta_det = 0
 	timing = proc.time()
 	
-	for(i in 1:(mcmc.save)){ # for to save 
+	for(i in 1:(mcmc.iter)){ # for to save 
 		#propose theta 
 	  theta_prop = theta_curr
 	  for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
@@ -215,10 +215,11 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		  accept_theta_det = accept_theta_det + 1
 		}
 		
-		for(j in 1:length(theta_curr)){
-			theta.mcmc[[j]][i,] =as.vector( theta_curr[[j]])
-		} # saving the results
-		
+		if(i %% thin.by==0){
+	  	for(j in 1:length(theta_curr)){
+		  	theta.mcmc[[j]][i/thin.by,] =as.vector( theta_curr[[j]])
+	  	} # saving the results
+		}
 		
 		
 		
@@ -249,7 +250,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
 		  accept_Z = accept_Z + 1
 		}
 		
-		Z.mcmc[i,]=Z_curr
+		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%100 == 0) { # reporting
 		  cat("Sampling iteration: #",i,"\n")
 		  cat("# of Z proposed: ",propose_Z,"\n")
@@ -277,7 +278,7 @@ IsingOccu.fit.Moller.sampler = function(X,detmat,detX
   
 	theta.mean =lapply(theta.mcmc,function(thetaa){ apply(thetaa,2,mean)})
   
-	res = list(theta.mcmc = theta.mcmc,means = theta.mean,vars=vars, interaction.range =list( int_range_inter,int_range_intra), envX=X)
+	res = list(theta.mcmc = theta.mcmc,means = theta.mean,Z.mcmc = Z.mcmc,vars=vars_prop, interaction.range =list( int_range_inter,int_range_intra), envX=X)
 	class(res)="IsingOccu_multispp.Moller"
 	return(res)
 }
