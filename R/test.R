@@ -31,7 +31,7 @@ spp_mat = matrix(c(0,1,1,0),2,2)
 envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(0,0),
-             beta_det = c(-.5,1,-1,-.5,1,-1),
+             beta_det = c(0,1,-1,0,1,-1),
              eta_intra = c(.15,.15),
              eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
@@ -92,7 +92,7 @@ H = IsingOccu_multi.logL.innorm(theta, envX, distM_full,link_map,distM_mainland,
 nspp = 2
 
 vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
-                  ,beta_det = rep(1e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
+                  ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
                   ,eta_intra = rep(1e-4,nspp)
                   ,eta_inter = rep(1e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
@@ -101,7 +101,7 @@ vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
 
 
 kk = IsingOccu.fit.Murray.sampler(envX,detmat,detX
-                                  , mcmc.iter = 5e4, burn.in = 5e3
+                                  , mcmc.iter = 5e3, burn.in = 5e2
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = .15
@@ -110,7 +110,7 @@ kk = IsingOccu.fit.Murray.sampler(envX,detmat,detX
                                   , int_range_intra="nn",int_range_inter="nn"
                                   , Z = Z_sample
                                   , seed = 42
-                                  , ini = theta,thin.by = 50)
+                                  , ini = theta,thin.by = 1)
 
 
 
