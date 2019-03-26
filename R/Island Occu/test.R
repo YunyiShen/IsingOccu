@@ -1,9 +1,10 @@
 source("misc_island.R")
 source("Moller_island.R")
+source("Murray_island.R")
 
 ###### graph data ######
-link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
-#link = "E:/UW Lab jobs/2. ISING Occupancy model/2. RFIBMs MCMC/RFIBM/island/"
+#link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
+link = "E:/UW Lab jobs/2. ISING Occupancy model/2. RFIBMs MCMC/RFIBM/island/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
@@ -87,47 +88,30 @@ ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
 
 H = IsingOccu_multi.logL.innorm(theta, envX, distM_full,link_map,distM_mainland,link_mainland,int_range_intra="nn",int_range_inter="nn", Z_sample ,detmat, detX)
 
-theta_prop = list(beta_occu = c(0.012,0.01),
-                  beta_det = c(0,1,-1,0,1,-1),
-                  eta_intra = c(.21,.2),
-                  eta_inter = c(.15,.15),
-                  #d_inter = c(.21,.2),
-                  spp_mat = -0.18 * spp_mat)
-Z_temp_prop = rIsingOccu_multi(theta_prop,
-                               envX,
-                               distM_full,link_map ,
-                               distM_mainland,link_mainland * exp(-distM_mainland),
-                               int_range_intra="nn",int_range_inter="nn",
-                               n=nrep,method = "CFTP",nIter = 100)
-M_ratio = Moller.ratio(theta_curr = theta ,theta_prop
-                        ,Z_curr = Z_sample ,Z_prop = Z_sample
-                        ,Z_temp_curr = Z_sample, Z_temp_prop
-                        ,detmat
-                        ,vars_prior = 10000
-                        ,theta_tuta = theta
-                        ,envX, detX
-                        ,distM_full,link_map
-                        ,distM_mainland,link_mainland * exp(-distM_mainland)
-                        ,int_range_intra="nn",int_range_inter="nn")
 
 nspp = 2
-vars_prop = list( beta_occu = rep(1e-6,nspp * ncol(envX))
-    ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
-    ,eta_intra = rep(4e-6,nspp)
-    ,eta_inter = rep(4e-6,nspp)
-    #,d_intra=rep(2.5e-5,nspp)
-    #,d_inter = rep(1e-4,nspp)
-    ,spp_mat = 1e-6)
+
+vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
+                  ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
+                  ,eta_intra = rep(1e-4,nspp)
+                  ,eta_inter = rep(1e-4,nspp)
+                  #,d_intra=rep(2.5e-5,nspp)
+                  #,d_inter = rep(1e-4,nspp)
+                  ,spp_mat = 1e-4)
 
 
-kk = IsingOccu.fit.Moller.sampler(envX,detmat,detX
-                              , mcmc.iter = 2e5, burn.in = 3e3
-                              , vars_prop = vars_prop
-                              , vars_prior = 200000
-                              , Zprop_rate = 0
-                              , distM=distM_full,link_map=link_map
-                              , distM_mainland , link_mainland * exp(-distM_mainland)
-                              , int_range_intra="nn",int_range_inter="nn"
-                              , Z = Z_sample
-                              , seed = 42
-                              , ini = theta,thin.by = 100)
+kk = IsingOccu.fit.Murray.sampler(envX,detmat,detX
+                                  , mcmc.iter = 2e3, burn.in = 5e2
+                                  , vars_prop = vars_prop
+                                  , vars_prior = 200000
+                                  , Zprop_rate = 0
+                                  , distM=distM_full,link_map=link_map
+                                  , distM_mainland , link_mainland * exp(-distM_mainland)
+                                  , int_range_intra="nn",int_range_inter="nn"
+                                  , Z = Z_sample
+                                  , seed = 42
+                                  , ini = theta,thin.by = 1)
+
+
+
+

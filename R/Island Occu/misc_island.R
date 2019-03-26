@@ -235,3 +235,36 @@ Moller.ratio = function(theta_curr ,theta_prop
 }
   # passed 2019/3/18
 
+Murray.ratio = function(theta_curr ,theta_prop
+						,Z_curr ,Z_prop
+						,Z_temp 
+						,detmat
+						,vars_prior
+						,envX, detX
+						,distM,link_map
+						,dist_mainland,link_mainland
+						,int_range_intra="nn",int_range_inter="exp"){
+	#log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_prop)
+	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
+	log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
+	log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
+	#log_pi_theta_prop = sum(log_pi_theta_prop)
+	#prior of proposed theta
+	log_q_theta_Z_prop_detmat = IsingOccu_multi.logL.innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
+	log_H_theta_curr_Z_temp = Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp)
+
+	#### end of the upper part, start the lower
+
+	#log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
+	log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
+	log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
+	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+	log_H_theta_prop_Z_temp = Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp)
+
+	log_MH_ratio = (log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_curr_Z_temp)-
+				   (log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_prop_Z_temp)
+
+	return(min(1,exp(log_MH_ratio)))
+}
+
