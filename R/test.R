@@ -1,9 +1,9 @@
 source("misc_island.R")
-source("Moller_island.R")
+#source("Moller_island.R")
 source("Murray_island.R")
 
 ###### graph data ######
-#link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
+link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
 link = "E:/UW Lab jobs/2. ISING Occupancy model/2. RFIBMs MCMC/RFIBM/island/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
@@ -101,7 +101,7 @@ vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
 
 
 kk = IsingOccu.fit.Murray.sampler(envX,detmat,detX
-                                  , mcmc.iter = 2e3, burn.in = 5e2
+                                  , mcmc.iter = 5e4, burn.in = 5e3
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = .15
@@ -110,7 +110,7 @@ kk = IsingOccu.fit.Murray.sampler(envX,detmat,detX
                                   , int_range_intra="nn",int_range_inter="nn"
                                   , Z = Z_sample
                                   , seed = 42
-                                  , ini = theta,thin.by = 1)
+                                  , ini = theta,thin.by = 50)
 
 
 
