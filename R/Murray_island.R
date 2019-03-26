@@ -279,7 +279,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 	theta.mean =lapply(theta.mcmc,function(thetaa){ apply(thetaa,2,mean)})
   
 	res = list(theta.mcmc = theta.mcmc,means = theta.mean,Z.mcmc = Z.mcmc,vars=vars_prop, interaction.range =list( int_range_inter,int_range_intra), envX=X)
-	class(res)="IsingOccu_multispp.Moller"
+	class(res)="IsingOccu_island"
 	return(res)
 }
 
