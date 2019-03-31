@@ -100,7 +100,8 @@ vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
                   ,spp_mat = 1e-4)
 
 
-kk = IsingOccu.fit.Murray.sampler(envX,detmat,detX
+kk = IsingOccu.fit.Murray.sampler(envX,detmat,no_obs = 0*Z_sample
+                                  , detX
                                   , mcmc.iter = 5e3, burn.in = 5e2
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000

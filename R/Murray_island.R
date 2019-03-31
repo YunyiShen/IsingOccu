@@ -1,4 +1,4 @@
-IsingOccu.fit.Murray.sampler = function(X,detmat,detX
+IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 										,mcmc.iter = 10000, burn.in = 10 
 										, vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
 										                    ,beta_det = rep(1e-5,2 * (ncol(detX[[1]][[1]]) + ncol(X)) )
@@ -13,9 +13,11 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 										,dist_mainland , link_mainland
 										,int_range_intra="nn",int_range_inter="exp"
 										,Z,seed = 42,ini,thin.by = 100,report.by=100){ # ini has same formate of theta
-	require(coda)
-	source("misc_island.R")
+	
 	cat("Initializing...\n\n")
+	require(coda)
+	require(IsingSampler)
+	source("misc_island.R")
 	set.seed(seed)
 	nsite = (nrow(distM))
 	
@@ -68,7 +70,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 	  Murray_ratio=Murray.ratio(theta_curr ,theta_prop
 	                            ,Z_curr ,Z_curr
 	                            ,Z_temp
-	                            ,detmat
+	                            ,detmat,no_obs
 	                            ,vars_prior
 	                             
 	                            ,X, detX
@@ -90,7 +92,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 		Murray_ratio=Murray.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp
-						,detmat
+						,detmat,no_obs
 						,vars_prior
 						 
 						,X, detX
@@ -118,7 +120,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 		Murray_ratio=Murray.ratio(theta_curr ,theta_curr
 						,Z_curr ,Z_prop
 						,Z_temp
-						,detmat
+						,detmat,no_obs
 						,vars_prior
 						 
 						,X, detX
@@ -179,7 +181,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 		Murray_ratio=Murray.ratio(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp
-						,detmat
+						,detmat,no_obs
 						,vars_prior
 						 
 						,X, detX
@@ -201,7 +203,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 		Murray_ratio=Murray.ratio(theta_curr ,theta_prop
 		                          ,Z_curr ,Z_curr
 		                          ,Z_temp
-		                          ,detmat
+		                          ,detmat,no_obs
 		                          ,vars_prior
 		                           
 		                          ,X, detX
@@ -235,7 +237,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 		Murray_ratio=Murray.ratio(theta_curr ,theta_curr
 		                          ,Z_curr ,Z_prop
 		                          ,Z_temp
-		                          ,detmat
+		                          ,detmat,no_obs
 		                          ,vars_prior
 		                           
 		                          ,X, detX
