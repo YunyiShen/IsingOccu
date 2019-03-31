@@ -70,12 +70,16 @@ for(j in 1:nrep){
     temp = matrix(runif(155 * 2),nrow = 155,ncol = 2)
     detX[[j]][[i]] = temp
   }
-}
+} # detX should be a list with length of # of repeats, with each element has a list has length of nperiod 
+  #    then in the second level list, it is a matrix with nrow = site ncol = ncov, 
 
 Pdet = Pdet_multi(nperiod, envX,detX[[1]], theta$beta_det, nspp=nrow(spp_mat))
 
 detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
-
+# detmat should be a list with length nrep, each element is a matrix with nrow=nspp*nsite, ncol = nperiod
+#  if there is no detection history for a site, simple give all 0, and mark the site in no_obs as 1
+#  makesure the order of species should be same as spp_mat, say if 1:nsite is 1st species, in spp_mat the first row
+#   (certainly also first col) should be the same species
 
 tempdata = data.frame(island[,6:7],
                       Z_1 = detmat[[1]][1:155,2],
@@ -99,6 +103,7 @@ vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-4)
 
+Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
 
 kk = IsingOccu.fit.Murray.sampler(envX,detmat,no_obs = 0*Z_sample
                                   , detX
@@ -109,7 +114,8 @@ kk = IsingOccu.fit.Murray.sampler(envX,detmat,no_obs = 0*Z_sample
                                   , distM=distM_full,link_map=link_map
                                   , distM_mainland , link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  , Z = Z_sample
+                                  , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
+                                  #, Z = Z_absolute
                                   , seed = 42
                                   , ini = theta,thin.by = 1)
 
