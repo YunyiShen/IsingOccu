@@ -12,7 +12,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 										,distM,link_map
 										,dist_mainland , link_mainland
 										,int_range_intra="nn",int_range_inter="exp"
-										,Z,seed = 42,ini,thin.by = 100){ # ini has same formate of theta
+										,Z,seed = 42,ini,thin.by = 100,report.by=100){ # ini has same formate of theta
 	require(coda)
 	source("misc_island.R")
 	cat("Initializing...\n\n")
@@ -131,7 +131,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 			Z_curr = Z_prop
 			accept_Z = accept_Z + 1
 		}
-		if(i%%100 == 0) {
+		if(i%%report.by == 0) {
 		  
 		  cat("Burn in iteration: #",i,"\n")
 		  cat("# of Z proposed: ",propose_Z,"\n")
@@ -251,7 +251,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,detX
 		}
 		
 		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
-		if(i%%100 == 0) { # reporting
+		if(i%%report.by == 0) { # reporting
 		  cat("Sampling iteration: #",i,"\n")
 		  cat("# of Z proposed: ",propose_Z,"\n")
 		  cat("# of Z acceptance: " , accept_Z-(100-propose_Z),"\n")
