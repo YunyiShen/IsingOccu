@@ -103,21 +103,27 @@ vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-4)
 
+
 Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
 
-kk = IsingOccu.fit.Murray.sampler(envX,detmat,no_obs = 0*Z_sample
-                                  , detX
-                                  , mcmc.iter = 5e3, burn.in = 5e2
+no_obs = 0*Z_sample
+no_obs[11]=1
+
+
+kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
+                                  , detX =  detX
+                                  , mcmc.iter = 5e3, burn.in = 2e2
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = .15
+                                  , Zprop_rate = 0.1
+                                  , Zprop_rate_missing_obs = 0.3
                                   , distM=distM_full,link_map=link_map
-                                  , distM_mainland , link_mainland * exp(-distM_mainland)
+                                  , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
                                   , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1)
+                                  , ini = theta,thin.by = 1,report.by = 100)
 
 
 

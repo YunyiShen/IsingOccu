@@ -9,6 +9,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 										                    ,spp_mat = 1e-5)
 										,vars_prior = 2000
 										,Zprop_rate = .1
+										,Zprop_rate_missing_obs = .5
 										,distM,link_map
 										,dist_mainland , link_mainland
 										,int_range_intra="nn",int_range_inter="exp"
@@ -19,6 +20,17 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	require(IsingSampler)
 	source("misc_island.R")
 	set.seed(seed)
+	
+	missing_obs = sum(no_obs)>0
+	
+	cat("Setting for imperfect observation and missing sites:\n")
+	if(Zprop_rate==0) cat("    Perfect observation, given by Z\n")
+	else cat("    Imperfect observation, Z propose with rate",Zprop_rate,"\n")
+	if(!missing_obs) cat("    No missing observation site\n\n")
+	else cat("    Missing some sites, Z propose with rate",Zprop_rate_missing_obs,"\n\n")
+	
+	cat("MCMC reported every",report.by,"iterations and thinned by",thin.by,"\n\n")
+	
 	nsite = (nrow(distM))
 	
 	theta = ini
@@ -46,14 +58,19 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	Z_temp = Z
 	
 	theta_curr = ini
+	
 	cat("Burn in...\n")
+	
 	accept_Z = 0
+	accept_Z_missing_obs = 0
 	accept_theta_occu = 0
 	accept_theta_det = 0
 	low_acc_Z = 0
+	low_acc_Z_missing_obs = 0
 	low_acc_theta_occu = 0
 	low_acc_theta_det = 0
 	propose_Z = 0
+	propose_Z_missing_obs = 0
 	timing = proc.time()
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 
@@ -110,7 +127,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		
 		
 		if(runif(1)<Zprop_rate) {
-		  flip = sample(which(Z_absolute==-1),1)
+		  flip = sample(which(Z_absolute==-1 & no_obs==0),1)
 			Z_prop[flip]=-Z_prop[flip]
 			propose_Z = propose_Z + 1
 			
@@ -133,38 +150,81 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 			Z_curr = Z_prop
 			accept_Z = accept_Z + 1
 		}
+		
+		# for missing site
+		
+		if(missing_obs ){
+			if(runif(1)<Zprop_rate_missing_obs){
+				Z_prop = Z_curr
+				propose_Z_missing_obs = propose_Z_missing_obs + 1
+				flip = sample(which(no_obs==1),1)
+				Z_prop[flip]=-Z_prop[flip]
+			}
+			Murray_ratio=Murray.ratio(theta_curr ,theta_curr
+						,Z_curr ,Z_prop
+						,Z_temp
+						,detmat,no_obs
+						,vars_prior
+						,X, detX
+						,distM,link_map
+						,dist_mainland , link_mainland
+						,int_range_intra,int_range_inter)
+			r = runif(1)
+			if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
+			if(r<=Murray_ratio){
+				Z_curr = Z_prop
+				accept_Z_missing_obs = accept_Z_missing_obs + 1
+			}
+		}
+		
+		
+		
 		if(i%%report.by == 0) {
 		  
-		  cat("Burn in iteration: #",i,"\n")
-		  cat("# of Z proposed: ",propose_Z,"\n")
-		  cat("# of Z acceptance: " , accept_Z-(100-propose_Z),"\n")
-		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
-		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
-		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
-		  cat("# of detection theta acceptance:" , accept_theta_det,"\n")
-		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
+		  cat("Burn in iteration",i-report.by+1,"to",i,":\n\n")
+		  cat("    # of Z proposed for imperfect detection: ",propose_Z,"\n")
+		  cat("    # of Z acceptance for imperfect detection: " , accept_Z-(report.by-propose_Z),"\n")
+		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
+		  
+		  #cat("# of Z proposed for missing sites: ",propose_Z,"\n")
+		  if(missing_obs){
+		    cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
+			cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
+			cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
+		  }
+		  
+		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
+		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
+		  cat("    # of detection theta acceptance:" , accept_theta_det,"\n")
+		  cat("    # of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
 		  timing = proc.time()- timing
-		  cat("Time used in this 100:",timing[1],"s\n")
+		  cat("Time used in this" ,report.by,":",timing[1],"s\n")
 		  cat("\n\n")
-		  timing = proc.time()
 		  accept_Z = 0
-		  low_acc_Z = 0
+		  accept_Z_missing_obs = 0
 		  accept_theta_occu = 0
-		  low_acc_theta_occu = 0
 		  accept_theta_det = 0
+		  low_acc_Z = 0
+		  low_acc_Z_missing_obs = 0
+		  low_acc_theta_occu = 0
 		  low_acc_theta_det = 0
 		  propose_Z = 0
+		  propose_Z_missing_obs = 0
+		  timing = proc.time()
 		  }
 	}
 	cat("Start sampling...\n")
 	accept_Z = 0
-	low_acc_Z = 0
+	accept_Z_missing_obs = 0
 	accept_theta_occu = 0
-	low_acc_theta_occu = 0
 	accept_theta_det = 0
+	low_acc_Z = 0
+	low_acc_Z_missing_obs = 0
+	low_acc_theta_occu = 0
 	low_acc_theta_det = 0
-	timing = proc.time()
-	
+	propose_Z = 0
+	propose_Z_missing_obs = 0
+	timing = proc.time()	
 	for(i in 1:(mcmc.iter)){ # for to save 
 		#propose theta 
 	  theta_prop = theta_curr
@@ -252,29 +312,66 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		  accept_Z = accept_Z + 1
 		}
 		
+		
+		
+		if(missing_obs ){
+			if(runif(1)<Zprop_rate_missing_obs){
+				Z_prop = Z_curr
+				propose_Z_missing_obs = propose_Z_missing_obs + 1
+				flip = sample(which(no_obs==1),1)
+				Z_prop[flip]=-Z_prop[flip]
+			}
+			Murray_ratio=Murray.ratio(theta_curr ,theta_curr
+						,Z_curr ,Z_prop
+						,Z_temp
+						,detmat,no_obs
+						,vars_prior
+						,X, detX
+						,distM,link_map
+						,dist_mainland , link_mainland
+						,int_range_intra,int_range_inter)
+			r = runif(1)
+			if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
+			if(r<=Murray_ratio){
+				Z_curr = Z_prop
+				accept_Z_missing_obs = accept_Z_missing_obs + 1
+			}
+		}		
+		
 		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%report.by == 0) { # reporting
-		  cat("Sampling iteration: #",i,"\n")
-		  cat("# of Z proposed: ",propose_Z,"\n")
-		  cat("# of Z acceptance: " , accept_Z-(100-propose_Z),"\n")
-		  cat("# of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
-		  cat("# of occupancy theta acceptance: " , accept_theta_occu,"\n")
-		  cat("# of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
+		  cat("Sampling iteration",i-report.by+1,"to",i,":\n\n")
+		  cat("    # of Z proposed: ",propose_Z,"\n")
+		  cat("    # of Z acceptance: " , accept_Z-(report.by-propose_Z),"\n")
+		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
+		  
+		  if(missing_obs){
+		    cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
+			cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
+			cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
+		  }
+		  
+		  
+		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
+		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
 		  #if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
-		  cat("# of detection theta acceptance: " , accept_theta_det,"\n")
-		  cat("# of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
+		  cat("    # of detection theta acceptance: " , accept_theta_det,"\n")
+		  cat("    # of detection acceptance ratio <exp(-10): ",low_acc_theta_det,"\n\n")
 		  #if(accept_theta_det==0) cat(theta_curr[1:ncov_det + ncov],"\n\n")
 		  timing = proc.time()-timing
-		  cat("Time used in this 100:",timing[1],"s\n")
+		  cat("Time used in this" ,report.by,":",timing[1],"s\n")
 		  cat("\n\n")
-		  timing = proc.time()
 		  accept_Z = 0
-		  low_acc_Z = 0
+		  accept_Z_missing_obs = 0
 		  accept_theta_occu = 0
-		  low_acc_theta_occu = 0
 		  accept_theta_det = 0
+		  low_acc_Z = 0
+		  low_acc_Z_missing_obs = 0
+		  low_acc_theta_occu = 0
 		  low_acc_theta_det = 0
-		  propose_Z=0
+		  propose_Z = 0
+		  propose_Z_missing_obs = 0
+		  timing = proc.time()
 		  }
 	}
   
