@@ -120,8 +120,8 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  #, Z = Z_absolute
+                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
+                                  , Z = Z_absolute
                                   , seed = 42
                                   , ini = theta,thin.by = 1,report.by = 100)
 
