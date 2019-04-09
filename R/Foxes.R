@@ -25,14 +25,14 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-spp_mat = matrix(1,3,3)
+spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(0,0,0),
-             beta_det = c(0,1,-1,0,1,-1,0,1,-1),
-             eta_intra = c(.15,.15,.15),
-             eta_inter = c(.15,.15,.15),
+theta = list(beta_occu = c(0,0),
+             beta_det = c(0,1,-1,0,1,-1),
+             eta_intra = c(.15,.15),
+             eta_inter = c(.15,.15),
              #d_inter = c(.2,.2),
              spp_mat = -0.15 * spp_mat)
 
@@ -44,11 +44,20 @@ nrep = 2
 set.seed(42)
 
 rep1 = read.csv(paste0(link,"PA_Coyote_Foxes_1415.csv"),row.names=1)
-rep1_vec = apply((matrix(1:3)),2,function(k,rep1){t(rep1[,k])},rep1)
+rep1_vec = matrix(c(rep1$Coyote,rep1$Fox_red))
 rep2 = read.csv(paste0(link,"PA_Coyote_Foxes_1617.csv"),row.names=1)
-rep2_vec = apply(matrix(1:3),2,function(k,rep2){t(rep2[,k])},rep2)
+rep2_vec = matrix(c(rep2$Coyote,rep2$Fox_red))
 
 Z_sample = cbind(rep1_vec,rep2_vec)
+
+require(ggplot2)
+
+tempdata = data.frame(island[,6:7],
+                      Z_1 = rep1$Coyote,
+                      Z_2 = rep1_vec[1:155])
+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_2))+
+  geom_point()
 
 detX = list()
 nperiod = 3
@@ -62,21 +71,21 @@ for(j in 1:nrep){
   #    then in the second level list, it is a matrix with nrow = site ncol = ncov, 
 detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
 
-nspp = 3
-vars_prop = list( beta_occu = rep(1e-3,nspp * ncol(envX))
+nspp = 2
+vars_prop = list( beta_occu = rep(6.4e-3,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = rep(1e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 1e-3)
+                  ,spp_mat = 6.4e-3)
 
 no_obs = 0*Z_sample
-no_obs[c(150:155,150:155+155,150:155+310),]=1				  
+no_obs[c(150:155,150:155+155),]=1				  
 				  
 kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  detX
-                                  , mcmc.iter = 5e3, burn.in = 2e3
+                                  , mcmc.iter = 5e3, burn.in = 1e3
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0
@@ -87,6 +96,6 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100)
+                                  , ini = theta,thin.by = 1,report.by = 500)
 
 
