@@ -63,20 +63,20 @@ for(j in 1:nrep){
 detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
 
 nspp = 3
-vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
+vars_prop = list( beta_occu = rep(1e-3,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
-                  ,eta_intra = rep(1e-4,nspp)
-                  ,eta_inter = rep(1e-4,nspp)
+                  ,eta_intra = rep(1e-3,nspp)
+                  ,eta_inter = rep(1e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 1e-4)
+                  ,spp_mat = 1e-3)
 
 no_obs = 0*Z_sample
 no_obs[c(150:155,150:155+155,150:155+310),]=1				  
 				  
 kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  detX
-                                  , mcmc.iter = 1e4, burn.in = 2e3
+                                  , mcmc.iter = 5e3, burn.in = 2e3
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0
