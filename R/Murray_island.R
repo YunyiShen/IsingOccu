@@ -13,7 +13,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 										,distM,link_map
 										,dist_mainland , link_mainland
 										,int_range_intra="nn",int_range_inter="exp"
-										,Z,seed = 42,ini,thin.by = 100,report.by=100){ # ini has same formate of theta
+										,Z,seed = 42,ini,thin.by = 100,report.by=100,nIter=100){ # ini has same formate of theta
 	
 	cat("Initializing...\n\n")
 	require(coda)
@@ -81,7 +81,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	  
 	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-	  Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
+	  Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
 	  # MH ratio
 	  
 	  Murray_ratio=Murray.ratio(theta_curr ,theta_prop
@@ -234,7 +234,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	  
 	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-		Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = 100)
+		Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
 
 		
 		# MH ratio
