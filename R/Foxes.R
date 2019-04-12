@@ -30,7 +30,7 @@ distM_mainland = (distM_mainland-intcd)/normd
 spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
-envX = cbind(envX,as.matrix(squ)/max(squ))
+envX = cbind(envX,as.matrix(full$Squirrel))
 
 theta = list(beta_occu = c(0,0.1,0,0.1),
              beta_det = c(0,0,1,-1,0,0,1,-1),
@@ -105,6 +105,6 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 100)
+                                  , ini = theta,thin.by = 10,report.by = 100,nIter = 100)
 
 
