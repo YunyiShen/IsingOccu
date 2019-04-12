@@ -88,13 +88,15 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	#beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
 	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
 	#thr = envX%*%beta_occu # a matrix
-	thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
+	#thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
+	
 	#rm(Xfull)
 	#thr_mainland = 0*thr
 	A = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
 	negPot = matrix(0,1,nrep)
 	for(i in 1:nspp){ # intralayer terms:
-		negPot = negPot + t(as.matrix(thr[,i] ))%*%Z_vec[1:nsites + (i-1) * nsites,] + 
+	  thr = envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)]
+		negPot = negPot + t(as.matrix(thr ))%*%Z_vec[1:nsites + (i-1) * nsites,] + 
 			apply(as.matrix(Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%(Z)},A=A[[i]])
 	}
 	for(i in 2:nspp-1){
@@ -134,10 +136,12 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	d_inter = theta$d_inter
 	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
-	thr = apply(matrix(1:nspp),2, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
+	thr = matrix(0,nspp*ncol(envX))
+	#thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#thr = matrix(thr,length(thr),1)
-	thr_mainland = 0*thr
+	thr_mainland = thr
 	for(i in 1:nspp){
+	  thr[1:nsite + (i-1)*nsite] = envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)]
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	
