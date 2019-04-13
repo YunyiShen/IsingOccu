@@ -1,5 +1,5 @@
 
-par_name_occu = c("env_spp1","env_spp2","J_intra_spp1","J_intra_spp2","J_inter_spp1","J_inter_spp2","eta12")
+par_name_occu = c("1.Fisher_Intc","2.Fisher_Squ","3.Marten_intc","4.Marten_Squ","5.Fisher_J_intra","6.Marten_J_intra","7.Fisher_J_inter","8.Marten_J_inter","9.eta")
 par_occu = data.frame(matrix(0,nrow = 1,ncol = 4))
 par_occu = par_occu[-1,]
 names(par_occu) = c("mean","low","high","point")
@@ -36,7 +36,7 @@ par_occu_real = rbind(par_occu_real,temp)
 par_occu$name = par_name_occu
 par_occu_real$name = par_name_occu
 
-par_occu_plot = rbind(par_occu,par_occu_real)
+par_occu_plot = rbind(par_occu)#,par_occu_real)
 
 
 
@@ -58,7 +58,9 @@ ggplot(par_occu_plot,aes(x=name, y=mean, colour = point)) +
   xlab("parameter")
 
 
+## Some energy contribution:
 
+# env for two species
 
 
 # for det

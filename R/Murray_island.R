@@ -117,6 +117,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 						,dist_mainland , link_mainland
 						,int_range_intra,int_range_inter)
 		r = runif(1)
+		if(is.na(Murray_ratio)) Murray_ratio=exp(-15)
 		if(Murray_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
 		if(r<=Murray_ratio){
 			theta_curr=theta_prop
@@ -249,6 +250,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 						,dist_mainland , link_mainland
 						,int_range_intra,int_range_inter)
 		r = runif(1)
+		if(is.na(Murray_ratio)) Murray_ratio=exp(-15)
 		if(Murray_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 		if(r<=Murray_ratio){
 			theta_curr=theta_prop
