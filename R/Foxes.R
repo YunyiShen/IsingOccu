@@ -24,13 +24,14 @@ intcd = min(min((distM_mainland*link_mainland)[(distM_mainland*link_mainland)>0]
 normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 
 
+
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
 spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
-envX = cbind(envX,as.matrix(full$Squirrel))
+envX = cbind(envX,as.matrix(full$Squirrel+1)/2)
 
 theta = list(beta_occu = c(0,0.1,0,0.1),
              beta_det = c(0,0,1,-1,0,0,1,-1),
@@ -54,7 +55,7 @@ set.seed(42)
 #Z_sample = cbind(rep1_vec,rep2_vec)
 
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
-Z_sample = matrix(c(full$Fisher,full$Marten))
+Z_sample = matrix(c(full$Coyote,full$Fox_red))
 
 require(ggplot2)
 
@@ -81,7 +82,7 @@ for(j in 1:nrep){
 detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
 
 nspp = 2
-vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
                   ,eta_intra = rep(5e-4,nspp)
                   ,eta_inter = rep(5e-4,nspp)
