@@ -187,7 +187,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	
-	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method)
+	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method,CFTPretry = 1)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
@@ -197,7 +197,7 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
 	# this is still 2 spp case, need to change to multi case
 	#nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
 	# length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	detDesign = lapply(detX,function(x,y){ cbind(y,x)},y = envX) # This is the full design matrix list of detection probability p at time
+	detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
 	npardet = ncol(detDesign[[1]])
 	#Pdet = list()
 	#nrep = length(detX)

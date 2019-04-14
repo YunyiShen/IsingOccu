@@ -6,8 +6,11 @@ source("Murray_island.R")
 link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
 link = "E:/UW Lab jobs/2. ISING Occupancy model/2. RFIBMs MCMC/RFIBM/island/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
-squ = read.csv(paste0(link,"Squirrel2016.csv"),row.names = 1)+read.csv(paste0(link,"Squirrel2015.csv"),row.names = 1)
-squ = apply(as.matrix(squ),1,function(x){min(x,70)})
+squ = read.csv(paste0(link,"Squirrel2014.csv"),row.names = 1)+
+      read.csv(paste0(link,"Squirrel2015.csv"),row.names = 1)+
+      read.csv(paste0(link,"Squirrel2016.csv"),row.names = 1)+
+      read.csv(paste0(link,"Squirrel2017.csv"),row.names = 1)
+squ = squ/(read.csv(paste0(link,"cameradays.csv"),row.names = 1))
 
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
 #link_outer = as.matrix( read.csv("link_outer.csv",row.names = 1))
@@ -27,15 +30,18 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-spp_mat = matrix(1,2,2)
+full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
+
+spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
-envX = cbind(envX,as.matrix(full$Squirrel))
+#envX = cbind(envX,squ)
+#envX = as.matrix(envX)
 
-theta = list(beta_occu = c(0,0.1,0,0.1),
-             beta_det = c(0,0,1,-1,0,0,1,-1),
-             eta_intra = c(.15,.15),
-             eta_inter = c(.15,.15),
+theta = list(beta_occu = c(0,-0.1,0),
+             beta_det = c(0,0,1,-1,0,0,1,-1,0),
+             eta_intra = c(.15,.15,.15),
+             eta_inter = c(.15,.15,.15),
              #d_inter = c(.2,.2),
              spp_mat = -0.15 * spp_mat)
 
@@ -54,18 +60,18 @@ set.seed(42)
 #Z_sample = cbind(rep1_vec,rep2_vec)
 
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
-Z_sample = matrix(c(full$Fisher,full$Marten))
+Z_sample = matrix(c(full$Fisher,full$Marten,full$Squirrel))
 
 require(ggplot2)
 
 tempdata = data.frame(island[,6:7],
-                      Z_1 = full$Coyote,
-                      Z_2 = full$Fox_red,
+                      Z_1 = full$Fisher,
+                      Z_2 = full$Marten,
                       Z_3 = squ
                       )
 
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = log(Z_3+1)))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = (Squirrel)))+
   geom_point()
 
 detX = list()
@@ -80,8 +86,8 @@ for(j in 1:nrep){
   #    then in the second level list, it is a matrix with nrow = site ncol = ncov, 
 detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
 
-nspp = 2
-vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
+nspp = 3
+vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
                   ,eta_intra = rep(5e-4,nspp)
                   ,eta_inter = rep(5e-4,nspp)
@@ -90,11 +96,11 @@ vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
                   ,spp_mat = 5e-4)
 
 no_obs = 0*Z_sample
-no_obs[c(150:155,150:155+155),]=1				  
+no_obs[c(150:155,150:155+155,150:155+2*155),]=1				  
 				  
 kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  detX
-                                  , mcmc.iter = 1.5e5, burn.in = 4e3
+                                  , mcmc.iter = 1e5, burn.in = 4e3
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0
@@ -105,6 +111,6 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 100,report.by = 500,nIter = 100)
+                                  , ini = theta,thin.by = 50,report.by = 500,nIter = 100)
 
 H = Hamiltonian_posterior(kk$means,envX,distM_full,link_map,distM_mainland,link_mainland =  link_mainland * exp(-distM_mainland),int_range_intra="nn",int_range_inter="nn",Z = Z_sample)
