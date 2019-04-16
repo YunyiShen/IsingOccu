@@ -32,16 +32,17 @@ distM_mainland = (distM_mainland-intcd)/normd
 
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 
-spp_mat = matrix(1,2,2)
+spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
 envX = cbind(envX,as.matrix( full$Squirrel+1)/2)
 #envX = as.matrix(envX)
 
-theta = list(beta_occu = c(0,0),
-             beta_det = c(0,0,1,0,0,1),
-             eta_intra = c(.15,.15),
-             eta_inter = c(.15,.15),
+
+theta = list(beta_occu = c(0,0.1,0,.1,0,.1),
+             beta_det = c(0,0,1,-1,0,0,1,-1,0,0,1,-1),
+             eta_intra = c(.15,.15,.15),
+             eta_inter = c(.15,.15,.15),
              #d_inter = c(.2,.2),
              spp_mat = -0.15 * spp_mat)
 
@@ -60,7 +61,9 @@ set.seed(42)
 #Z_sample = cbind(rep1_vec,rep2_vec)
 
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
-Z_sample = matrix(c(full$Coyote,full$Fox_red))
+
+Z_sample = matrix(c(full$Coyote,full$Bobcat,full$Fox_red))
+
 
 require(ggplot2)
 
@@ -96,7 +99,9 @@ vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,spp_mat = 5e-4)
 
 no_obs = 0*Z_sample
-no_obs[c(150:155,150:155+155),]=1				  
+
+no_obs[c(150:155,150:155+155,150:155+2*155),]=1				  
+
 				  
 kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  detX
