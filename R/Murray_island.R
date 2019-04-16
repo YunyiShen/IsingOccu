@@ -254,6 +254,11 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(is.na(Murray_ratio)){
+		  if(i %% thin.by==0){
+		    for(j in 1:length(theta_curr)){
+		      theta.mcmc[[j]][i/thin.by,] =as.vector( theta_curr[[j]])
+		    } # saving the results
+		  }
 		  next
 		}
 		if(Murray_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
@@ -382,7 +387,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		  }
 	}
   
-	theta.mean =lapply(theta.mcmc,function(thetaa){ apply(thetaa,2,mean)})
+	theta.mean =lapply(theta.mcmc,function(thetaa){ apply(thetaa,2,mean,na.rm=T)})
   
 	res = list(theta.mcmc = theta.mcmc,means = theta.mean,Z.mcmc = Z.mcmc,vars=vars_prop, interaction.range =list( int_range_inter,int_range_intra), envX=X)
 	class(res)="IsingOccu_island"
