@@ -35,12 +35,12 @@ full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
-envX = cbind(envX,as.matrix( full$Squirrel+1)/2)
+#envX = cbind(envX,as.matrix( full$Squirrel+1)/2)
 #envX = as.matrix(envX)
 
 
-theta = list(beta_occu = c(0,0.1,0,.1,0,.1),
-             beta_det = c(0,0,1,-1,0,0,1,-1,0,0,1,-1),
+theta = list(beta_occu = c(0,0,0),
+             beta_det = c(0,1,-1,0,1,-1,0,1,-1),
              eta_intra = c(.15,.15,.15),
              eta_inter = c(.15,.15,.15),
              #d_inter = c(.2,.2),
@@ -68,13 +68,13 @@ Z_sample = matrix(c(full$Coyote,full$Bobcat,full$Fox_red))
 require(ggplot2)
 
 tempdata = data.frame(island[,6:7],
-                      Z_1 = full$Fisher,
-                      Z_2 = full$Marten,
+                      Z_1 = full$Bobcat,
+                      Z_2 = full$Coyote,
                       Z_3 = squ
                       )
 
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = (Squirrel)))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_2))+
   geom_point()
 
 detX = list()
@@ -89,7 +89,7 @@ for(j in 1:nrep){
   #    then in the second level list, it is a matrix with nrow = site ncol = ncov, 
 detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
 
-nspp = 2
+nspp = 3
 vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,2 * (ncol(detX[[1]][[1]]) + ncol(envX)) )
                   ,eta_intra = rep(5e-4,nspp)
@@ -105,7 +105,7 @@ no_obs[c(150:155,150:155+155,150:155+2*155),]=1
 				  
 kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  detX
-                                  , mcmc.iter = 1e5, burn.in = 4e3
+                                  , mcmc.iter = 1e4, burn.in = 1e3
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0
@@ -116,6 +116,6 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 50,report.by = 500,nIter = 100)
+                                  , ini = theta,thin.by = 10,report.by = 100,nIter = 100)
 
 H = Hamiltonian_posterior(kk$means,envX,distM_full,link_map,distM_mainland,link_mainland =  link_mainland * exp(-distM_mainland),int_range_intra="nn",int_range_inter="nn",Z = Z_sample)
