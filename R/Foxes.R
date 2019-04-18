@@ -60,7 +60,7 @@ set.seed(42)
 #Z_sample = cbind(rep1_vec,rep2_vec)
 
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
-Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Fox_gray))
+Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
 require(ggplot2)
 
