@@ -109,4 +109,7 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , seed = 42
                                   , ini = theta,thin.by = 50,report.by = 500,nIter = 100)
 
-H = Hamiltonian_posterior(kk$means,envX,distM_full,link_map,distM_mainland,link_mainland =  link_mainland * exp(-distM_mainland),int_range_intra="nn",int_range_inter="nn",Z = Z_sample)
+
+
+
+
