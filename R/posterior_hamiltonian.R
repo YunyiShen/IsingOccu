@@ -27,7 +27,7 @@ temp1 = data.frame(point = "model fit"
                    , name = Parameter )
 
 require(ggplot2)
-ggplot(temp1,aes(x=name, y=mean, colour = point)) + 
+ggplot(temp1[-c(1,5,9),],aes(x=name, y=mean, colour = point)) + 
   geom_errorbar(aes(ymin=low, ymax=high), width=.1) +
   #geom_line() +
   geom_point()+
