@@ -229,16 +229,28 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
   # passed, will return a matrix, with nrow = nspp*nsite, ncol = nperiod,
   #  1:nsite for species 1 and 1:nsite+(i-1)*nsite rows for species i.
   
-  
 Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
 	graph = sppmat[spp_exist,spp_exist]
-	thr = thr[,spp_exist]
+	thr = thr[,spp_exist] - colSums(sppmat[!spp_exist,spp_exist]) # condition on some species not exist here thus never be detection
 	dethis = dethis[,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
-	Pdet_site = apply(matrix(1:nrow(dethis)),1,function(k,dethis,thr,graph,){
+	Pdet_site = apply(matrix(1:nrow(dethis)),1,function(k,dethis,thr,graph){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
 	} dethis,thr,graph)
 	return(sum(Pdet_site))
+}
+
+Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, method = "CFTP"){
+	spp_exist = Z==1
+	graph = sppmat[spp_exist,spp_exist]
+	thr = thr[,spp_exist] - colSums(sppmat[!spp_exist,spp_exist]) # condition on some species not exist here thus never be detection
+	dethis[,!spp_exist] = -1# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
+	dethis_exist = dethis[,spp_exist]
+	dethis_exist = apply(matrix(1:nrow(dethis)),1,function(k,dethis_exist,thr,graph,nIter,n,method){
+		IsingSampler(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter)
+	} dethis,thr,graph,nIter,n,method)
+	dethis[,spp_exist] = dethis_exist
+	return(dethis)
 }
 
 extract_thr = function(i,thr_list){
@@ -247,7 +259,6 @@ extract_thr = function(i,thr_list){
 	return(thr)
 }
 
-  
 Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 	require(IsingSampler)
 	detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
@@ -257,7 +268,7 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod){ 
 		temp = lapply(detDesign,function(w,beta1,i){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]),i=i)
 		thr = (matrix(unlist(P_det_temp),nrow = n_row,ncol = nperiod))
-		return(thr) # now here is basicly a matrix, for each species at site and period
+		return(thr) # now here is basically a matrix, for each species at site and period
 		},detDesign,beta_det,npardet,nrow(envX),nperiod) # this is gonna be  a list for all species, 
 	
 	Pdet = lapply(1:nsite,function(i,thr_list,detmat,Z,sppmat_det,nsite,nspp){
@@ -270,6 +281,28 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 	return(Reduce('+',Pdet))
 }
 
+## sampleIsingdet
+Sample_Ising_detection = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n=1, method = "CFTP"){
+	require(IsingSampler)
+	detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
+	npardet = ncol(detDesign[[1]])
+	nsite = nrow(envX)
+	nspp = nrow(sppmat_det)
+	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod){ 
+		temp = lapply(detDesign,function(w,beta1,i){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]),i=i)
+		thr = (matrix(unlist(P_det_temp),nrow = n_row,ncol = nperiod))
+		return(thr) # now here is basically a matrix, for each species at site and period
+		},detDesign,beta_det,npardet,nrow(envX),nperiod) # this is gonna be  a list for all species, 
+	
+	detmat = lapply(1:nsite,function(i,thr_list,detmat,Z,sppmat_det,nsite,nspp,nIter,n, method){
+		thr = extract_thr(i,thr_list)
+		rows1 = i + (1:nspp-1)*nsite
+		dethis = t(detmat[rows1,])
+		Z_site = Z[rows1]
+		Sample_Ising_det_single_site(thr, Z_site, dethis, sppmat_det,nIter,n, method)
+	},thr_list,detmat,Z,sppmat_det,nsite,nspp,nIter,n, method)# loop over sites
+	return(detmat)
+}
 
 Sample_detection = function(nrep,nperiod,envX,detX,beta_det,nspp,Z){
   detmat = list()
