@@ -256,12 +256,12 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 
 Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, method = "CFTP"){
 	spp_exist = Z==1
+	dethis[,!spp_exist] = -1# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
+	if(sum(spp_exist)==0) return(dethis)
 	graph = sppmat_det[spp_exist,spp_exist]
 	thr_exis = as.matrix( thr[,spp_exist])
 	thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),2,sum) # condition on some species not exist here thus never be detection
 	thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
-	dethis[,!spp_exist] = -1# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
-	if(sum(spp_exist)==0) return(dethis)
 	dethis_exist = dethis[,spp_exist]
 	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
 		IsingSampler(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter)
