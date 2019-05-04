@@ -210,8 +210,13 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
 	# this is still 2 spp case, need to change to multi case
 	#nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
 	# length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
-	npardet = ncol(detDesign[[1]])
+	#detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
+  if(is.null(detX)) {
+    detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
+    
+  }
+  else detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX)
+  npardet = ncol(detDesign[[1]])
 	#Pdet = list()
 	#nrep = length(detX)
 	#for(j in 1:nrep){
@@ -265,13 +270,18 @@ extract_thr = function(i,thr_list){
 	return(thr)
 }
 
-Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nobs = NULL){
+Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs){
 	require(IsingSampler)
-	detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
+	 # This is the full design matrix list of detection probability p at time
+	if(is.null(detX)) {
+	  detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
+	  
+	}
+	else detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX)
 	npardet = ncol(detDesign[[1]])
 	nsite = nrow(envX)
 	nspp = nrow(sppmat_det)
-	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod,nobs){ 
+	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod,no_obs){ 
 		temp = lapply(detDesign,function(w,beta1,i){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]),i=i)
 		thr = (matrix(unlist(temp),nrow = n_row,ncol = nperiod))
 		return(thr) # now here is basically a matrix, for each species at site and period
@@ -281,17 +291,23 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nobs = NULL
 		thr = extract_thr(i,thr_list)
 		rows1 = i + (1:nspp-1)*nsite
 		dethis = t(detmat[rows1,])
-		Z_site = Z[rows1]
+		Z_site = Z[rows1,]
 		Pdet_Ising_single_site(thr, Z_site, dethis, sppmat_det)
-	},thr_list,detmat,Z,sppmat_det,nsite,nspp)# loop over sites
-	Pdet[nobs]=0
+	},thr_list,detmat,as.matrix( Z),sppmat_det,nsite,nspp)# loop over sites
+	Pdet[no_obs]=0
 	return(Reduce('+',Pdet))
 }
 
 ## sampleIsingdet
 Sample_Ising_detection = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter=100,n=1, method = "CFTP"){
 	require(IsingSampler)
-  detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
+  #detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
+  if(is.null(detX)) {
+    detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
+    
+  }
+  else detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX)
+  
   npardet = ncol(detDesign[[1]])
   nsite = nrow(envX)
   nspp = nrow(sppmat_det)
@@ -325,10 +341,10 @@ Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det
   },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method)
 }
 
-Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nobs=NULL){
-  Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nobs,nIter,n, method){
-    Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z,detmat[[k]],nobs[,k])
-  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nobs,nIter,n, method)
+Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs=NULL){
+  Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs,nIter,n, method){
+    Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]],no_obs[,k])
+  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,as.matrix(no_obs),nIter,n, method)
   return(Reduce('+',Pdets))
 }
 
@@ -369,7 +385,7 @@ IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dis
   beta_det = theta$beta_det
   negPot = Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)
   nrep = ncol(Z)
-  logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$sppmat_det,Z,detmat,no_obs)
+  logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$spp_mat_det,Z,detmat,no_obs)
   return(negPot+logLdata)
 }
 
@@ -468,7 +484,7 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   #log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
   log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
   log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX, no_obs=NULL)
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX, no_obs)
   log_H_theta_prop_Z_temp = Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp)
   
   log_MH_ratio = (log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_curr_Z_temp)-

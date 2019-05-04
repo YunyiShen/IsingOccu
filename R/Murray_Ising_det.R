@@ -1,4 +1,4 @@
-IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
+IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 										,mcmc.iter = 10000, burn.in = 10 
 										, vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
 										                    ,beta_det = rep(1e-5,2 * (ncol(detX[[1]][[1]]) + ncol(X)) )
@@ -6,7 +6,8 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 										                    ,eta_inter = rep(1e-5,nspp*(nspp-1)/2)
 										                    ,d_intra=rep(1e-5,nspp)
 										                    ,d_inter = rep(1e-5,nspp)
-										                    ,spp_mat = 1e-5)
+										                    ,spp_mat = 1e-5
+															,spp_mat_det = 1e-5)
 										,vars_prior = 2000
 										,Zprop_rate = .1
 										,Zprop_rate_missing_obs = .5
@@ -21,7 +22,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	source("misc_island.R")
 	set.seed(seed)
 	
-	missing_obs = sum(no_obs)>0
+	missing_obs = length(no_obs)>0
 	
 	cat("Setting for imperfect observation and missing sites:\n")
 	if(Zprop_rate==0) cat("    Perfect observation, given by Z\n")
@@ -51,7 +52,8 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	
 	
 	Z.mcmc = mcmc(matrix(nrow = floor(mcmc.iter/thin.by),ncol = nrow(Z)*nrep),thin = thin.by)
-	Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
+	#Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
+	Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 	
 	
 	Z_curr = Z
@@ -72,10 +74,11 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	propose_Z = 0
 	propose_Z_missing_obs = 0
 	timing = proc.time()
+	n_para_group = length(theta_curr)
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 
 	  theta_prop = theta_curr
-	  for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
+	  for(j in c(1:length(theta_curr))[-c(2,n_para_group)]){ # no detection proposing
 	    theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
 	  }
 	  
@@ -84,7 +87,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	  Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
 	  # MH ratio
 	  
-	  Murray_ratio=Murray.ratio(theta_curr ,theta_prop
+	  Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 	                            ,Z_curr ,Z_curr
 	                            ,Z_temp
 	                            ,detmat,no_obs
@@ -108,8 +111,11 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		
 		theta_prop = theta_curr
 		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
+		theta_prop[[n_para_group]] = matrix( rnorm(length(theta_curr[[n_para_group]]),mean = 0,sd = sqrt(vars_prop[[n_para_group]])),nrow(theta_curr[[n_para_group]]),ncol(theta_curr[[n_para_group]]) )+ theta_curr[[n_para_group]]
+		theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
+		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 		
-		Murray_ratio=Murray.ratio(theta_curr ,theta_prop
+		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp
 						,detmat,no_obs
@@ -131,14 +137,16 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		
 		
 		if(runif(1)<Zprop_rate) {
-		  flip = sample(which(Z_absolute==-1 & no_obs==0),1)
+		  absence = which(Z_absolute==-1)
+		  abs_obs = absence[absence!=no_obs]
+		  flip = sample(abs_obs,1)
 			Z_prop[flip]=-Z_prop[flip]
 			propose_Z = propose_Z + 1
 			
 		}
 		
 		
-		Murray_ratio=Murray.ratio(theta_curr ,theta_curr
+		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
 						,Z_curr ,Z_prop
 						,Z_temp
 						,detmat,no_obs
@@ -156,15 +164,15 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		}
 		
 		# for missing site
-		
+		Z_prop = Z_curr
 		if(missing_obs ){
 			if(runif(1)<Zprop_rate_missing_obs){
-				Z_prop = Z_curr
+				
 				propose_Z_missing_obs = propose_Z_missing_obs + 1
-				flip = sample(which(no_obs==1),1)
+				flip = sample((no_obs),1)
 				Z_prop[flip]=-Z_prop[flip]
 			}
-			Murray_ratio=Murray.ratio(theta_curr ,theta_curr
+			Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
 						,Z_curr ,Z_prop
 						,Z_temp
 						,detmat,no_obs
@@ -232,7 +240,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	for(i in 1:(mcmc.iter)){ # for to save 
 		#propose theta 
 	  theta_prop = theta_curr
-	  for(j in c(1:length(theta_curr))[-2]){ # no detection proposing
+	  for(j in c(1:length(theta_curr))[-c(2,n_para_group)]){ # no detection proposing
 	    theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
 	  }
 	  
@@ -242,7 +250,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 
 		
 		# MH ratio
-		Murray_ratio=Murray.ratio(theta_curr ,theta_prop
+		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp
 						,detmat,no_obs
@@ -271,8 +279,12 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		
 		theta_prop = theta_curr
 		theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
+		theta_prop[[n_para_group]] = matrix( rnorm(length(theta_curr[[n_para_group]]),mean = 0,sd = sqrt(vars_prop[[n_para_group]])),nrow(theta_curr[[n_para_group]]),ncol(theta_curr[[n_para_group]]) )+ theta_curr[[n_para_group]]
+		theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
+		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
+
 		
-		Murray_ratio=Murray.ratio(theta_curr ,theta_prop
+		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 		                          ,Z_curr ,Z_curr
 		                          ,Z_temp
 		                          ,detmat,no_obs
@@ -299,14 +311,16 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 		
 		Z_prop = Z_curr
 		if(runif(1)<Zprop_rate) {
-		  flip = sample(which(Z_absolute==-1),1)
+		  absence = which(Z_absolute==-1)
+		  abs_obs = absence[absence!=no_obs]
+		  flip = sample(abs_obs,1)
 		  Z_prop[flip]=-Z_prop[flip]
 		  propose_Z = propose_Z + 1
 		  
 		}
 		
 		
-		Murray_ratio=Murray.ratio(theta_curr ,theta_curr
+		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
 		                          ,Z_curr ,Z_prop
 		                          ,Z_temp
 		                          ,detmat,no_obs
@@ -330,10 +344,10 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 			if(runif(1)<Zprop_rate_missing_obs){
 				
 				propose_Z_missing_obs = propose_Z_missing_obs + 1
-				flip = sample(which(no_obs==1),1)
+				flip = sample((no_obs),1)
 				Z_prop[flip]=-Z_prop[flip]
 			}
-			Murray_ratio=Murray.ratio(theta_curr ,theta_curr
+			Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
 						,Z_curr ,Z_prop
 						,Z_temp
 						,detmat,no_obs
@@ -390,7 +404,7 @@ IsingOccu.fit.Murray.sampler = function(X,detmat,no_obs,detX
 	theta.mean =lapply(theta.mcmc,function(thetaa){ apply(thetaa,2,mean,na.rm=T)})
   
 	res = list(theta.mcmc = theta.mcmc,means = theta.mean,Z.mcmc = Z.mcmc,vars=vars_prop, interaction.range =list( int_range_inter,int_range_intra), envX=X)
-	class(res)="IsingOccu_island"
+	class(res)="IsingOccu_island_Ising_det"
 	return(res)
 }
 
