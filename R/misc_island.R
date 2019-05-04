@@ -238,10 +238,14 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
   
 Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
-	graph = sppmat_det[spp_exist,spp_exist]
-	thr = thr[,spp_exist] - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),2,sum) # condition on some species not exist here thus never be detection
-	dethis = dethis[,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
 	if(sum(spp_exist)==0){ return(0)} # no species there, probability one to be no detection
+	graph = sppmat_det[spp_exist,spp_exist]
+	thr_exis = as.matrix( thr[,spp_exist])
+	thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),2,sum) # condition on some species not exist here thus never be detection
+	thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
+	#thr = t(thr)
+	dethis = dethis[,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
+	
 	Pdet_site = apply(matrix(1:nrow(as.matrix(dethis))),1,function(k,dethis,thr,graph){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
 	} ,as.matrix( dethis), as.matrix( thr), as.matrix( graph))
@@ -253,7 +257,9 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, method = "CFTP"){
 	spp_exist = Z==1
 	graph = sppmat_det[spp_exist,spp_exist]
-	thr = thr[,spp_exist] - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),2,sum) # condition on some species not exist here thus never be detection
+	thr_exis = as.matrix( thr[,spp_exist])
+	thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),2,sum) # condition on some species not exist here thus never be detection
+	thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
 	dethis[,!spp_exist] = -1# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
 	if(sum(spp_exist)==0) return(dethis)
 	dethis_exist = dethis[,spp_exist]

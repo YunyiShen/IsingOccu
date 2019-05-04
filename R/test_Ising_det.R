@@ -32,11 +32,11 @@ envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(0,0),
              beta_det = c(0,0),
-             eta_intra = c(.15,.15),
-             eta_inter = c(.15,.15),
+             eta_intra = c(.2,.2),
+             eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
-             spp_mat = 0.2 * spp_mat,
-             spp_mat_det = -0.2 * spp_mat)
+             spp_mat = 0.4 * spp_mat,
+             spp_mat_det = -0.3 * spp_mat)
 
 link_map = 
   list(inter = link_outer * exp(-distM_full),
@@ -72,7 +72,7 @@ Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland*exp(-dis
 #sppmat_det = -0.1 * spp_mat
 #Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,sppmat_det,Z = Z_sample,detmat[[1]])
 
-nperiod = 5
+nperiod = 10
 nsite = 155
 nspp = 2
 detmat = list(matrix(-1,nsite*nspp,nperiod))
@@ -112,11 +112,11 @@ Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 500
+                                  , mcmc.iter = 500, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.2
-                                  , Zprop_rate_missing_obs = 0.3
+                                  , Zprop_rate = 0.7
+                                  , Zprop_rate_missing_obs = 0.5
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
