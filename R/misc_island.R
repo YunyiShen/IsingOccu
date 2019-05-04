@@ -281,7 +281,7 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs){
 	npardet = ncol(detDesign[[1]])
 	nsite = nrow(envX)
 	nspp = nrow(sppmat_det)
-	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod,no_obs){ 
+	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod){ 
 		temp = lapply(detDesign,function(w,beta1,i){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]),i=i)
 		thr = (matrix(unlist(temp),nrow = n_row,ncol = nperiod))
 		return(thr) # now here is basically a matrix, for each species at site and period
@@ -294,7 +294,7 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs){
 		Z_site = Z[rows1,]
 		Pdet_Ising_single_site(thr, Z_site, dethis, sppmat_det)
 	},thr_list,detmat,as.matrix( Z),sppmat_det,nsite,nspp)# loop over sites
-	Pdet[no_obs]=0
+	 Pdet[no_obs]=0
 	return(Reduce('+',Pdet))
 }
 
@@ -342,9 +342,10 @@ Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det
 }
 
 Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs=NULL){
+  if(!is.null(no_obs)) no_obs = as.matrix(no_obs) 
   Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs,nIter,n, method){
     Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]],no_obs[,k])
-  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,as.matrix(no_obs),nIter,n, method)
+  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,(no_obs),nIter,n, method)
   return(Reduce('+',Pdets))
 }
 
