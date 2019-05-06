@@ -35,8 +35,8 @@ theta = list(beta_occu = c(0,0),
              eta_intra = c(.2,.2),
              eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
-             spp_mat = 0.4 * spp_mat,
-             spp_mat_det = -0.3 * spp_mat)
+             spp_mat = 0.2 * spp_mat,
+             spp_mat_det = -2 * spp_mat)
 
 link_map = 
   list(inter = link_outer * exp(-distM_full),
@@ -57,7 +57,7 @@ tempdata = data.frame(island[,6:7],
                       Z_1 = Z_sample[1:155,1],
                       Z_2 = Z_sample[156:310,1])
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_2))+
   geom_point()
 
 Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland*exp(-distM_mainland),int_range_intra="nn",int_range_inter="nn",(Z_sample))
@@ -79,14 +79,14 @@ detmat = list(matrix(-1,nsite*nspp,nperiod))
 
 no_obs=11
 set.seed(42)
-detmat = Sample_Ising_detection_rep(1,nperiod,envX,detX=NULL,beta_det = theta$beta_det,theta$spp_mat_det,Z = Z_sample,detmat,nIter=100,n=1, method = "CFTP")
+detmat = Sample_Ising_detection_rep(1,nperiod,envX,detX=NULL,beta_det = theta$beta_det,theta$spp_mat_det,Z = abs( Z_sample),detmat,nIter=100,n=1, method = "CFTP")
 Pdet_Ising_rep(1,nperiod,envX,detX=NULL,beta_det = theta$beta_det,theta$spp_mat_det,Z = Z_sample,detmat)
 
 detmat[[1]][c(no_obs,no_obs+155),]=-1
 
 tempdata = data.frame(island[,6:7],
-                      Z_1 = detmat[[1]][1:155,1],
-                      Z_2 = detmat[[1]][156:310,1])
+                      Z_1 = detmat[[1]][1:155,2],
+                      Z_2 = detmat[[1]][156:310,2])
 
 ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
   geom_point()

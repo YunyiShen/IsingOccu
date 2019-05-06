@@ -26,6 +26,8 @@ distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
 detmat = list(as.matrix(read.csv(paste0(link,"det_his_coyote_fox_bobcat_20day_2015.csv"),header = F)))
+full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
+Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
 ###### simulation ######
 
@@ -87,8 +89,8 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = 
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  , Z = Z_absolute
+                                  , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
+                                  #, Z = Z_absolute
                                   , seed = 42
                                   , ini = theta,thin.by = 1,report.by = 100)
 

@@ -263,6 +263,7 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
 	  thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),1,sum) # condition on some species not exist here thus never be detection
+	  # check here, may be sth wrong 
 	  thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
 	}
 	graph = sppmat_det[spp_exist,spp_exist]
@@ -270,7 +271,7 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
 		IsingSampler(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,method = method)
 	}, as.matrix( dethis), as.matrix( thr), as.matrix( graph),nIter,n,method)
-	dethis[,spp_exist] = dethis_exist
+	dethis[,spp_exist] = t(dethis_exist)
 	return(dethis)
 }
 
