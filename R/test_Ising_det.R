@@ -35,7 +35,7 @@ theta = list(beta_occu = c(0,0),
              eta_intra = c(.2,.2),
              eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
-             spp_mat = 0.3 * spp_mat,
+             spp_mat = 0.15 * spp_mat,
              spp_mat_det = -.3 * spp_mat)
 
 link_map = 
@@ -112,7 +112,7 @@ no_obs = c(no_obs,no_obs+155)
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = NULL
                                   , detX =  NULL
-                                  , mcmc.iter = 2000, burn.in = 500
+                                  , mcmc.iter = 5000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.3
