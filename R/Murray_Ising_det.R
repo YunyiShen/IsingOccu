@@ -312,7 +312,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Z_prop = Z_curr
 		if(runif(1)<Zprop_rate) {
 		  absence = which(Z_absolute==-1)
-		  abs_obs = absence[absence!=no_obs]
+		  abs_obs = absence[!absence%in%no_obs]
 		  flip = sample(abs_obs,1)
 		  Z_prop[flip]=-Z_prop[flip]
 		  propose_Z = propose_Z + 1

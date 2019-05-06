@@ -72,7 +72,7 @@ Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland*exp(-dis
 #sppmat_det = -0.1 * spp_mat
 #Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,sppmat_det,Z = Z_sample,detmat[[1]])
 
-nperiod = 10
+nperiod = 5
 nsite = 155
 nspp = 2
 detmat = list(matrix(-1,nsite*nspp,nperiod))
@@ -112,7 +112,7 @@ no_obs = c(no_obs,no_obs+155)
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = NULL
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 500
+                                  , mcmc.iter = 2000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.3
@@ -123,7 +123,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = 
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   , Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100)
+                                  , ini = theta,thin.by = 1,report.by = 200)
 
 
 
