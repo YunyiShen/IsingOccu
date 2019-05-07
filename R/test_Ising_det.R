@@ -31,7 +31,7 @@ spp_mat = matrix(c(0,1,1,0),2,2)
 envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(0,0),
-             beta_det = c(0,0),
+             beta_det = c(-.3,-.3),
              eta_intra = c(.2,.2),
              eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
@@ -72,7 +72,7 @@ Hamiltonian(theta,envX,distM_full,link_map,distM_mainland,link_mainland*exp(-dis
 #sppmat_det = -0.1 * spp_mat
 #Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,sppmat_det,Z = Z_sample,detmat[[1]])
 
-nperiod = 5
+nperiod = 10
 nsite = 155
 nspp = 2
 detmat = list(matrix(-1,nsite*nspp,nperiod))
@@ -115,15 +115,15 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = 
                                   , mcmc.iter = 5000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.3
+                                  , Zprop_rate = 0
                                   , Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  , Z = Z_absolute
+                                  , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
+                                  #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 200)
+                                  , ini = theta,thin.by = 1,report.by = 500)
 
 
 
