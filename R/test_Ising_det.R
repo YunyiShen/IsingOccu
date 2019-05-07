@@ -30,12 +30,12 @@ distM_mainland = (distM_mainland-intcd)/normd
 spp_mat = matrix(c(0,1,1,0),2,2)
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(0,0),
+theta = list(beta_occu = c(-.25,-.25),
              beta_det = c(-.3,-.3),
-             eta_intra = c(.2,.2),
-             eta_inter = c(.2,.2),
+             eta_intra = c(.3,.3),
+             eta_inter = c(.3,.3),
              #d_inter = c(.2,.2),
-             spp_mat = 0.15 * spp_mat,
+             spp_mat = .1* spp_mat,
              spp_mat_det = -.3 * spp_mat)
 
 link_map = 
@@ -43,7 +43,7 @@ link_map =
        intra = link_inner)
 
 nrep = 1
-set.seed(42)
+set.seed(12345)
 Z_sample = rIsingOccu_multi(theta,
                             envX,
                             distM_full,link_map ,
@@ -115,13 +115,13 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = 
                                   , mcmc.iter = 5000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0
+                                  , Zprop_rate = .8
                                   , Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  #, Z = Z_absolute
+                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
+                                  , Z = Z_absolute
                                   , seed = 42
                                   , ini = theta,thin.by = 1,report.by = 500)
 
