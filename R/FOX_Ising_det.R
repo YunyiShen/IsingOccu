@@ -25,7 +25,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"det_his_coyote_fox_bobcat_20day_2015.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_30d.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -35,8 +35,8 @@ spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(0,0,0),
-             beta_det = c(0,0,0),
+theta = list(beta_occu = c(-.3,-.3,-.3),
+             beta_det = c(-.3,-.3,-.3),
              eta_intra = c(.2,.2,.2),
              eta_inter = c(.2,.2,.2),
              #d_inter = c(.2,.2),
@@ -60,6 +60,7 @@ nrep = 1
 
 
 no_obs=150:155
+no_obs = c(no_obs, no_obs + 155, no_obs + 310)
 
 nspp = 3
 
@@ -79,13 +80,13 @@ Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 
 
 
 
-kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = no_obs
+kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = NULL
                                   , detX =  NULL
                                   , mcmc.iter = 5000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.5
-                                  , Zprop_rate_missing_obs = 0.5
+                                  , Zprop_rate = 0
+                                  , Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
