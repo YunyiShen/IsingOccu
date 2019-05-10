@@ -64,14 +64,14 @@ no_obs = c(no_obs, no_obs + 155, no_obs + 310)
 
 nspp = 3
 
-vars_prop = list( beta_occu = rep(1e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = rep(1e-3,nspp)
+                  ,eta_intra = rep(5e-4,nspp)
+                  ,eta_inter = rep(5e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-3
-                  ,spp_mat_det = 1e-3)
+                  ,spp_mat_det = 5e-3)
 
 
 Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
@@ -82,7 +82,7 @@ Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = NULL
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 500
+                                  , mcmc.iter = 5000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0
