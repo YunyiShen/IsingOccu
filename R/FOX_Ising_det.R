@@ -66,12 +66,12 @@ nspp = 3
 
 vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(5e-4,nspp)
-                  ,eta_inter = rep(5e-4,nspp)
+                  ,eta_intra = rep(1e-4,nspp)
+                  ,eta_inter = rep(1e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 1e-3
-                  ,spp_mat_det = 5e-3)
+                  ,spp_mat = 5e-4
+                  ,spp_mat_det = 2.5e-3)
 
 
 Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
@@ -82,16 +82,16 @@ Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = NULL
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 1500
+                                  , mcmc.iter = 15000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.5
+                                  , Zprop_rate = 0
                                   , Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  , Z = Z_absolute
+                                  , Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
+                                  #, Z = Z_absolute
                                   , seed = 42
                                   , ini = theta,thin.by = 1,report.by = 100)
 
