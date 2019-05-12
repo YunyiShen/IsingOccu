@@ -254,7 +254,7 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
 	} ,as.matrix( dethis), as.matrix( thr), as.matrix( graph))
 	
-	return(sum(log(Pdet_site)))
+	return(sum(log(Pdet_site + 1e-15)))
 	
 }
 
