@@ -80,9 +80,11 @@ detmat = list(matrix(-1,nsite*nspp,nperiod))
 no_obs=11
 set.seed(42)
 detmat = Sample_Ising_detection_rep(1,nperiod,envX,detX=NULL,beta_det = theta$beta_det,theta$spp_mat_det,Z = ( Z_sample),detmat,nIter=100,n=1, method = "CFTP")
+detmat[[1]][1]=NA # get some NAs
+detmat[[1]][c(2,155+2),]=NA
 Pdet_Ising_rep(1,nperiod,envX,detX=NULL,beta_det = theta$beta_det,theta$spp_mat_det,Z = Z_sample,detmat)
 
-detmat[[1]][c(no_obs,no_obs+155),]=-1
+#detmat[[1]][c(no_obs,no_obs+155),]=-1
 
 tempdata = data.frame(island[,6:7],
                       Z_1 = detmat[[1]][1:155,2],

@@ -1,4 +1,4 @@
-IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
+IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 										,mcmc.iter = 10000, burn.in = 10 
 										, vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
 										                    ,beta_det = rep(1e-5,2 * (ncol(detX[[1]][[1]]) + ncol(X)) )
@@ -10,11 +10,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 															,spp_mat_det = 1e-5)
 										,vars_prior = 2000
 										,Zprop_rate = .1
-										,Zprop_rate_missing_obs = .5
+										#,Zprop_rate_missing_obs = .5
 										,distM,link_map
 										,dist_mainland , link_mainland
 										,int_range_intra="nn",int_range_inter="exp"
-										,Z,seed = 42,ini,thin.by = 100,report.by=100,nIter=100){ # ini has same formate of theta
+										#,Z
+										,seed = 42,ini,thin.by = 100,report.by=100,nIter=100){ # ini has same formate of theta
 	
 	cat("Initializing...\n\n")
 	require(coda)
@@ -22,13 +23,13 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 	source("misc_island.R")
 	set.seed(seed)
 	
-	missing_obs = length(no_obs)>0
+	#missing_obs = is.na(sum(Z))
 	
 	cat("Setting for imperfect observation and missing sites:\n")
 	if(Zprop_rate==0) cat("    Perfect observation, given by Z\n")
 	else cat("    Imperfect observation, Z propose with rate",Zprop_rate,"\n")
-	if(!missing_obs) cat("    No missing observation site\n\n")
-	else cat("    Missing some sites, Z propose with rate",Zprop_rate_missing_obs,"\n\n")
+	#if(!missing_obs) cat("    No missing observation site\n\n")
+	#else cat("    Missing some sites, Z propose with rate",Zprop_rate_missing_obs,"\n\n")
 	
 	cat("MCMC reported every",report.by,"iterations and thinned by",thin.by,"\n\n")
 	
@@ -38,7 +39,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 	spp_neig = 1 *( spp_mat!=0 )
 	
 	nspp = nrow(spp_mat)
-	nrep = ncol(Z)
+	nrep = length(detmat)
 	
     #theta_tuta=ini
 	ini = lapply(ini,as.matrix)
@@ -51,13 +52,17 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 	names(theta.mcmc) = names(ini)
 	
 	
-	Z.mcmc = mcmc(matrix(nrow = floor(mcmc.iter/thin.by),ncol = nrow(Z)*nrep),thin = thin.by)
+	Z.mcmc = mcmc(matrix(nrow = floor(mcmc.iter/thin.by),ncol = nsite*nspp*nrep),thin = thin.by)
 	#Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
-	Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
+	detmat_nona = lapply(detmat,function(mat){
+	  mat[is.na(mat)]=-1
+	  return(mat)
+	})
+	Z_absolute = (sapply(detmat_nona,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
+	rm(detmat_nona)
 	
-	
-	Z_curr = Z
-	Z_temp = Z
+	Z_curr = Z_absolute
+	Z_temp = Z_absolute
 	
 	theta_curr = ini
 	
@@ -90,7 +95,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 	  Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 	                            ,Z_curr ,Z_curr
 	                            ,Z_temp
-	                            ,detmat,no_obs
+	                            ,detmat
 	                            ,vars_prior
 	                             
 	                            ,X, detX
@@ -118,7 +123,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp
-						,detmat,no_obs
+						,detmat
 						,vars_prior
 						 
 						,X, detX
@@ -138,8 +143,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		
 		if(runif(1)<Zprop_rate) {
 		  absence = which(Z_absolute==-1)
-		  abs_obs = absence[!absence%in%no_obs]
-		  flip = sample(abs_obs,1)
+		  #abs_obs = absence[!absence%in%no_obs]
+		  flip = sample(absence,1)
 			Z_prop[flip]=-Z_prop[flip]
 			propose_Z = propose_Z + 1
 			
@@ -149,7 +154,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
 						,Z_curr ,Z_prop
 						,Z_temp
-						,detmat,no_obs
+						,detmat
 						,vars_prior
 						 
 						,X, detX
@@ -163,33 +168,33 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 			accept_Z = accept_Z + 1
 		}
 		
-		# for missing site
-		Z_prop = Z_curr
-		if(missing_obs ){
-			if(runif(1)<Zprop_rate_missing_obs){
-				
-				propose_Z_missing_obs = propose_Z_missing_obs + 1
-				flip = sample((no_obs),1)
-				Z_prop[flip]=-Z_prop[flip]
-			}
-			Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-						,Z_curr , Z_prop
-						,Z_temp
-						,detmat,no_obs
-						,vars_prior
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
-			r = runif(1)
-			if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
-			if(r<=Murray_ratio){
-				Z_curr = Z_prop
-				accept_Z_missing_obs = accept_Z_missing_obs + 1
-			}
-		}
-		
-		
+		# # for missing site
+		# Z_prop = Z_curr
+		# if(missing_obs ){
+		# 	if(runif(1)<Zprop_rate_missing_obs){
+		# 		
+		# 		propose_Z_missing_obs = propose_Z_missing_obs + 1
+		# 		flip = sample((no_obs),1)
+		# 		Z_prop[flip]=-Z_prop[flip]
+		# 	}
+		# 	Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
+		# 				,Z_curr , Z_prop
+		# 				,Z_temp
+		# 				,detmat
+		# 				,vars_prior
+		# 				,X, detX
+		# 				,distM,link_map
+		# 				,dist_mainland , link_mainland
+		# 				,int_range_intra,int_range_inter)
+		# 	r = runif(1)
+		# 	if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
+		# 	if(r<=Murray_ratio){
+		# 		Z_curr = Z_prop
+		# 		accept_Z_missing_obs = accept_Z_missing_obs + 1
+		# 	}
+		# }
+		# 
+		# 
 		
 		if(i%%report.by == 0) {
 		  
@@ -198,12 +203,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		  cat("    # of Z acceptance for imperfect detection: " , accept_Z-(report.by-propose_Z),"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  
-		  #cat("# of Z proposed for missing sites: ",propose_Z,"\n")
-		  if(missing_obs){
-		    cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
-			cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
-			cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
-		  }
+		#   #cat("# of Z proposed for missing sites: ",propose_Z,"\n")
+		#   if(missing_obs){
+		#     cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
+		# 	cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
+		# 	cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
+		#   }
 		  
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
@@ -253,7 +258,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 						,Z_curr ,Z_curr
 						,Z_temp
-						,detmat,no_obs
+						,detmat
 						,vars_prior
 						 
 						,X, detX
@@ -287,7 +292,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
 		                          ,Z_curr ,Z_curr
 		                          ,Z_temp
-		                          ,detmat,no_obs
+		                          ,detmat
 		                          ,vars_prior
 		                           
 		                          ,X, detX
@@ -312,8 +317,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Z_prop = Z_curr
 		if(runif(1)<Zprop_rate) {
 		  absence = which(Z_absolute==-1)
-		  abs_obs = absence[!absence%in%no_obs]
-		  flip = sample(abs_obs,1)
+		  #abs_obs = absence[!absence%in%no_obs]
+		  flip = sample(absence,1)
 		  Z_prop[flip]=-Z_prop[flip]
 		  propose_Z = propose_Z + 1
 		  
@@ -323,7 +328,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
 		                          ,Z_curr ,Z_prop
 		                          ,Z_temp
-		                          ,detmat,no_obs
+		                          ,detmat
 		                          ,vars_prior
 		                           
 		                          ,X, detX
@@ -339,30 +344,30 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		}
 		
 		
-		Z_prop = Z_curr
-		if(missing_obs ){
-			if(runif(1)<Zprop_rate_missing_obs){
-				
-				propose_Z_missing_obs = propose_Z_missing_obs + 1
-				flip = sample((no_obs),1)
-				Z_prop[flip]=-Z_prop[flip]
-			}
-			Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-						,Z_curr ,Z_prop
-						,Z_temp
-						,detmat,no_obs
-						,vars_prior
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
-			r = runif(1)
-			if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
-			if(r<=Murray_ratio){
-				Z_curr = Z_prop
-				accept_Z_missing_obs = accept_Z_missing_obs + 1
-			}
-		}		
+		# Z_prop = Z_curr
+		# if(missing_obs ){
+		# 	if(runif(1)<Zprop_rate_missing_obs){
+		# 		
+		# 		propose_Z_missing_obs = propose_Z_missing_obs + 1
+		# 		flip = sample((no_obs),1)
+		# 		Z_prop[flip]=-Z_prop[flip]
+		# 	}
+		# 	Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
+		# 				,Z_curr ,Z_prop
+		# 				,Z_temp
+		# 				,detmat
+		# 				,vars_prior
+		# 				,X, detX
+		# 				,distM,link_map
+		# 				,dist_mainland , link_mainland
+		# 				,int_range_intra,int_range_inter)
+		# 	r = runif(1)
+		# 	if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
+		# 	if(r<=Murray_ratio){
+		# 		Z_curr = Z_prop
+		# 		accept_Z_missing_obs = accept_Z_missing_obs + 1
+		# 	}
+		# }		
 		
 		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%report.by == 0) { # reporting
@@ -371,12 +376,11 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,no_obs,detX
 		  cat("    # of Z acceptance: " , accept_Z-(report.by-propose_Z),"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  
-		  if(missing_obs){
-		    cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
-			cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
-			cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
-		  }
-		  
+		#   if(missing_obs){
+		#     cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
+		# 	cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
+		# 	cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
+		#   }
 		  
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")

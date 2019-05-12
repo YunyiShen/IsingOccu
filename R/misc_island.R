@@ -238,7 +238,7 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
   
 Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
-	if(sum(spp_exist)==0){ return(0)} # no species there, probability one to be no detection
+	if(sum(spp_exist)==0 | sum(!is.na(dethis))==0){return(0)} # no species there, probability one to be no detection, or no observation here
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
 	  thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),1,sum) # condition on some species not exist here thus never be detection
@@ -246,7 +246,9 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	}
 	graph = sppmat_det[spp_exist,spp_exist]
 	#thr = t(thr)
-	dethis = dethis[,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
+	has_obs = !(is.na(rowSums(dethis)))
+	dethis = dethis[has_obs,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
+	thr = thr[has_obs,]
 	
 	Pdet_site = apply(matrix(1:nrow(as.matrix(dethis))),1,function(k,dethis,thr,graph){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
@@ -281,7 +283,7 @@ extract_thr = function(i,thr_list){
 	return(thr)
 }
 
-Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs){
+Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 	require(IsingSampler)
 	 # This is the full design matrix list of detection probability p at time
 	if(is.null(detX)) {
@@ -305,7 +307,6 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs){
 		Z_site = Z[rows1,]
 		Pdet_Ising_single_site(thr, Z_site, dethis, sppmat_det)
 	},thr_list,detmat,as.matrix( Z),sppmat_det,nsite,nspp)# loop over sites
-	 Pdet[no_obs]=0
 	return(Reduce('+',Pdet))
 }
 
@@ -352,11 +353,11 @@ Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det
   },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method)
 }
 
-Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs=NULL){
-  if(!is.null(no_obs)) no_obs = as.matrix(no_obs) 
+Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
+  #if(!is.null(no_obs)) no_obs = as.matrix(no_obs) 
   Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs,nIter,n, method){
-    Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]],no_obs[,k])
-  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,(no_obs),nIter,n, method)
+    Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]])
+  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method)
   return(Reduce('+',Pdets))
 }
 
@@ -397,47 +398,11 @@ IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dis
   beta_det = theta$beta_det
   negPot = Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)
   nrep = ncol(Z)
-  logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$spp_mat_det,Z,detmat,no_obs)
+  logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$spp_mat_det,Z,detmat)
   return(negPot+logLdata)
 }
 
 
-
-
-Moller.ratio = function(theta_curr ,theta_prop
-						,Z_curr ,Z_prop
-						,Z_temp_curr, Z_temp_prop
-						,detmat,no_obs # give detmat all 0 if no observation there
-						,vars_prior
-						,theta_tuta
-						,envX, detX
-						,distM,link_map
-						,dist_mainland,link_mainland
-						,int_range_intra="nn",int_range_inter="exp"){
-	log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_prop)
-	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
-	log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
-	log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
-	#log_pi_theta_prop = sum(log_pi_theta_prop)
-	#prior of proposed theta
-	log_q_theta_Z_prop_detmat = IsingOccu_multi.logL.innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX,no_obs)
-	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-	log_H_theta_Z_temp_curr = Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
-
-	#### end of the upper part, start the lower
-
-	log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
-	log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
-	log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX,no_obs)
-	log_H_theta_Z_temp_prop = Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_prop)
-
-	log_MH_ratio = (log_H_theta_tuta_Z_temp_prop + log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_Z_temp_curr)-
-				   (log_H_theta_tuta_Z_temp_curr + log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_Z_temp_prop)
-
-	return(min(1,exp(log_MH_ratio)))
-}
-  # passed 2019/3/18
 
 Murray.ratio = function(theta_curr ,theta_prop
 						,Z_curr ,Z_prop
@@ -475,7 +440,7 @@ Murray.ratio = function(theta_curr ,theta_prop
 Murray.ratio.Ising_det = function(theta_curr ,theta_prop
                         ,Z_curr ,Z_prop
                         ,Z_temp 
-                        ,detmat,no_obs
+                        ,detmat
                         ,vars_prior
                         ,envX, detX
                         ,distM,link_map
@@ -487,7 +452,7 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
   #log_pi_theta_prop = sum(log_pi_theta_prop)
   #prior of proposed theta
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX, no_obs)
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
   # theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
   log_H_theta_curr_Z_temp = Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp)
   
@@ -496,7 +461,7 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   #log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
   log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
   log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX, no_obs)
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
   log_H_theta_prop_Z_temp = Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp)
   
   log_MH_ratio = (log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_curr_Z_temp)-
