@@ -82,7 +82,7 @@ Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat,no_obs = NULL
                                   , detX =  NULL
-                                  , mcmc.iter = 15000, burn.in = 5000
+                                  , mcmc.iter = 50000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0
