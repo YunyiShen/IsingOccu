@@ -71,7 +71,7 @@ vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-4
-                  ,spp_mat_det = 1e-3)
+                  ,spp_mat_det = 4e-3)
 
 detmat_nona = lapply(detmat,function(mat){
   mat[is.na(mat)]=-1
@@ -89,7 +89,7 @@ rm(detmat_nona)
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 500, burn.in = 150
+                                  , mcmc.iter = 20000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.3
