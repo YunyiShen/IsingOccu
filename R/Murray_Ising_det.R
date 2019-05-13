@@ -105,6 +105,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	  r = runif(1)
 	  if(is.na(Murray_ratio)){
 	    Murray_ratio = 0
+	    #cat("occuNA\n")
 	  }
 	  if(Murray_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 	  if(r<=Murray_ratio){
@@ -131,7 +132,10 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 						,dist_mainland , link_mainland
 						,int_range_intra,int_range_inter)
 		r = runif(1)
-		if(is.na(Murray_ratio)) Murray_ratio=0
+		if(is.na(Murray_ratio)) {
+		  Murray_ratio=0
+		  #cat("detNA\n")
+		  }
 		if(Murray_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
 		if(r<=Murray_ratio){
 			theta_curr=theta_prop
@@ -162,7 +166,10 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 						,dist_mainland , link_mainland
 						,int_range_intra,int_range_inter)
 		r = runif(1)
-		if(is.na(Murray_ratio)) Murray_ratio = 0
+		if(is.na(Murray_ratio)) {
+		  Murray_ratio = 0
+		  #cat("ZNA\n")
+		  }
 		if(Murray_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
 		if(r<=Murray_ratio){
 			Z_curr = Z_prop
