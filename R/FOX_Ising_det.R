@@ -25,7 +25,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_15dfull.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_20dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -56,8 +56,8 @@ nrep = 1
 #detmat = lapply(detmat,function(w){w*2-1}) 
 
 #sppmat_det = -0.1 * spp_mat
-Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,theta$sppmat_det,Z = Z_sample,detmat[[1]])
-Pdet_Ising_rep(1,68,X,detX,theta_curr$beta_det,theta_curr$spp_mat_det,Z = Z_curr,detmat)
+#Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,theta$sppmat_det,Z = Z_sample,detmat[[1]])
+#Pdet_Ising_rep(1,52,envX,NULL,theta$beta_det,theta$spp_mat_det,Z = Z_sample,detmat)
 
 #no_obs=150:155
 #no_obs = c(no_obs, no_obs + 155, no_obs + 310)
@@ -66,8 +66,8 @@ nspp = 3
 
 vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(5e-4,nspp)
-                  ,eta_inter = rep(5e-4,nspp)
+                  ,eta_intra = rep(3.6e-4,nspp)
+                  ,eta_inter = rep(3.6e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-4
@@ -89,7 +89,7 @@ rm(detmat_nona)
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 500
+                                  , mcmc.iter = 15000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.3
