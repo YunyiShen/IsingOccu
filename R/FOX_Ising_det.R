@@ -56,8 +56,8 @@ nrep = 1
 #detmat = lapply(detmat,function(w){w*2-1}) 
 
 #sppmat_det = -0.1 * spp_mat
-#Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,sppmat_det,Z = Z_sample,detmat[[1]])
-
+Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,theta$sppmat_det,Z = Z_sample,detmat[[1]])
+Pdet_Ising_rep(1,68,X,detX,theta_curr$beta_det,theta_curr$spp_mat_det,Z = Z_curr,detmat)
 
 #no_obs=150:155
 #no_obs = c(no_obs, no_obs + 155, no_obs + 310)

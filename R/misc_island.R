@@ -252,7 +252,7 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	
 	Pdet_site = apply(matrix(1:sum(has_obs)),1,function(k,dethis,thr,graph){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
-	} ,as.matrix( dethis), as.matrix( thr), as.matrix( graph))
+	} ,matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph))
 	
 	return(sum(log(Pdet_site + 1e-15)))
 	
@@ -272,14 +272,14 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	dethis_exist = dethis[,spp_exist]
 	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
 		IsingSampler(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,method = method)
-	}, as.matrix( dethis), as.matrix( thr), as.matrix( graph),nIter,n,method)
+	},matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph),nIter,n,method)
 	dethis[,spp_exist] = t(dethis_exist)
 	return(dethis)
 }
 
 extract_thr = function(i,thr_list){
 	nspp = length(thr_list)
-	thr = sapply(thr_list,function(thr,i){t(thr[i,])},i=i) # thr at site i for all spps, will return a matrix with ncol = nspp, nrow = nperiod
+	thr = sapply(thr_list,function(thr1,i){t(thr1[i,])},i=i) # thr at site i for all spps, will return a matrix with ncol = nspp, nrow = nperiod
 	return(thr)
 }
 
@@ -296,16 +296,16 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 	nspp = nrow(sppmat_det)
 	thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod){ 
 		temp = lapply(detDesign,function(w,beta1,i){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]),i=i)
-		thr = (matrix(unlist(temp),nrow = n_row,ncol = nperiod))
-		return(thr) # now here is basically a matrix, for each species at site and period
+		thr1 = (matrix(unlist(temp),nrow = n_row,ncol = nperiod))
+		return(thr1) # now here is basically a matrix, for each species at site and period
 		},detDesign,beta_det,npardet,nrow(envX),nperiod) # this is gonna be  a list for all species, 
 	
 	Pdet = lapply(1:nsite,function(i,thr_list,detmat,Z,sppmat_det,nsite,nspp){
-		thr = extract_thr(i,thr_list)
+		thr1 = extract_thr(i,thr_list)
 		rows1 = i + (1:nspp-1)*nsite
 		dethis = t(detmat[rows1,])
 		Z_site = Z[rows1,]
-		Pdet_Ising_single_site(thr, Z_site, dethis, sppmat_det)
+		Pdet_Ising_single_site(thr1, Z_site, dethis, sppmat_det)
 	},thr_list,detmat,as.matrix( Z),sppmat_det,nsite,nspp)# loop over sites
 	return(Reduce('+',Pdet))
 }
@@ -355,9 +355,9 @@ Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det
 
 Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
   #if(!is.null(no_obs)) no_obs = as.matrix(no_obs) 
-  Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,no_obs,nIter,n, method){
+  Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
     Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]])
-  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method)
+  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat)
   return(Reduce('+',Pdets))
 }
 

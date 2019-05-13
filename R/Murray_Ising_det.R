@@ -292,11 +292,10 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 
 		
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-		                          ,Z_curr ,Z_curr
+		                          ,Z_curr=Z_curr ,Z_prop = Z_curr
 		                          ,Z_temp
 		                          ,detmat
 		                          ,vars_prior
-		                           
 		                          ,X, detX
 		                          ,distM,link_map
 		                          ,dist_mainland , link_mainland
