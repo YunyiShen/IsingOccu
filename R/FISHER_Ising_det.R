@@ -59,8 +59,8 @@ nrep = 1
 #Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,sppmat_det,Z = Z_sample,detmat[[1]])
 
 
-no_obs=150:155
-no_obs = c(no_obs, no_obs + 155, no_obs + 310)
+#no_obs=150:155
+#no_obs = c(no_obs, no_obs + 155, no_obs + 310)
 
 nspp = 2
 
@@ -82,7 +82,7 @@ Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 15000, burn.in = 1500
+                                  , mcmc.iter = 5000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.3
