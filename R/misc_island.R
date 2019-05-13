@@ -392,7 +392,7 @@ IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland
 }
   # passed 2019/3/18
 
-IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX,no_obs){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
+IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
   nspp = nrow(theta$spp_mat)
   nperiod = ncol(detmat[[1]])
   beta_det = theta$beta_det
@@ -428,7 +428,7 @@ Murray.ratio = function(theta_curr ,theta_prop
 	#log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
 	log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
 	log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX, no_obs=NULL)
+	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX, no_obs)
 	log_H_theta_prop_Z_temp = Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp)
 
 	log_MH_ratio = (log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_curr_Z_temp)-
