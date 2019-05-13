@@ -241,7 +241,7 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	if(sum(spp_exist)==0 | sum(!is.na(dethis))==0){return(0)} # no species there, probability one to be no detection, or no observation here
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
-	  thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),1,sum) # condition on some species not exist here thus never be detection
+	  thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detection
 	  thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
 	}
 	graph = sppmat_det[spp_exist,spp_exist]
@@ -250,7 +250,7 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	dethis = dethis[has_obs,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
 	thr = thr[has_obs,]
 	
-	Pdet_site = apply(matrix(1:nrow(as.matrix(dethis))),1,function(k,dethis,thr,graph){
+	Pdet_site = apply(matrix(1:sum(has_obs)),1,function(k,dethis,thr,graph){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
 	} ,as.matrix( dethis), as.matrix( thr), as.matrix( graph))
 	
@@ -264,7 +264,7 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	if(sum(spp_exist)==0) return(dethis)
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
-	  thr_abs = - apply(as.matrix(sppmat_det[!spp_exist,spp_exist]),1,sum) # condition on some species not exist here thus never be detection
+	  thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detection
 	  # check here, may be sth wrong 
 	  thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
 	}
