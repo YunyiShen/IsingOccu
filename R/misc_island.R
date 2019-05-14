@@ -200,7 +200,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	
-	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method,CFTPretry = 1)
+	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method,CFTPretry = 0)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
