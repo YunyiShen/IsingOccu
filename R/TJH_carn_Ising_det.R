@@ -65,8 +65,8 @@ nspp = 4
 
 vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
                   ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(3.6e-4,nspp)
-                  ,eta_inter = rep(3.6e-4,nspp)
+                  ,eta_intra = rep(1e-4,nspp)
+                  ,eta_inter = rep(1e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-4
@@ -79,10 +79,16 @@ detmat_nona = lapply(detmat,function(mat){
 Z_absolute = (sapply(detmat_nona,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 
 rm(detmat_nona)
+datatemp  = data.frame(island,
+                       Z1 = Z_absolute[1:97,],
+                       Z2 = Z_absolute[1:97+97],
+                       Z3 = Z_absolute[1:97+2*97],
+                       Z4 = Z_absolute[1:97+3*97])
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
-
-
+require(ggplot2)
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z4))+
+  geom_point()
 
 
 
