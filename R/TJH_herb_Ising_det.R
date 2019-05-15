@@ -22,7 +22,7 @@ normd = max(max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"BM_GZL_HHD_ZH_20dayfull.csv"))))
+detmat = list(as.matrix(read.csv(paste0(link,"BL_LN_BGL_XJ_10dayfull.csv"))))
 #full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 #Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -64,13 +64,13 @@ nrep = 1
 nspp = 4
 
 vars_prop = list( beta_occu = rep(5e-4,nspp * ncol(envX))
-                  ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
+                  ,beta_det = rep(5e-4,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-4,nspp)
                   ,eta_inter = rep(1e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-4
-                  ,spp_mat_det = 2.5e-3)
+                  ,spp_mat_det = 5e-4)
 
 detmat_nona = lapply(detmat,function(mat){
   mat[is.na(mat)]=-1
@@ -87,14 +87,14 @@ datatemp  = data.frame(island,
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 require(ggplot2)
-ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z4))+
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
   geom_point()
 
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 500
+                                  , mcmc.iter = 2000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.25
@@ -105,7 +105,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 25)
+                                  , ini = theta,thin.by = 1,report.by = 100)
 
 
 
