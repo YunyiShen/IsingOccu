@@ -89,7 +89,7 @@ rm(detmat_nona)
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 15000, burn.in = 1500
+                                  , mcmc.iter = 25000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.25
