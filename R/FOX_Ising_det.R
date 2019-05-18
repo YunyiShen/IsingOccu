@@ -71,7 +71,7 @@ vars_prop = list( beta_occu = rep(8e-4,nspp * ncol(envX))
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-4
-                  ,spp_mat_det = c(2.5e-3,2.5e-3,1))
+                  ,spp_mat_det = c(2.5e-3,2.5e-3,0.01))
 
 detmat_nona = lapply(detmat,function(mat){
   mat[is.na(mat)]=-1
