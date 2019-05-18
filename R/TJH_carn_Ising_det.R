@@ -43,7 +43,7 @@ theta = list(beta_occu = c(-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3),
              spp_mat_det = -0.3 * spp_mat)
 
 link_map = 
-  list(inter = link_outer * exp(-distM_full),
+  list(inter = link_outer, # * exp(-distM_full),
        intra = link_inner)
 
 nrep = 1

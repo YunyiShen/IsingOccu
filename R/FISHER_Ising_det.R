@@ -70,7 +70,7 @@ vars_prop = list( beta_occu = rep(4e-4,nspp * ncol(envX))
                   ,eta_inter = rep(4e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 2e-4
+                  ,spp_mat = 1e-3
                   ,spp_mat_det = 2.5e-3)
 
 detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
