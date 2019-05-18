@@ -69,7 +69,7 @@ vars_prop = list( beta_occu = rep(1e-3,nspp * ncol(envX))
                   ,eta_inter = rep(5e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 1e-3
+                  ,spp_mat = 2.5e-3
                   ,spp_mat_det = 3e-3)
 
 detmat_nona = lapply(detmat,function(mat){
@@ -105,7 +105,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 30)
+                                  , ini = theta,thin.by = 5,report.by = 100,nIter = 30)
 
 
 

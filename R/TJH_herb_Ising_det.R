@@ -97,7 +97,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , mcmc.iter = 20000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.1
+                                  , Zprop_rate = 0.08
                                   #, Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
@@ -105,7 +105,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100)
+                                  , ini = theta,thin.by = 5,report.by = 100)
 
 
 
