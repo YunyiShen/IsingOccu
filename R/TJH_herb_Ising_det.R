@@ -22,25 +22,25 @@ normd = max(max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"BL_LN_BGL_XJ_10dayfull.csv"))))
+detmat = list(as.matrix(read.csv(paste0(link,"BL_LN_BGL_XJ_10dayfull.csv")))[-(98:(2*97)),])
 #full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 #Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
 ###### simulation ######
 
-spp_mat = matrix(1,4,4)
+spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
-envX = cbind(matrix(1,97,1),island$ELE,island$ELE^2)
+envX = cbind(matrix(1,97,1),island$ELE)
 envX = apply(envX,2,function(k){(k-min(k))/(max(k)-min(k))})
 envX[,1]=1
 
-theta = list(beta_occu = c(-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3),
-             beta_det = c(-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3,-.3),
-             eta_intra = c(0,0,0,0),
-             eta_inter = c(.2,.2,.2,.2),
+theta = list(beta_occu = rep(0,6),
+             beta_det = rep(0,6),
+             eta_intra = c(0,0,0),
+             eta_inter = c(.2,.2,.2),
              #d_inter = c(.2,.2),
-             spp_mat = 0.3 * spp_mat,
-             spp_mat_det = -0.3 * spp_mat)
+             spp_mat = 0.1 * spp_mat,
+             spp_mat_det = -0.1 * spp_mat)
 
 link_map = 
   list(inter = link_outer * exp(-distM_full),
@@ -61,12 +61,12 @@ nrep = 1
 #no_obs=150:155
 #no_obs = c(no_obs, no_obs + 155, no_obs + 310)
 
-nspp = 4
+nspp = 3
 
 vars_prop = list( beta_occu = rep(1e-3,nspp * ncol(envX))
                   ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = rep(1e-3,nspp)
+                  ,eta_inter = rep(5e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-3
@@ -94,7 +94,7 @@ ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 20000, burn.in = 500
+                                  , mcmc.iter = 20000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.1
