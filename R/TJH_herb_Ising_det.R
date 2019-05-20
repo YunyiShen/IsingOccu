@@ -63,7 +63,7 @@ nrep = 1
 
 nspp = 3
 
-vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = rep(0.01,nspp * ncol(envX))
                   ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = rep(5e-4,nspp)

@@ -63,7 +63,7 @@ nrep = 1
 
 nspp = 3
 
-vars_prop = list( beta_occu = rep(3e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = c(0.01,0.01,4e-3,4e-3,4e-3,8e-3)
                   ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(2e-4,nspp)
                   ,eta_inter = rep(5e-4,nspp)
@@ -82,12 +82,12 @@ rm(detmat_nona)
 datatemp  = data.frame(island,
                        Z1 = Z_absolute[1:97,],
                        Z2 = Z_absolute[1:97+97],
-                       Z3 = Z_absolute[1:97+2*97],
-                       Z4 = Z_absolute[1:97+3*97])
+                       Z3 = Z_absolute[1:97+2*97]
+                       )
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 require(ggplot2)
-ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z1))+
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = ELE))+
   geom_point()
 
 
