@@ -41,7 +41,7 @@ link_map =
   list(inter = link_outer * exp(-distM_full),
        intra = link_inner)
 
-nrep = 1
+nrep = 4
 set.seed(42)
 Z_sample = rIsingOccu_multi(theta,
                             envX,
@@ -107,15 +107,15 @@ vars_prop = list( beta_occu = rep(1e-4,nspp * ncol(envX))
 Z_absolute = (sapply(detmat,rowSums)>0) * 2 - 1
 
 no_obs = 0*Z_sample
-no_obs[11]=1
+#no_obs[11]=1
 
 
 kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   , detX =  detX
-                                  , mcmc.iter = 5e3, burn.in = 2e2
+                                  , mcmc.iter = 2500, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.1
+                                  , Zprop_rate = 0
                                   , Zprop_rate_missing_obs = 0.3
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
@@ -123,7 +123,7 @@ kk = IsingOccu.fit.Murray.sampler(X = envX, detmat =  detmat,no_obs = no_obs
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   , Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100)
+                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 30)
 
 
 
