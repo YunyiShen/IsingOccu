@@ -94,10 +94,10 @@ ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z1))+
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 2000, burn.in = 1500
+                                  , mcmc.iter = 20000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.02
+                                  , Zprop_rate = 0.05
                                   #, Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
