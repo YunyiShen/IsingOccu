@@ -22,7 +22,7 @@ normd = max(max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"BM_GZL_HHD_ZH_20dayfull.csv")))[98:(97*4),])
+detmat = list(as.matrix(read.csv(paste0(link,"BM_GZL_HHD_ZH_20dayfull.csv")))[1:(97*3),])
 #full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 #Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -43,7 +43,7 @@ theta = list(beta_occu = rep(0,6),
              spp_mat_det = -0.1 * spp_mat)
 
 link_map = 
-  list(inter = link_outer, # * exp(-distM_full),
+  list(inter = 0*link_outer, # * exp(-distM_full),
        intra = link_inner)
 
 nrep = 1
@@ -56,7 +56,7 @@ nrep = 1
 
 #sppmat_det = -0.1 * spp_mat
 #Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,theta$sppmat_det,Z = Z_sample,detmat[[1]])
-#Pdet_Ising_rep(1,52,envX,NULL,theta$beta_det,theta$spp_mat_det,Z = Z_sample,detmat)
+Pdet_Ising_rep(1,27,envX,NULL,1:6/10,theta$spp_mat_det,Z = Z_absolute,detmat)
 
 #no_obs=150:155
 #no_obs = c(no_obs, no_obs + 155, no_obs + 310)
@@ -87,17 +87,17 @@ datatemp  = data.frame(island,
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 require(ggplot2)
-ggplot(data = datatemp,aes(x=LONG,y=LAT,color = ELE))+
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z1))+
   geom_point()
 
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 20000, burn.in = 1500
+                                  , mcmc.iter = 2000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.05
+                                  , Zprop_rate = 0.02
                                   #, Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
@@ -105,7 +105,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 5,report.by = 100,nIter = 30)
+                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 100)
 
 
 
