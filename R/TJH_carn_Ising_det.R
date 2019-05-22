@@ -63,13 +63,13 @@ Pdet_Ising_rep(1,27,envX,NULL,1:6/10,theta$spp_mat_det,Z = Z_absolute,detmat)
 
 nspp = 3
 
-vars_prop = list( beta_occu = c(0.01,0.01,4e-3,4e-3,4e-3,8e-3)
-                  ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
+vars_prop = list( beta_occu = c(0.01,0.01,.01,.01,.01,.01)
+                  ,beta_det = rep(.01,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(2e-4,nspp)
                   ,eta_inter = rep(5e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 2.5e-3
+                  ,spp_mat = .01
                   ,spp_mat_det = 3e-3)
 
 detmat_nona = lapply(detmat,function(mat){

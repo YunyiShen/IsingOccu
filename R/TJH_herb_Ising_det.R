@@ -62,13 +62,13 @@ nrep = 1
 
 nspp = 3
 
-vars_prop = list( beta_occu = rep(0.001,nspp * ncol(envX))
-                  ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
+vars_prop = list( beta_occu = rep(0.01,nspp * ncol(envX))
+                  ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = rep(5e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 2e-3
+                  ,spp_mat = 5e-3
                   ,spp_mat_det = 5e-4)
 
 detmat_nona = lapply(detmat,function(mat){
@@ -93,7 +93,7 @@ ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 1500
+                                  , mcmc.iter = 15000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.08
