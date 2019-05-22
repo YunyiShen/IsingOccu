@@ -42,7 +42,7 @@ theta = list(beta_occu = rep(0,6),
              spp_mat = 0.1 * spp_mat,
              spp_mat_det = -0.1 * spp_mat)
 
-link_map = list(inter = 0*link_outer * exp(-distM_full),
+link_map = list(inter = link_outer * exp(-distM_full),
        intra = link_inner)
 
 nrep = 1
@@ -93,7 +93,7 @@ ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 20000, burn.in = 1500
+                                  , mcmc.iter = 5000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.08
