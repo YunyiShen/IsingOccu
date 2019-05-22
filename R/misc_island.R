@@ -242,8 +242,9 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
 	  thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detected 
-	  # need further check 
-	  thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
+	  # need further check
+	  thr = thr_exis
+	  #thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
 	}
 	graph = sppmat_det[spp_exist,spp_exist]
 	#thr = t(thr)
