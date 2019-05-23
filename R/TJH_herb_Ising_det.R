@@ -42,7 +42,7 @@ theta = list(beta_occu = rep(0,6),
              spp_mat = 0.1 * spp_mat,
              spp_mat_det = -0.1 * spp_mat)
 
-link_map = list(inter = link_outer * exp(-distM_full),
+link_map = list(inter = 0 * link_outer * exp(-distM_full),
        intra = link_inner)
 
 nrep = 1
@@ -104,7 +104,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 5,report.by = 100)
+                                  , ini = theta,thin.by = 5,report.by = 100,nIter = 30)
 
 
 

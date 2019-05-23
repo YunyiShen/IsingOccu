@@ -43,7 +43,7 @@ theta = list(beta_occu = rep(0,6),
              spp_mat_det = -0.1 * spp_mat)
 
 link_map = 
-  list(inter = 0*link_outer, # * exp(-distM_full),
+  list(inter = 0*link_outer * exp(-distM_full),
        intra = link_inner)
 
 nrep = 1
@@ -63,14 +63,14 @@ Pdet_Ising_rep(1,27,envX,NULL,1:6/10,theta$spp_mat_det,Z = Z_absolute,detmat)
 
 nspp = 3
 
-vars_prop = list( beta_occu = c(0.01,0.01,.01,.01,.01,.01)
-                  ,beta_det = rep(.01,nspp * ( ncol(envX)) ) # no extra det thing
+vars_prop = list( beta_occu = c(0.01,0.01,.01,.04,.04,.04)
+                  ,beta_det = rep(.02,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(2e-4,nspp)
-                  ,eta_inter = rep(5e-4,nspp)
+                  ,eta_inter = rep(1e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = .01
-                  ,spp_mat_det = 3e-3)
+                  ,spp_mat = 1e-2
+                  ,spp_mat_det = 1e-2)
 
 detmat_nona = lapply(detmat,function(mat){
   mat[is.na(mat)]=-1
@@ -87,14 +87,14 @@ datatemp  = data.frame(island,
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 require(ggplot2)
-ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z1))+
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z2))+
   geom_point()
 
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 20000, burn.in = 1500
+                                  , mcmc.iter = 50000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.05
@@ -105,7 +105,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 100)
+                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 30)
 
 
 
