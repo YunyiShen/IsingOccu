@@ -1,4 +1,4 @@
-nspp = 3
+nspp = 2
 ncov = ncol(envX)
 hs = matrix(0,nrow(envX),nspp)
 
@@ -26,8 +26,8 @@ pal <- colorRampPalette(c("pink","white","darkgreen"))
 raster::plot(raster::raster(E),col = pal(200))
 graph2ppt(file = "TJHcarn_envmat.pptx")
 
-raster::plot(raster::raster(matrix(kk$means$spp_mat,3,3)),col = pal(200))
-graph2ppt(file = "TJHcarn_intermat.pptx")
+raster::plot(raster::raster(matrix(kk$means$spp_mat,nspp,nspp)),col = pal(200))
+graph2ppt(file = "FM_intermat.pptx")
 
-raster::plot(raster::raster(matrix(kk$means$spp_mat_det,3,3)),col =pal(200))
-graph2ppt(file = "TJHcarn_behamat.pptx")
+raster::plot(raster::raster(matrix(kk$means$spp_mat_det,nspp,nspp)),col =pal(200))
+graph2ppt(file = "FM_behamat.pptx")
