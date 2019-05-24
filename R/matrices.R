@@ -1,4 +1,4 @@
-nspp = 2
+nspp = 3
 ncov = ncol(envX)
 hs = matrix(0,nrow(envX),nspp)
 
