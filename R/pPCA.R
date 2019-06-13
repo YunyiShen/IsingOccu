@@ -25,7 +25,11 @@ function(cnt,dis,...){
     
     eig = eigen(cormat,T) # corresponding eigen problem
 	
+	V = eig$vector
+	X = cbind(cnt,dis)
+	X_new = X%*%V
+	w = eig$value/sum(eig$value)
 	
-
+	return(list(eigen_vector = V,eigen_value = eig$value,weight = w,newX = X_new))
 
 }
