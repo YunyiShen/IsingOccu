@@ -4,7 +4,7 @@ source("Murray_Ising_det.R")
 
 ###### graph data ######
 link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/TJH/"
-link = "E:/UW Lab jobs/2. ISING Occupancy model/2. RFIBMs MCMC/RFIBM/TJH/"
+link = "E:/UW Lab jobs/2. ISING Occupancy model/4. DATA/TJH/"
 island = read.csv(paste0(link,"TJH_unique_grids.csv"))
 
 link_outer = as.matrix( read.csv(paste0(link, "link_TJH.csv")))

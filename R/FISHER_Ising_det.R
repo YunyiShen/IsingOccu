@@ -4,7 +4,7 @@ source("Murray_Ising_det.R")
 
 ###### graph data ######
 link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
-link = "E:/UW Lab jobs/2. ISING Occupancy model/2. RFIBMs MCMC/RFIBM/island/"
+link = "E:/UW Lab jobs/2. ISING Occupancy model/4. DATA/APIS/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
