@@ -10,9 +10,9 @@ island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
 #link_outer = as.matrix( read.csv("link_outer.csv",row.names = 1))
 link_outer = as.matrix( read.csv(paste0(link,"link_outer_full.csv"),row.names = 1))
-link_mainland = as.matrix( read.csv(paste0(link,"link_mainland.csv")))
-#link_outer = 0 * link_outer # this makes it a mainland-island system
-#link_mainland = matrix(0,155,1)
+#link_mainland = as.matrix( read.csv(paste0(link,"link_mainland.csv")))
+link_outer = 0 * link_outer # this makes it a mainland-island system
+link_mainland = matrix(1,155,1)
 
 distM_full = as.matrix( read.csv(paste0(link,"distM_full.csv"),row.names = 1))
 distM_mainland = as.matrix( read.csv(paste0(link,"dist_to_mainland.csv"),row.names = 1))
