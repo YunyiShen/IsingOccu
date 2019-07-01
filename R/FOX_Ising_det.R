@@ -95,14 +95,14 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , Zprop_rate = 0.05
                                   #, Zprop_rate_missing_obs = 0
                                   , distM=distM_full,link_map=link_map
-                                  , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
+                                  , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
                                   #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
                                   #, Z = Z_absolute
                                   , seed = 42
                                   , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
 
-
+save.image("CFB_Mainland_island.RData")
 
 
 
