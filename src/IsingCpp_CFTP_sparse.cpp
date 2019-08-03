@@ -1,10 +1,12 @@
 #include <Rcpp.h>
 #include <climits>
+// [[Rcpp::depends(RcppArmadillo)]]
+#include <RcppArmadillo.h> // to use sparse matrix
 using namespace Rcpp;
 
 // FUNCTIONS FOR EXACT SAMPLING //
 
-// Inner function to resize list: do not need change
+// Inner function to resize list:
 List resize( const List& x, int n ){
     int oldsize = x.size() ;
     List y(n) ;
@@ -12,7 +14,7 @@ List resize( const List& x, int n ){
     return y ;
 }
 
-// Inner function to simulate random uniforms in a matrix: do not need change
+// Inner function to simulate random uniforms in a matrix:
 NumericMatrix RandMat(int nrow, int ncol)
  {
   int N = nrow * ncol;
@@ -25,14 +27,14 @@ NumericMatrix RandMat(int nrow, int ncol)
   return(Res);
  }
 
-// Computes maximal and minimal probability of node flipping: changed
-NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, IntegerVector t, double eta,NumericVector h, double beta, IntegerVector responses)
+// Computes maximal and minimal probability of node flipping:
+NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
 {
   // The function computes the probability that node i is in Response 1 instead of 0, given all other nodes, which might be missing.
   // Output: minimal and maximal probablity
   
-  NumericVector H0(2, (h[i] + eta * t[i]) * responses[0]); // relevant part of the Hamiltonian for state = 0, add second layer
-  NumericVector H1(2, (h[i] + eta * t[i]) * responses[1]); // relevant part of the Hamiltonian for state = 1
+  NumericVector H0(2, h[i] * responses[0]); // relevant part of the Hamiltonian for state = 0
+  NumericVector H1(2, h[i] * responses[1]); // relevant part of the Hamiltonian for state = 1
   
   NumericVector Res(2);
   
@@ -81,19 +83,17 @@ NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, IntegerVector
   return(Res);
 }
        
-// Inner function: changed
-IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector thresholds, NumericVector thresholdt, double eta ,double beta, int nIter, IntegerVector responses, bool exact)
+// Inner function:
+IntegerVector IsingEx(NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerVector constrain)
 {
   // Parameters and results vector:
   int N = graph.nrow();
-  IntegerVector states(N, 1); //sigma
-  IntegerVector statet(N, 1); //tau
+  IntegerVector state(N, INT_MIN);
   double u;
-  NumericVector Ps(2);
-  NumericVector Pt(2);
+  NumericVector P(2);
   int maxChain = 100;
-  List Us(1);
-  List Ut(1)
+  List U(1);
   int minT = 0;
   bool anyNA = true;
     
@@ -102,25 +102,21 @@ IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector 
     // Resize U if needed:
     if (minT > 0)
     {
-      Us = resize(Us, minT+1);
-	  Ut = resize(Ut, minT+1);
+      U = resize(U, minT+1);
     }
     
     // Generate new random numbers:
-    Us[minT] = RandMat(nIter, N);
-	Ut[minT] = RandMat(nIter, N);
+    U[minT] = RandMat(nIter, N);
     
     // Initialize states:
     for (int i=0; i<N; i++)
     {
       if (exact)
       {
-        states[i] = INT_MIN;
-		statet[i] = INT_MIN;
+        state[i] = INT_MIN;
       } else 
       {
-        states[i] = ifelse(runif(1) < 0.5, responses[1], responses[0])[0];
-		statet[i] = ifelse(runif(1) < 0.5, responses[1], responses[0])[0];
+        state[i] = ifelse(runif(1) < 0.5, responses[1], responses[0])[0];
       }
     }    
 
@@ -129,38 +125,20 @@ IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector 
     {
       for (int it=0;it<nIter;it++)
       {
-        NumericMatrix Ucur = Us[t];
-		
-        for (int node=0;node<N;node++) // update sigma
+        NumericMatrix Ucur = U[t];
+        for (int node=0;node<N;node++)
         {
           u = Ucur(it, node);
-          P = PplusMinMax(node, graphs, states, statet,thresholds, eta,beta, responses);
+          P = PplusMinMax(node, graph, state, thresholds, beta, responses);
           if (u < P[0])
           {
-            states[node] = responses[1];
+            state[node] = responses[1];
           } else if (u >= P[1])
           {
-            states[node] = responses[0];
+            state[node] = responses[0];
           } else 
           {
-            states[node] = INT_MIN;
-          }
-        }
-		
-		NumericMatrix Ucur = Ut[t];
-		for (int node=0;node<N;node++) // update tau
-        {
-          u = Ucur(it, node);
-          P = PplusMinMax(node, grapht, statet, states,thresholdt, eta,beta, responses);
-          if (u < P[0])
-          {
-            statet[node] = responses[1];
-          } else if (u >= P[1])
-          {
-            statet[node] = responses[0];
-          } else 
-          {
-            statet[node] = INT_MIN;
+            state[node] = INT_MIN;
           }
         }
       }
@@ -173,7 +151,7 @@ IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector 
       {
        for (int i=0; i<N; i++)
        {
-        if (statet[i] == INT_MIN || states[i] == INT_MIN)
+        if (state[i] == INT_MIN)
         {
           anyNA = true;
         }
@@ -183,22 +161,20 @@ IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector 
     minT++;
     
   } while (anyNA);
-  IntegerMatrix state(N,2);
-  state(_,0) = states;
-  state(_,1) = ststet;
+
   // Rf_PrintValue(wrap(minT));
   return(state);
 }
 
 
-// FUNCTIONS FOR METROPOLIS SAMPLER //, changed
-double Pplus(int i, NumericMatrix J, IntegerVector s, IntegerVector t, double eta ,NumericVector h, double beta, IntegerVector responses)
+// FUNCTIONS FOR METROPOLIS SAMPLER //
+double Pplus(int i, NumericMatrix J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
 {
   // The function computes the probability that node i is in Response 1 instead of 0, given all other nodes, which might be missing.
   // Output: minimal and maximal probablity
   
-  double H0 = h[i] * responses[0] + eta * t[i] * responses[0]; // relevant part of the Hamiltonian for state = 0
-  double H1 = h[i] * responses[1] + eta * t[i] * responses[1]; // relevant part of the Hamiltonian for state = 1, added another layer
+  double H0 = h[i] * responses[0]; // relevant part of the Hamiltonian for state = 0
+  double H1 = h[i] * responses[1]; // relevant part of the Hamiltonian for state = 1
 
   //double Res;
 
@@ -218,155 +194,122 @@ double Pplus(int i, NumericMatrix J, IntegerVector s, IntegerVector t, double et
 }
 
 
-IntegerMatrix IsingMet(NumericMatrix graphs, NumericVector thresholds, NumericMatrix grapht, NumericVector thresholdt, double eta,double beta, int nIter, IntegerVector responses) //changed
+IntegerVector IsingMet(NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses,
+IntegerVector constrain)
 {
   // Parameters and results vector:
-  int N = graphs.nrow();
-  IntegerVector states =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
-  IntegerVector statet =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
-  
+  int N = graph.nrow();
+  IntegerVector state =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
+  for (int i=0; i<N; i++)
+  {
+    if (constrain[i] != INT_MIN)
+    {
+      state[i] = constrain[i];
+    }
+  }
   double u;
   double P;
     
     // START ALGORITHM
     for (int it=0;it<nIter;it++)
     {
-      for (int node=0;node<N;node++) //update first layer
-      { 
+      for (int node=0;node<N;node++)
+      {
+        if (constrain[node] == INT_MIN)
+        {
          u = runif(1)[0];
-         P = Pplus(node, graphs, states, statet, eta,thresholds, beta, responses);
+         P = Pplus(node, graph, state, thresholds, beta, responses);
           if (u < P)
          {
-           states[node] = responses[1];
+           state[node] = responses[1];
          } else 
          {
-           states[node] = responses[0];
+           state[node] = responses[0];
          } 
+        }
       }
-	  for (int node=0;node<N;node++) //update second layer
-      { 
-         u = runif(1)[0];
-         P = Pplus(node, grapht, statet, states, eta, thresholds, beta, responses);
-          if (u < P)
-         {
-           statet[node] = responses[1];
-         } else 
-         {
-           statet[node] = responses[0];
-         } 
-      }
-	}
+    }
    
-   IntegerMatrix state (statet.size(),2);//check how to code here
-   state(_,0)=states;
-   state(_,1)=statet;
   return(state);
 }
 
 
 ///ISING PROCESS SAMPLER:
-// [[Rcpp::export]] changed, List class not sure
-List IsingProcess(int nSample, NumericMatrix graphs, NumericVector thresholds, NumericMatrix grapht, NumericVector thresholdt, eta,double beta, IntegerVector responses)
+// [[Rcpp::export]]
+IntegerMatrix IsingProcess(int nSample, NumericMatrix graph, NumericVector thresholds, double beta, IntegerVector responses)
 {
   // Parameters and results vector:
-  int N = graphs.nrow();
-  IntegerVector states =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
-  IntegerVector statet =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
+  int N = graph.nrow();
+  IntegerVector state =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
   double u;
   double P;
-  IntegerMatrix Ress(nSample,N);
-  IntegerMatrix Rest(nSample,N);
+  IntegerMatrix Res(nSample,N);
   int node;
     
     // START ALGORITHM
     for (int it=0;it<nSample;it++)
     {
-		node = floor(R::runif(0,N));
+      node = floor(R::runif(0,N));
         u = runif(1)[0];
-        P = P = Pplus(node, graphs, states, statet, eta,thresholds, beta, responses);
+        P = Pplus(node, graph, state, thresholds, beta, responses);
         if (u < P)
         {
-          states[node] = responses[1];
+          state[node] = responses[1];
         } else 
         {
-          states[node] = responses[0];
+          state[node] = responses[0];
         }
-        Ress(it,_) = states;
-		
-		node = floor(R::runif(0,N));
-        u = runif(1)[0];
-        P = P = Pplus(node, grapht, statet, states, eta,thresholds, beta, responses);
-        if (u < P)
-        {
-          statet[node] = responses[1];
-        } else 
-        {
-          statet[node] = responses[0];
-        }
-        Rest(it,_) = statet;
+        for (int k=0; k<N; k++) Res(it,k) = state[k];
     }
-  List Res(2);
-  Res[0] = states;
-  Res[1] = statet;
+   
   return(Res);
 }
 
 // OVERAL FUNCTION //
-// [[Rcpp::export]]// Changed, but not sure about list
-List IsingSamplerCpp(int n, NumericMatrix graphs, NumericVector thresholds, NumericMatrix grapht, NumericVector thresholdt, double eta, double beta, int nIter, IntegerVector responses, bool exact,
-IntegerMatrix constrains, IntegerMatrix constraint)
+// [[Rcpp::export]]
+IntegerMatrix IsingSamplerCpp(int n, NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerMatrix constrain)
 {
-  int Ni = graphs.nrow();
-  IntegerMatrix Ress(n,Ni);
-  IntegerMatrix Rest(n,Ni);
-  //IntegerVector states(Ni);
-  //IntegerVector statet(Ni);
-  IntegerMatrix state(Ni,2);
-  IntegerVector constrainsVec(Ni);
-  IntegerVector constraintVec(Ni);
-  List Res(2);
+  int Ni = graph.nrow();
+  IntegerMatrix Res(n,Ni);
+  IntegerVector state(Ni);
+  IntegerVector constrainVec(Ni);
   if (exact)
   {
     for (int s=0;s<n;s++)
     {
-      constrainsVec = constrains(s,_);
-	  constraintVec = constraint(s,_);
-      state = IsingEx(graphs, thresholds, grapht, thresholdt, eta, beta, nIter, responses, exact);
-	  Rest(s,_) = state(_,0);
-      Ress(s,_) = state(_,0);
+      for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
+      state = IsingEx(graph, thresholds, beta, nIter, responses, exact, constrainVec);
+      for (int i=0;i<Ni;i++) Res(s,i) = state[i];
     }
   } else 
   {
     for (int s=0;s<n;s++)
     {
-      constrainsVec = constrains(s,_);
-	  constraintVec = constraint(s,_);
-      state = IsingMet(graphs, thresholds, grapht, thresholdt, eta, beta, nIter, responses, exact);
-	  Rest(s,_) = state(_,0);
-      Ress(s,_) = state(_,0);
+      for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
+      state = IsingMet(graph, thresholds, beta, nIter, responses, constrainVec);
+      for (int i=0;i<Ni;i++) Res(s,i) = state[i];
     }
   }
-  Res(0) = Ress;
-  Res(1) = Rest; //not sure here
+  
   return(Res);
 }
 
 
 // HELPER FUNCTIONS //
-// Hamiltonian: changed
+// Hamiltonian:
+// THIS IS VERY USEFUL TO CHANGE, FOR US, H is just -log likelihood function 
 // [[Rcpp::export]]
-double H(NumericMatrix Js, NumericMatrix Jt, IntegerVector s, IntegerVector t, double eta, NumericVector hs, NumericVector ht)
+double H(NumericMatrix J, IntegerVector s, NumericVector h)
 {
   double Res = 0;
   int N = J.nrow();
   for (int i=0;i<N;i++)
   {
-    Res -= (hs[i] + eta * t[i]) * s[i];
-	Res -= (ht[i]) * t[i];
+    Res -= h[i] * s[i];
     for (int j=i;j<N;j++)
     {
-      Res -= Js(i,j) * s[i] * s[j] * (j!=i);
-	  Res -= Jt(i,j) * t[i] * t[j] * (j!=i);
+      if (j!=i) Res -= J(i,j) * s[i] * s[j];
     }
   }
   return(Res);
@@ -374,28 +317,26 @@ double H(NumericMatrix Js, NumericMatrix Jt, IntegerVector s, IntegerVector t, d
 
 
 // Likelihood without Z
-// [[Rcpp::export]] // not sure what this is
-double f(List Y, NumericMatrix Js, NumericMatrix Jt, NumericVector hs, NumericVector ht , double eta)
+// [[Rcpp::export]]
+double f(IntegerMatrix Y, NumericMatrix J, NumericVector h)
 {
   double Res = 1;
-  S = Y(0);
-  T = Y(1);
-  int Np = S.nrow();
-  int Ni = Js.ncol();
+  int Np = Y.nrow();
+  int Ni = J.ncol();
   IntegerVector s(Ni);
-  IntegerVector t(Ni);
   for (int p=0;p<Np;p++)
   {
-
-      s = S(p,_);
-	  t = T(p,_)
-    Res *= exp(-1.0 * H(Js, Jt, s, t, eta, hs, ht));
+    for (int i=0;i<Ni;i++)
+    {
+      s[i] = Y(p,i);
+    }
+    Res *= exp(-1.0 * H(J, s, h));
   }
   return(Res);
 }
 
 
-// VECTOR VERSIONS did not changed, skip//
+// VECTOR VERSIONS //
 
 
 // Hamiltonian:
@@ -655,26 +596,6 @@ NumericVector expvalues(IntegerMatrix x){
   }
   
   return(Res);
-}
-
-//expected interlayer spin correlation 
-double EIntLayercov(List MCMC){
-	S = MCMC(0);
-	T = MCMC(1);
-	// Sample size:
-    int N = S.nrow();
-    // Number of nodes:
-    int P = T.ncol();
-	double Res;
-	Res = 0;
-	for(int i=0;i<N;i++){
-		for(int j=0;j<P;j++){
-			Res += S(i,j) * T(i,j);
-			
-		}
-	}
-	Res = Res/(N*P);
-	return(Res);
 }
 
 // Function to obtain thresholds from vector:
