@@ -19,13 +19,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	
 	cat("Initializing...\n\n")
 	require(coda)
-	require(IsingSampler)
+	#require(IsingSampler)
   require(Matrix)
   require(RcppArmadillo)
 	source("misc_island.R")
+  Rcpp::sourceCpp("IsingCpp_CFTP_sparse.cpp")
 	set.seed(seed)
-	
-	#missing_obs = is.na(sum(Z))
 	
 	cat("Setting for imperfect observation and missing sites:\n")
 	if(Zprop_rate==0) cat("    Perfect observation, given by Z\n")

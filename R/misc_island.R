@@ -180,7 +180,7 @@ Hamiltonian_posterior = function(theta,envX,distM,link_map,dist_mainland,link_ma
   # passed 2019/3/19
 
 rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
-	require(IsingSampler)
+	#require(IsingSamplerCpp)
 	nsite = nrow(envX)
 	beta_occu = theta$beta_occu
 	eta_intra = theta$eta_intra # intra spp, intra island if apply
@@ -202,7 +202,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	
-	Z = IsingSampler(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method,CFTPretry = 0)
+	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method,CFTPretry = 0)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
@@ -275,7 +275,7 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	graph = sppmat_det[spp_exist,spp_exist]
 	dethis_exist = dethis[,spp_exist]
 	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
-		IsingSampler(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,method = method)
+		IsingSamplerCpp(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,method = method)
 	},matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph),nIter,n,method)
 	dethis[,spp_exist] = t(dethis_exist)
 	return(dethis)
@@ -288,7 +288,7 @@ extract_thr = function(i,thr_list){
 }
 
 Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
-	require(IsingSampler)
+	#require(IsingSamplerCpp)
 	 # This is the full design matrix list of detection probability p at time
 	if(is.null(detX)) {
 	  detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
@@ -316,7 +316,7 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 
 ## sampleIsingdet
 Sample_Ising_detection = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter=100,n=1, method = "CFTP"){
-	require(IsingSampler)
+	#require(IsingSamplerCpp)
   #detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
   if(is.null(detX)) {
     detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
