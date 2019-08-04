@@ -1,7 +1,7 @@
-#include <Rcpp.h>
-#include <climits>
+//#include <Rcpp.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h> // to use sparse matrix
+#include <climits>
 using namespace Rcpp;
 
 // FUNCTIONS FOR EXACT SAMPLING //
@@ -612,8 +612,8 @@ NumericVector vec2Thresh(NumericVector vec, int P){
 }
 
 // [[Rcpp::export]]
-NumericMatrix vec2Graph(NumericVector vec, int P){
-  NumericMatrix Res(P, P);
+arma::sp_mat vec2Graph(NumericVector vec, int P){
+  arma::sp_mat Res(P, P);
   
   int par = P;
   
