@@ -4,8 +4,7 @@ source("./R/Murray_Ising_det.R")
 Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 ###### graph data ######
-link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
-link = "E:/UW Lab jobs/2. ISING Occupancy model/4. DATA/APIS/"
+link = "./data/APIS/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
@@ -87,12 +86,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.05
-                                 # , Zprop_rate_missing_obs = 0
+                                 
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
-                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  #, Z = Z_absolute
+                                  
                                   , seed = 42
                                   , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
 
