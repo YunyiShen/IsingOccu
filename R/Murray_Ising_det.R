@@ -19,7 +19,6 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	
 	cat("Initializing...\n\n")
 	require(coda)
-	#require(IsingSampler)
   require(Matrix)
   require(RcppArmadillo)
 	source("misc_island.R")
