@@ -1,8 +1,9 @@
 getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #it can be used multiple times for interislan and intra-island
 {
-  #eta = eta[1:nspp]
+  # pass all graphs as sparse matrix in package Matrix
   nspp = nrow(spp_mat) # which is the interspecific neighborhood matrix
   A = list() # intralayer graphs are passed using lists
+  link_map = as(as.matrix(link_map),"dgCMatrix")
   if(int_range=="arth"){
     A = lapply(1:nspp,function(i,eta,distM,d){
       eta[i]*as.matrix(1/((distM)^(2+d[i])))
@@ -32,14 +33,14 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
       }
     }
   }
-  return(A)
+  return(A) # if link map is sparse, then A is sparse
 } 
   # passed 2019/3/18
 
 getfullGraph = function(A_ex,A_in,spp_mat){
   nspp = nrow(spp_mat)
   nsite = nrow(A_ex[[1]])
-  A = matrix(0,nspp*nsite,nspp*nsite)
+  A = Matrix(0,nspp*nsite,nspp*nsite,sparse = T)
   for(i in 2:nspp-1){
     A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]] # diagonal part
     for(j in (i+1):nspp){
@@ -57,6 +58,7 @@ getfullGraph = function(A_ex,A_in,spp_mat){
 
 mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp"){
 	A = 0*dist_mainland
+	link_mainland = (as.matrix(link_mainland))
 	if(int_range_inter=="arth"){
 			A = eta*as.matrix(1/((dist_mainland)^(2+d)))
 	}
@@ -66,7 +68,7 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 		}
 	  else{
 	    if(int_range_inter=="nn")
-	    A = eta * as.matrix(link_mainland)
+	    A = eta * (link_mainland)
 	  }
 	}
 	return(A)

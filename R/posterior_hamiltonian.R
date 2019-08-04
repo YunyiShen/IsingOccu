@@ -10,7 +10,7 @@ post_para = lapply(sample_temp,function(k,posterior){
 
 contri = sapply(post_para,Hamiltonian_posterior,
                 envX,distM_full,link_map,
-                distM_mainland,link_mainland =  link_mainland * exp(-2*distM_mainland),
+                distM_mainland,link_mainland =  link_mainland * exp(-distM_mainland),
                 int_range_intra="nn",int_range_inter="nn",Z = Z_sample)
 
 contri = mcmc(t(contri))
@@ -30,7 +30,7 @@ temp1 = data.frame(point = "model fit"
                    , name = Parameter )
 
 require(ggplot2)
-ggplot(temp1[-c(1,3,5,7),],aes(x=name, y=mean, colour = point)) + 
+ggplot(temp1[-c(1,4,5,8),],aes(x=name, y=mean, colour = point)) + 
   geom_errorbar(aes(ymin=low, ymax=high), width=.1) +
   #geom_line() +
   geom_point()+
@@ -46,9 +46,9 @@ ggplot(temp1[-c(1,3,5,7),],aes(x=name, y=mean, colour = point)) +
   ylab("value")+
   xlab("parameter")
 
-
-temp = data.frame("modelfit",contri[,-c(1,3,5,7,4,8)])
-colnames(temp) = c("id","Fisher_intra","Marten_intra","Association","Fisher_mainland","Marten_mainland")
+require(reshape2)
+temp = data.frame("modelfit",contri[,-c(1,5,4,8)])
+colnames(temp) = c("id","Fisher_intra","Fisher_inter","Marten_intra","Marten_inter","Association","Fisher_mainland","Marten_mainland")
 temp = melt(temp,value.name = "posterior_negH")
 ggplot(data = temp,aes(x=variable,y=posterior_negH))+geom_boxplot()+
   theme(axis.text.x = element_text(size = 10, 

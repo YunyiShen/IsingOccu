@@ -28,7 +28,7 @@ NumericMatrix RandMat(int nrow, int ncol)
  }
 
 // Computes maximal and minimal probability of node flipping:
-NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
+NumericVector PplusMinMax(int i, arma::sp_mat J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
 {
   // The function computes the probability that node i is in Response 1 instead of 0, given all other nodes, which might be missing.
   // Output: minimal and maximal probablity
@@ -38,7 +38,7 @@ NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, NumericVector
   
   NumericVector Res(2);
   
-  int N = J.nrow();
+  int N = J.n_rows;
   NumericVector TwoOpts(2);
   
   for (int j=0; j<N; j++)
@@ -84,11 +84,11 @@ NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, NumericVector
 }
        
 // Inner function:
-IntegerVector IsingEx(NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerVector IsingEx(arma::sp_mat graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
 IntegerVector constrain)
 {
   // Parameters and results vector:
-  int N = graph.nrow();
+  int N = graph.n_rows;
   IntegerVector state(N, INT_MIN);
   double u;
   NumericVector P(2);
@@ -167,8 +167,9 @@ IntegerVector constrain)
 }
 
 
+
 // FUNCTIONS FOR METROPOLIS SAMPLER //
-double Pplus(int i, NumericMatrix J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
+double Pplus(int i, arma::sp_mat J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
 {
   // The function computes the probability that node i is in Response 1 instead of 0, given all other nodes, which might be missing.
   // Output: minimal and maximal probablity
@@ -179,7 +180,7 @@ double Pplus(int i, NumericMatrix J, IntegerVector s, NumericVector h, double be
   //double Res;
 
   
-  int N = J.nrow();
+  int N = J.n_rows;
   
   for (int j=0; j<N; j++)
   {
@@ -194,11 +195,11 @@ double Pplus(int i, NumericMatrix J, IntegerVector s, NumericVector h, double be
 }
 
 
-IntegerVector IsingMet(NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses,
+IntegerVector IsingMet(arma::sp_mat graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses,
 IntegerVector constrain)
 {
   // Parameters and results vector:
-  int N = graph.nrow();
+  int N = graph.n_rows;
   IntegerVector state =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
   for (int i=0; i<N; i++)
   {
@@ -236,10 +237,10 @@ IntegerVector constrain)
 
 ///ISING PROCESS SAMPLER:
 // [[Rcpp::export]]
-IntegerMatrix IsingProcess(int nSample, NumericMatrix graph, NumericVector thresholds, double beta, IntegerVector responses)
+IntegerMatrix IsingProcess(int nSample, arma::sp_mat graph, NumericVector thresholds, double beta, IntegerVector responses)
 {
   // Parameters and results vector:
-  int N = graph.nrow();
+  int N = graph.n_rows;
   IntegerVector state =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
   double u;
   double P;
@@ -267,10 +268,10 @@ IntegerMatrix IsingProcess(int nSample, NumericMatrix graph, NumericVector thres
 
 // OVERAL FUNCTION //
 // [[Rcpp::export]]
-IntegerMatrix IsingSamplerCpp(int n, NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerMatrix IsingSamplerCpp(int n, arma::sp_mat graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
 IntegerMatrix constrain)
 {
-  int Ni = graph.nrow();
+  int Ni = graph.n_rows;
   IntegerMatrix Res(n,Ni);
   IntegerVector state(Ni);
   IntegerVector constrainVec(Ni);
@@ -300,10 +301,10 @@ IntegerMatrix constrain)
 // Hamiltonian:
 // THIS IS VERY USEFUL TO CHANGE, FOR US, H is just -log likelihood function 
 // [[Rcpp::export]]
-double H(NumericMatrix J, IntegerVector s, NumericVector h)
+double H(arma::sp_mat J, IntegerVector s, NumericVector h)
 {
   double Res = 0;
-  int N = J.nrow();
+  int N = J.n_rows;
   for (int i=0;i<N;i++)
   {
     Res -= h[i] * s[i];
@@ -318,11 +319,11 @@ double H(NumericMatrix J, IntegerVector s, NumericVector h)
 
 // Likelihood without Z
 // [[Rcpp::export]]
-double f(IntegerMatrix Y, NumericMatrix J, NumericVector h)
+double f(IntegerMatrix Y, arma::sp_mat J, NumericVector h)
 {
   double Res = 1;
   int Np = Y.nrow();
-  int Ni = J.ncol();
+  int Ni = J.n_cols;
   IntegerVector s(Ni);
   for (int p=0;p<Np;p++)
   {
