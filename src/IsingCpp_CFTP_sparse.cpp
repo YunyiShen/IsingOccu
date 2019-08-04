@@ -28,7 +28,7 @@ NumericMatrix RandMat(int nrow, int ncol)
  }
 
 // Computes maximal and minimal probability of node flipping:
-NumericVector PplusMinMax(int i, arma::sp_mat J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
+NumericVector PplusMinMax(int i, const arma::sp_mat& J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
 {
   // The function computes the probability that node i is in Response 1 instead of 0, given all other nodes, which might be missing.
   // Output: minimal and maximal probablity
@@ -84,7 +84,7 @@ NumericVector PplusMinMax(int i, arma::sp_mat J, IntegerVector s, NumericVector 
 }
        
 // Inner function:
-IntegerVector IsingEx(arma::sp_mat graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerVector IsingEx(const arma::sp_mat& graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
 IntegerVector constrain)
 {
   // Parameters and results vector:
@@ -169,7 +169,7 @@ IntegerVector constrain)
 
 
 // FUNCTIONS FOR METROPOLIS SAMPLER //
-double Pplus(int i, arma::sp_mat J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
+double Pplus(int i, const arma::sp_mat& J, IntegerVector s, NumericVector h, double beta, IntegerVector responses)
 {
   // The function computes the probability that node i is in Response 1 instead of 0, given all other nodes, which might be missing.
   // Output: minimal and maximal probablity
@@ -195,7 +195,7 @@ double Pplus(int i, arma::sp_mat J, IntegerVector s, NumericVector h, double bet
 }
 
 
-IntegerVector IsingMet(arma::sp_mat graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses,
+IntegerVector IsingMet(const arma::sp_mat& graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses,
 IntegerVector constrain)
 {
   // Parameters and results vector:
@@ -237,7 +237,7 @@ IntegerVector constrain)
 
 ///ISING PROCESS SAMPLER:
 // [[Rcpp::export]]
-IntegerMatrix IsingProcess(int nSample, arma::sp_mat graph, NumericVector thresholds, double beta, IntegerVector responses)
+IntegerMatrix IsingProcess(int nSample, const arma::sp_mat& graph, NumericVector thresholds, double beta, IntegerVector responses)
 {
   // Parameters and results vector:
   int N = graph.n_rows;
@@ -268,7 +268,7 @@ IntegerMatrix IsingProcess(int nSample, arma::sp_mat graph, NumericVector thresh
 
 // OVERAL FUNCTION //
 // [[Rcpp::export]]
-IntegerMatrix IsingSamplerCpp(int n, arma::sp_mat graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerMatrix IsingSamplerCpp(int n, const arma::sp_mat& graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
 IntegerMatrix constrain)
 {
   int Ni = graph.n_rows;
@@ -301,7 +301,7 @@ IntegerMatrix constrain)
 // Hamiltonian:
 // THIS IS VERY USEFUL TO CHANGE, FOR US, H is just -log likelihood function 
 // [[Rcpp::export]]
-double H(arma::sp_mat J, IntegerVector s, NumericVector h)
+double H(const arma::sp_mat& J, IntegerVector s, NumericVector h)
 {
   double Res = 0;
   int N = J.n_rows;
@@ -319,7 +319,7 @@ double H(arma::sp_mat J, IntegerVector s, NumericVector h)
 
 // Likelihood without Z
 // [[Rcpp::export]]
-double f(IntegerMatrix Y, arma::sp_mat J, NumericVector h)
+double f(IntegerMatrix Y, const arma::sp_mat& J, NumericVector h)
 {
   double Res = 1;
   int Np = Y.nrow();
