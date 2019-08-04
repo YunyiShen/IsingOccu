@@ -28,9 +28,6 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	cat("Setting for imperfect observation and missing sites:\n")
 	if(Zprop_rate==0) cat("    Perfect observation, given by Z\n")
 	else cat("    Imperfect observation, Z propose with rate",Zprop_rate,"\n")
-	#if(!missing_obs) cat("    No missing observation site\n\n")
-	#else cat("    Missing some sites, Z propose with rate",Zprop_rate_missing_obs,"\n\n")
-	
 	cat("MCMC reported every",report.by,"iterations and thinned by",thin.by,"\n\n")
 	
 	nsite = (nrow(distM))
