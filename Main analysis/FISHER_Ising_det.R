@@ -1,6 +1,7 @@
-source("misc_island.R")
+source("./R/misc_island.R")
 #source("Moller_island.R")
-source("Murray_Ising_det.R")
+source("./R/Murray_Ising_det.R")
+Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 ###### graph data ######
 link = "C:/Users/yshen99/Documents/GitHub/RFIBM_MCMC/Island/"
