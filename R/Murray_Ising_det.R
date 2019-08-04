@@ -21,8 +21,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	require(coda)
   require(Matrix)
   require(RcppArmadillo)
-	source("misc_island.R")
-  Rcpp::sourceCpp("IsingCpp_CFTP_sparse.cpp")
+	source("./R/misc_island.R")
+  Rcpp::sourceCpp("./src/IsingCpp_CFTP_sparse.cpp")
 	set.seed(seed)
 	
 	cat("Setting for imperfect observation and missing sites:\n")

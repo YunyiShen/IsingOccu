@@ -1,4 +1,4 @@
-source("misc_island.R")
+source("./R/misc_island.R")
 require(coda)
 H = Hamiltonian_posterior(kk$means,envX,distM_full,link_map,distM_mainland,link_mainland =  link_mainland * exp(-distM_mainland),int_range_intra="nn",int_range_inter="nn",Z = Z_sample)
 mcmc_iter = nrow(kk$theta.mcmc$beta_occu)
