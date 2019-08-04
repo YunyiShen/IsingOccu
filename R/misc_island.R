@@ -76,6 +76,18 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 }
   # passed 2019/3/18
 
+IsingStateProb = function (s, graph, thresholds, beta, responses = c(-1L, 1L)) 
+{
+  if (!is.list(s)) 
+    s <- list(s)
+  N <- length(s[[1]])
+  Allstates <- do.call(expand.grid, lapply(1:N, function(x) responses))
+  Dist <- exp(-beta * apply(Allstates, 1, function(s) H(graph, 
+    s, thresholds)))
+  Z <- sum(Dist)
+  sapply(s, function(x) exp(-beta * H(graph, x, thresholds))/Z)
+}
+
 Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
 	beta_occu = theta$beta_occu # this will be a matrix for cols are species
 	beta_det = theta$beta_det
@@ -240,16 +252,16 @@ Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z 
   
 Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
+  sppmat_det = as(sppmat_det,"dgCMatrix")
 	if(sum(spp_exist)==0 | sum(!is.na(dethis))==0){return(0)} # no species there, probability one to be no detection, or no observation here
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
-	  thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detected 
-	  # need further check
+	  # thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detected 
+	  # do not include thr_abs since if two species never coexist we cannot infer "what if they coexist", i.e. thr_exis will be total colinear with thr_exis
 	  thr = thr_exis
 	  #thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
 	}
 	graph = sppmat_det[spp_exist,spp_exist]
-	#thr = t(thr)
 	has_obs = !(is.na(rowSums(dethis)))
 	dethis = dethis[has_obs,spp_exist]# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
 	thr = thr[has_obs,]

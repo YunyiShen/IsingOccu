@@ -299,7 +299,6 @@ IntegerMatrix constrain)
 
 // HELPER FUNCTIONS //
 // Hamiltonian:
-// THIS IS VERY USEFUL TO CHANGE, FOR US, H is just -log likelihood function 
 // [[Rcpp::export]]
 double H(const arma::sp_mat& J, IntegerVector s, NumericVector h)
 {
