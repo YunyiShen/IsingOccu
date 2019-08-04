@@ -202,7 +202,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	
-	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,method=method,CFTPretry = 0)
+	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
@@ -275,7 +275,7 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	graph = sppmat_det[spp_exist,spp_exist]
 	dethis_exist = dethis[,spp_exist]
 	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
-		IsingSamplerCpp(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,method = method)
+		IsingSamplerCpp(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,exact = (method=="CFTP"),constrain = NA+thr[k,])
 	},matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph),nIter,n,method)
 	dethis[,spp_exist] = t(dethis_exist)
 	return(dethis)
