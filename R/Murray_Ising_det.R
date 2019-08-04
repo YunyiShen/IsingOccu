@@ -20,6 +20,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	cat("Initializing...\n\n")
 	require(coda)
 	require(IsingSampler)
+  require(Matrix)
+  require(RcppArmadillo)
 	source("misc_island.R")
 	set.seed(seed)
 	
@@ -176,48 +178,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 			accept_Z = accept_Z + 1
 		}
 		
-		# # for missing site
-		# Z_prop = Z_curr
-		# if(missing_obs ){
-		# 	if(runif(1)<Zprop_rate_missing_obs){
-		# 		
-		# 		propose_Z_missing_obs = propose_Z_missing_obs + 1
-		# 		flip = sample((no_obs),1)
-		# 		Z_prop[flip]=-Z_prop[flip]
-		# 	}
-		# 	Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-		# 				,Z_curr , Z_prop
-		# 				,Z_temp
-		# 				,detmat
-		# 				,vars_prior
-		# 				,X, detX
-		# 				,distM,link_map
-		# 				,dist_mainland , link_mainland
-		# 				,int_range_intra,int_range_inter)
-		# 	r = runif(1)
-		# 	if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
-		# 	if(r<=Murray_ratio){
-		# 		Z_curr = Z_prop
-		# 		accept_Z_missing_obs = accept_Z_missing_obs + 1
-		# 	}
-		# }
-		# 
-		# 
-		
 		if(i%%report.by == 0) {
 		  
 		  cat("Burn in iteration",i-report.by+1,"to",i,":\n\n")
 		  cat("    # of Z proposed for imperfect detection: ",propose_Z,"\n")
 		  cat("    # of Z acceptance for imperfect detection: " , accept_Z-(report.by-propose_Z),"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
-		  
-		#   #cat("# of Z proposed for missing sites: ",propose_Z,"\n")
-		#   if(missing_obs){
-		#     cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
-		# 	cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
-		# 	cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
-		#   }
-		  
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
 		  cat("    # of detection theta acceptance:" , accept_theta_det,"\n")
@@ -275,12 +241,6 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(is.na(Murray_ratio)){
-		  # if(i %% thin.by==0){
-		  #   for(j in 1:length(theta_curr)){
-		  #     theta.mcmc[[j]][i/thin.by,] =as.vector( theta_curr[[j]])
-		  #   } # saving the results
-		  # }
-		  # next
 		  Murray_ratio = 0
 		}
 		if(Murray_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
@@ -353,45 +313,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		  accept_Z = accept_Z + 1
 		}
 		
-		
-		# Z_prop = Z_curr
-		# if(missing_obs ){
-		# 	if(runif(1)<Zprop_rate_missing_obs){
-		# 		
-		# 		propose_Z_missing_obs = propose_Z_missing_obs + 1
-		# 		flip = sample((no_obs),1)
-		# 		Z_prop[flip]=-Z_prop[flip]
-		# 	}
-		# 	Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-		# 				,Z_curr ,Z_prop
-		# 				,Z_temp
-		# 				,detmat
-		# 				,vars_prior
-		# 				,X, detX
-		# 				,distM,link_map
-		# 				,dist_mainland , link_mainland
-		# 				,int_range_intra,int_range_inter)
-		# 	r = runif(1)
-		# 	if(Murray_ratio<exp(-10)) low_acc_Z_missing_obs = low_acc_Z_missing_obs + 1
-		# 	if(r<=Murray_ratio){
-		# 		Z_curr = Z_prop
-		# 		accept_Z_missing_obs = accept_Z_missing_obs + 1
-		# 	}
-		# }		
-		
 		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%report.by == 0) { # reporting
 		  cat("Sampling iteration",i-report.by+1,"to",i,":\n\n")
 		  cat("    # of Z proposed: ",propose_Z,"\n")
 		  cat("    # of Z acceptance: " , accept_Z-(report.by-propose_Z),"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
-		  
-		#   if(missing_obs){
-		#     cat("    # of Z proposed for missing sites: ",propose_Z_missing_obs,"\n")
-		# 	cat("    # of Z acceptance for missing sites: " , accept_Z_missing_obs-(report.by-propose_Z_missing_obs),"\n")
-		# 	cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z_missing_obs,"\n\n")
-		#   }
-		  
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
 		  #if(accept_theta_occu==0) cat(theta_curr[c(1:ncov,1:5+(ncov+ncov_det))],"\n\n")
