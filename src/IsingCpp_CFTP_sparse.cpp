@@ -2,7 +2,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h> // to use sparse matrix
 #include <climits>
-using namespace Rcpp;
+using namespace RcppArmadillo;
 
 // FUNCTIONS FOR EXACT SAMPLING //
 
@@ -15,15 +15,9 @@ List resize( const List& x, int n ){
 }
 
 // Inner function to simulate random uniforms in a matrix:
-NumericMatrix RandMat(int nrow, int ncol)
+arma::mat RandMat(int nrow, int ncol)
  {
-  int N = nrow * ncol;
-  NumericMatrix Res(nrow,ncol);
-  NumericVector Rands  = runif(N);
-   for (int i = 0; i < N; i++) 
-  {
-    Res[i] = Rands[i];
-  }
+  arma::mat Res = arma::randu(nrow,ncol);
   return(Res);
  }
 
