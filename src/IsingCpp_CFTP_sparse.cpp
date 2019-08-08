@@ -2,7 +2,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h> // to use sparse matrix
 #include <climits>
-using namespace RcppArmadillo;
+using namespace Rcpp;
 
 // FUNCTIONS FOR EXACT SAMPLING //
 
@@ -119,7 +119,7 @@ IntegerVector constrain)
     {
       for (int it=0;it<nIter;it++)
       {
-        NumericMatrix Ucur = U[t];
+        arma::mat Ucur = U[t];
         for (int node=0;node<N;node++)
         {
           u = Ucur(it, node);
