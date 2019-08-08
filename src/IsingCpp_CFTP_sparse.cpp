@@ -32,39 +32,39 @@ NumericVector PplusMinMax(int i, const arma::sp_mat& J, IntegerVector s, Numeric
   
   NumericVector Res(2);
   
-  int N = J.n_rows;
+  //int N = J.n_rows;
   NumericVector TwoOpts(2);
   
-  for (int j=0; j<N; j++)
+  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); it++)
   {
-    if (i != j)
+    if (i != it.row())
     {
-      if (s[j] != INT_MIN)
+      if (s[it.row()] != INT_MIN)
       {
-       H0[0] += J(i,j) * responses[0] * s[j];
-       H0[1] += J(i,j) * responses[0] * s[j];
-       H1[0] += J(i,j) * responses[1] * s[j];
-       H1[1] += J(i,j) * responses[1] * s[j]; 
+       H0[0] += *it * responses[0] * s[it.row()];
+       H0[1] += *it * responses[0] * s[it.row()];
+       H1[0] += *it * responses[1] * s[it.row()];
+       H1[1] += *it * responses[1] * s[it.row()]; 
       } else 
       {
                
-        TwoOpts[0] = J(i,j) * responses[1] * responses[0];
-        TwoOpts[1] = J(i,j) * responses[1] * responses[1];
+        TwoOpts[0] = *it * responses[1] * responses[0];
+        TwoOpts[1] = *it * responses[1] * responses[1];
 
         if (TwoOpts[1] > TwoOpts[0])
         {
           H1[0] += TwoOpts[0];
           H1[1] += TwoOpts[1];
           
-          H0[0] += J(i,j) * responses[0] * responses[0];
-          H0[1] += J(i,j) * responses[0] * responses[1];
+          H0[0] += *it * responses[0] * responses[0];
+          H0[1] += *it * responses[0] * responses[1];
         } else 
         {
           H1[0] += TwoOpts[1];
           H1[1] += TwoOpts[0];          
           
-          H0[0] += J(i,j) * responses[0] * responses[1];
-          H0[1] += J(i,j) * responses[0] * responses[0];
+          H0[0] += *it * responses[0] * responses[1];
+          H0[1] += *it * responses[0] * responses[0];
         }
       }
     }
@@ -174,14 +174,15 @@ double Pplus(int i, const arma::sp_mat& J, IntegerVector s, NumericVector h, dou
   //double Res;
 
   
-  int N = J.n_rows;
+  //int N = J.n_rows;
   
-  for (int j=0; j<N; j++)
+  
+  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); it++)
   {
-    if (i != j)
+    if (i != it.row())
     {
-       H0 += J(i,j) * responses[0] * s[j];
-       H1 += J(i,j) * responses[1] * s[j];
+       H0 += *it * responses[0] * s[it.row()];
+       H1 += *it * responses[1] * s[it.row()];
     }
   }
   
