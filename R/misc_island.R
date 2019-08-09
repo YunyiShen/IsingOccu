@@ -89,50 +89,27 @@ IsingStateProb = function (s, graph, thresholds, beta, responses = c(-1L, 1L))
 }
 
 Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
-	beta_occu = theta$beta_occu # this will be a matrix for cols are species
-	beta_det = theta$beta_det
+	nsite = nrow(envX)
+	beta_occu = theta$beta_occu
 	eta_intra = theta$eta_intra # intra spp, intra island if apply
 	d_intra = theta$d_intra
 	spp_mat = theta$spp_mat
-	eta_inter = theta$eta_inter
 	nspp = nrow(spp_mat)
-	d_inter = theta$d_inter # inter island scaling factor
-	nsites = nrow(distM)
-	ncov = ncol(envX) # number of covs
 	nrep = ncol(Z_vec)
-	#zeros = matrix(0,nrow=nsites,ncol=ncov)
-	#beta1 = as.numeric( matrix(c(theta[1:(2*ncol(envX))])))
-	#Xfull = cbind(rbind(envX,zeros),rbind(zeros,envX))
-	#thr = envX%*%beta_occu # a matrix
-	#thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
-	
-	#rm(Xfull)
-	#thr_mainland = 0*thr
-	A = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	negPot = matrix(0,1,nrep)
-	for(i in 1:nspp){ # intralayer terms:
-	  thr = envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)]
-		negPot = negPot + t(as.matrix(thr ))%*%Z_vec[1:nsites + (i-1) * nsites,] + 
-			apply(as.matrix(Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%(Z)},A=A[[i]])
-	}
-	for(i in 2:nspp-1){
-		for (j in (i+1):nspp){
-			negPot = negPot + spp_mat[i,j] * diag(t(Z_vec[1:nsites + (i-1) * nsites,])%*%(Z_vec[1:nsites + (j-1) * nsites,]))
-		}
-	}
-	#if(!is.null(link_map$inter) & !is.null(theta$eta_inter) & !is.null(int_range_inter) & !is.null(theta$d_inter)){
+	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
 	eta_inter = theta$eta_inter # assume there is a 
 	d_inter = theta$d_inter
-	A_inter = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph among different islands, here will be exp for between two island
-	for(i in 1:nspp){ # intralayer, inter island terms:
-			thr_mainland = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-			negPot = negPot  + t(as.matrix(thr_mainland))%*%Z_vec[1:nsites + (i-1) * nsites,] + #mainland part
-				apply(as.matrix( Z_vec[1:nsites + (i-1) * nsites,]),2,function(Z,A){.5*t(Z)%*%A%*%Z},A=A_inter[[i]])  
-				#0.5*t(Z_vec[1:nsite + (i-1) * nsite,])%*%A_inter[[i]]%*%Z_vec[1:nsite + (i-1) * nsite,]
-	#	}
-	
+	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
+	A=getfullGraph(A_ex,A_in,spp_mat)
+	thr = matrix(0,nspp*ncol(envX))
+	thr_mainland = thr
+	for(i in 1:nspp){
+	  thr[1:nsite + (i-1)*nsite] = envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)]
+		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
-	
+	negPot = matrix(0,1,nrep)
+	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)}],Z=Z_vec,J=A,h=thr+thr_mainland)
+	negPot = Reduce(rbind,negPot)
 	return(sum(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
 }

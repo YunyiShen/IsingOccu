@@ -35,7 +35,7 @@ NumericVector PplusMinMax(int i, const arma::sp_mat& J, IntegerVector s, Numeric
   //int N = J.n_rows;
   NumericVector TwoOpts(2);
   
-  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); it++)
+  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
   {
     if (i != it.row())
     {
@@ -177,7 +177,7 @@ double Pplus(int i, const arma::sp_mat& J, IntegerVector s, NumericVector h, dou
   //int N = J.n_rows;
   
   
-  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); it++)
+  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
   {
     if (i != it.row())
     {
@@ -302,9 +302,9 @@ double H(const arma::sp_mat& J, IntegerVector s, NumericVector h)
   for (int i=0;i<N;i++)
   {
     Res -= h[i] * s[i];
-    for (int j=i;j<N;j++)
+    for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
     {
-      if (j!=i) Res -= J(i,j) * s[i] * s[j];
+      if (it.row()!=i) Res -= *it * s[i] * s[it.row()] * .5;
     }
   }
   return(Res);
@@ -689,8 +689,10 @@ NumericVector Broderick2013(
 
     step *= 0.5;
   }
-
-
-
   return(newEsts);
 }
+
+
+
+
+
