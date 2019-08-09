@@ -108,7 +108,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	negPot = matrix(0,1,nrep)
-	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)}],Z=Z_vec,J=A,h=thr+thr_mainland)
+	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=thr+thr_mainland)
 	negPot = Reduce(rbind,negPot)
 	return(sum(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
@@ -191,7 +191,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 		thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	}
 	
-	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr + thr_mainland, responses = c(-1L, 1L),nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
+	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr + thr_mainland, responses = matrix( c(-1L, 1L),2,1),nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
