@@ -10,5 +10,21 @@ est_logLik_occu = function(theta_0, Y, theta,envX,distM,link_map,dist_mainland,l
 	-Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_vec)-log(partition_ratio)
 }
 
+make_list_version_mcmc = function(mcmc_list,theta_0){ # gonna return a list, with single element is a theta list
+	n_mcmc = nrow(mcmc_list[[1]])
+	nspp = sqrt( ncol(mcmc_list[[length(mcmc_list)-1]]))
+	nparas = length(mcmc_list)
+	lapply(1:n_mcmc,function(i,mcmc_list,theta_0,nspp,nparas){
+	    temp = lapply(1:(length(theta_0)-2),function(k,mcmc_list,i){
+		    mcmc_list[[k]][i,]
+		},mcmc_list,i)
+		names(temp) = names(theta_0)[1:(length(theta_0)-2)]
+		
+		temp$spp_mat = matrix(mcmc_list[[nparas-1]][i,],nspp,nspp) # sppmat, need to be formatted
+		temp$spp_mat_det = matrix(mcmc_list[[nparas]][i,],nspp,nspp)
+	
+	},mcmc_list,theta_0,nspp,nparas)
+}
+
 
 
