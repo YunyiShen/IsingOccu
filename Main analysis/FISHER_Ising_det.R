@@ -1,6 +1,8 @@
 source("./R/misc_island.R")
 #source("Moller_island.R")
 source("./R/Murray_Ising_det.R")
+require(Matrix)
+require(Rcpp)
 Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 ###### graph data ######
@@ -8,10 +10,10 @@ link = "./data/APIS/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
-#link_outer = as.matrix( read.csv("link_outer.csv",row.names = 1))
+link_inner = as(link_inner,'dsCMatrix')
 link_outer = as.matrix( read.csv(paste0(link,"link_outer_full.csv"),row.names = 1))
-#link_mainland = as.matrix( read.csv(paste0(link,"link_mainland.csv")))
 link_outer = 0 * link_outer # this makes it a mainland-island system
+link_outer = as(link_outer,'dsCMatrix')
 link_mainland = matrix(1,155,1)
 
 distM_full = as.matrix( read.csv(paste0(link,"distM_full.csv"),row.names = 1))
@@ -33,6 +35,7 @@ Z_sample = matrix(c(full$Fisher,full$Marten))
 
 spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
+spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(-.3,-.3),
@@ -48,20 +51,6 @@ link_map =
        intra = link_inner)
 
 nrep = 1
-  #    then in the second level list, it is a matrix with nrow = site ncol = ncov, 
-
-#Pdet = Pdet_multi(nperiod, envX,detX[[1]], theta$beta_det, nspp=nrow(spp_mat))
-
-#detmat = Sample_detection(nrep,nperiod,envX,detX,theta$beta_det,nspp = nrow(spp_mat),Z=Z_sample)
-#detmat = lapply(detmat,function(w){w*2-1}) 
-
-#sppmat_det = -0.1 * spp_mat
-#Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,sppmat_det,Z = Z_sample,detmat[[1]])
-
-
-#no_obs=150:155
-#no_obs = c(no_obs, no_obs + 155, no_obs + 310)
-
 nspp = 2
 
 vars_prop = list( beta_occu = rep(5e-3,nspp * ncol(envX))
@@ -82,7 +71,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 50000, burn.in = 5000
+                                  , mcmc.iter = 50, burn.in = 5
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = 0.05
@@ -92,7 +81,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 10,report.by = 1,nIter = 30)
 
 
 save.image("FM_Mainland_island.RData")

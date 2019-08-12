@@ -52,6 +52,7 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   }
   i=nspp
   A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]]
+  A = as(A,'symmetricMatrix')
   return(A)
 } 
   # passed 2019/3/18
@@ -83,9 +84,9 @@ IsingStateProb = function (s, graph, thresholds, beta, responses = c(-1L, 1L))
   N <- length(s[[1]])
   Allstates <- do.call(expand.grid, lapply(1:N, function(x) responses))
   Dist <- exp(-beta * apply(Allstates, 1, function(s) H(graph, 
-    s, thresholds)))
+    s, ( thresholds))))
   Z <- sum(Dist)
-  sapply(s, function(x) exp(-beta * H(graph, x, thresholds))/Z)
+  sapply(s, function(x) exp(-beta * H(graph, x, ( thresholds)))/Z)
 }
 
 Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
@@ -110,7 +111,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
 	#negPot = matrix(0,1,nrep)
-	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=thr)
+	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=( thr))
 	negPot = Reduce(rbind,negPot)
 	return(-(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
@@ -199,7 +200,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	             },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
 	
-	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses = matrix( c(-1L, 1L),2,1),nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
+	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses = matrix( c(-1L, 1L),2,1),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
@@ -253,7 +254,7 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	
 	Pdet_site = apply(matrix(1:sum(has_obs)),1,function(k,dethis,thr,graph){
 		IsingStateProb(dethis[k,], graph, thr[k,], beta=1, responses = c(-1L, 1L))
-	} ,matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph))
+	} ,matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as( as.matrix(graph),'dsCMatrix'))
 	
 	return(sum(log(Pdet_site + 1e-15)))
 	
@@ -448,7 +449,7 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
                         ,distM,link_map
                         ,dist_mainland,link_mainland
                         ,int_range_intra="nn",int_range_inter="exp"){
-  log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
+  log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector(theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
   log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
   
   #prior of proposed theta
@@ -458,7 +459,7 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   
   #### end of the numerator part, start the denominator
   
-  log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
+  log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector( theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
   log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
   log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
   log_H_theta_prop_Z_temp = -sum(Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
