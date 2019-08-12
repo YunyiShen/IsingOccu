@@ -20,11 +20,11 @@ make_list_version_mcmc = function(mcmc_list,theta_0){ # gonna return a list, wit
 		},mcmc_list,i)
 		names(temp) = names(theta_0)[1:(length(theta_0)-2)]
 		
-		temp$spp_mat = matrix(mcmc_list[[nparas-1]][i,],nspp,nspp) # sppmat, need to be formatted
-		temp$spp_mat_det = matrix(mcmc_list[[nparas]][i,],nspp,nspp)
-	
+		temp$spp_mat = Matrix(mcmc_list[[nparas-1]][i,],nspp,nspp,sparse = T) # sppmat, need to be formatted
+		temp$spp_mat_det = Matrix(mcmc_list[[nparas]][i,],nspp,nspp,sparse = T)
+	  return(temp)
 	},mcmc_list,theta_0,nspp,nparas)
 }
-
+# passed Aug 12 2019
 
 
