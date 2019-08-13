@@ -102,15 +102,12 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	d_inter = theta$d_inter
 	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
-	#thr = matrix(0,nspp*ncol(envX))
-	#thr_mainland = thr
 	thr = lapply(1:nspp,
 	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
 	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
 		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
-	#negPot = matrix(0,1,nrep)
 	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=( thr))
 	negPot = Reduce(rbind,negPot)
 	return(-(negPot)) # if we have repeat, just make Z_vec has two cols 

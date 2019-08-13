@@ -31,7 +31,7 @@ detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.c
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Fisher,full$Marten))
 
-###### simulation ######
+###### analysis ######
 
 spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
