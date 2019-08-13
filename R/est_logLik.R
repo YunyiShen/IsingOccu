@@ -1,6 +1,26 @@
-est_logLik_occu = function(theta_0,envX_0,link_map_0,link_mainland_0,int_range_intra_0="nn",int_range_inter_0="exp",Y # all settings for theta_0 model
-						   ,theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
+est_logLik_occu = function(A_0,thr_0,Y # all settings for theta_0 model
+						   ,A,thr,Z){
 	# Descombes 1999 paper, calculate Z_theta/Z_theta0, using samples Y from theta_0, I will use posterior mean.
+	A_dif = as(A_0-A,'dsCMatrix')
+	rm(A_0,A)
+	thr_diff = thr_0-thr	
+	partition_ratio = mean(
+		apply(Y,2,function(X,graph,s){exp(-H(graph,X,s))},graph = A_dif,s = thr_dif)
+	)# ratio of partitioning function: Z_theta/Z_theta_0
+	
+	# this is the estimation of a single theta, we need to loop through every sample
+	-Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)-log(partition_ratio)
+}
+
+logLik_full = function(theta,envX,detX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z, detmat, A_0,thr_0,Y){
+    ## logLik for detection part
+	nspp = nrow(theta$spp_mat)
+    nperiod = ncol(detmat[[1]])
+    beta_det = theta$beta_det
+    logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$spp_mat_det,Z,detmat)
+	
+	## now estimate the logLik for occu
+	
 	nsite = nrow(envX)
 	beta_occu = theta$beta_occu
 	eta_intra = theta$eta_intra # intra spp, intra island if apply
@@ -20,41 +40,15 @@ est_logLik_occu = function(theta_0,envX_0,link_map_0,link_mainland_0,int_range_i
 		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
+    
 	
-	beta_occu_0 = theta_0$beta_occu
-	eta_intra_0 = theta_0$eta_intra # intra spp, intra island if apply
-	d_intra_0 = theta_0$d_intra
-	spp_mat_0 = theta_0$spp_mat
-	
-	A_in_0 = getintralayerGraph(distM,link_map_0$intra,eta_intra_0,d_intra_0,int_range = int_range_intra_0,spp_mat_0)
-	eta_inter_0 = theta_0$eta_inter # assume there is a 
-	d_inter_0 = theta_0$d_inter
-	A_ex_0 = getintralayerGraph(distM,link_map_0$inter,eta_inter_0,d_inter_0,int_range = int_range_inter_0,spp_mat_0) # graph among islands, if apply, distM should only contain graph 
-	A_0=getfullGraph(A_ex_0,A_in_0,spp_mat_0)
-	
-	rm(A_in_0,A_ex_0)
-	
-	thr_0 = lapply(1:nspp,
-	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
-	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
-		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	    },envX_0,beta_occu_0,dist_mainland,link_mainland_0,eta_inter_0,d_inter_0,int_range_inter_0)
-	thr_0 = Reduce(rbind,thr_0)
-	
-	A_dif = as(A_0-A,'dsCMatrix')
-	rm(A_0,A)
-	
-	thr_diff = thr_0-thr
-	rm(thr,thr_0)
-	
-	
-	partition_ratio = mean(
-		apply(Y,2,function(X,graph,s){exp(-H(graph,X,s))},graph = A_dif,s = thr_dif)
-	)# ratio of partitioning function: Z_theta/Z_theta_0
-	
-	# this is the estimation of a single theta, we need to loop through every sample
-	-Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_vec)-log(partition_ratio)
+	logLoccu = est_logLik_occu(A_0,thr_0,Y,A,thr,Z)
+	# sum them up
+	return(logLoccu + logLdata)
+
 }
+
+
 
 make_list_version_mcmc = function(mcmc_list,theta_0){ # gonna return a list, with single element is a theta list
 	n_mcmc = nrow(mcmc_list[[1]])
@@ -73,4 +67,89 @@ make_list_version_mcmc = function(mcmc_list,theta_0){ # gonna return a list, wit
 }
 # passed Aug 12 2019
 
+# we calculate the deltaDIC: DIC(theta_a)-DIC(theta), luckly delta DIC is summable
+deltaDIC = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_mainland_a,int_range_intra_a="nn",int_range_inter_a="exp",Z_a_mcmc, detX_a, theta_a_point
+					,theta_mcmc,envX,link_map,link_mainland,int_range_intra="nn",int_range_inter="exp",Z, detX, theta_point, detmat, nrep, nY = 3000,nIter = 100){
+    nsite = nrow(envX)
+	beta_occu_point = theta_point$beta_occu
+	eta_intra_point = theta_point$eta_intra # intra spp, intra island if apply
+	d_intra_point = theta_point$d_intra
+	spp_mat_point = theta_point$spp_mat
+	nspp = nrow(spp_mat_point)
+	A_in_point = getintralayerGraph(distM,link_map$intra,eta_intra_point,d_intra_point,int_range = int_range_intra,spp_mat_point)
+	eta_inter_point = theta_point$eta_inter # assume there is one 
+	d_inter_point = theta_point$d_inter
+	A_ex_point = getintralayerGraph(distM,link_map$inter,eta_inter_point,d_inter_point,int_range = int_range_inter,spp_mat_point) # graph among islands, if apply, distM should only contain graph 
+	A_point=getfullGraph(A_ex,A_in,spp_mat_point)
+	rm(A_ex_point,A_in_point)
+	thr_point = lapply(1:nspp,
+	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
+	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
+		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	    },envX,beta_occu_point,dist_mainland,link_mainland,eta_inter_point,d_inter_point,int_range_inter)
+	thr_point = Reduce(rbind,thr_point)
+
+    beta_occu_0_point = theta_a_point$beta_occu
+	eta_intra_0_point = theta_a_point$eta_intra # intra spp, intra island if apply
+	d_intra_0_point = theta_a_point$d_intra
+	spp_mat_0_point = theta_a_point$spp_mat
+	
+	A_in_0_point = getintralayerGraph(distM,link_map_a$intra,eta_intra_0_point,d_intra_0_point,int_range = int_range_intra_a,spp_mat_0_point)
+	eta_inter_0_point = theta_a_point$eta_inter # assume there is a 
+	d_inter_0_point = theta_a_point$d_inter
+	A_ex_0_point = getintralayerGraph(distM,link_map_a$inter,eta_inter_0_point,d_inter_0_point,int_range = int_range_inter_a,spp_mat_0_point) # graph among islands, if apply, distM should only contain graph 
+	A_0_point=getfullGraph(A_ex_0_point,A_in_0_point,spp_mat_0_point)
+	
+	rm(A_in_0_point,A_ex_0_point)
+	
+	thr_0_point = lapply(1:nspp,
+	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
+	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
+		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	    },envX_a,beta_occu_0_point,dist_mainland,link_mainland_a,eta_inter_0_point,d_inter_0_point,int_range_inter_a)
+	thr_0 = Reduce(rbind,thr_0)
+
+    A_mean = as(0.5*(A + A_0),'dsCMatrix') # theta in 1999 paper, as the constant, we estimate ratio of partition function of theta_a/theta_mean and theta/theta_mean
+    thr_mean = 0.5*(thr + thr_0)
+    
+	Y = IsingSamplerCpp(n=nY,graph = A_mean, thresholds = thr_mean, beta=1, responses = c(-1L, 1L),nIter = nIter,exact = (method=="CFTP"),constrain = NA+thr_mean)
+    
+	logLik_a = lapply(1:length(theta_a_mcmc),
+					  function(i,theta,envX,detX
+							   ,distM,link_map,dist_mainland
+							   ,link_mainland,int_range_intra
+							   ,int_range_inter,Z, detmat, A_0,thr_0,Y){
+	                               logLik_full(theta[[i]],envX,detX
+											   ,distM,link_map,dist_mainland
+											   ,link_mainland,int_range_intra,int_range_inter
+											   ,Z[[i]], detmat, A_0,thr_0,Y)
+	},theta_a_mcmc,envX_a,detX_a,distM,link_map_a,dist_mainland
+	  ,link_mainland_a,int_range_intra_a
+	  ,int_range_inter_a,Z_a_mcmc, detmat, A_mean,thr_mean,Y)
+    
+    
+	logLik_theta = lapply(1:length(theta_mcmc),
+					  function(i,theta,envX,detX
+							   ,distM,link_map,dist_mainland
+							   ,link_mainland,int_range_intra
+							   ,int_range_inter,Z, detmat, A_0,thr_0,Y){
+	                               logLik_full(theta[[i]],envX,detX
+											   ,distM,link_map,dist_mainland
+											   ,link_mainland,int_range_intra,int_range_inter
+											   ,Z[[i]], detmat, A_0,thr_0,Y)
+	},theta_mcmc,envX,detX,distM,link_map,dist_mainland
+	  ,link_mainland,int_range_intra
+	  ,int_range_inter,Z_mcmc, detmat, A_mean,thr_mean,Y)
+	
+	rm(Y,A_mean,thr_mean)
+	
+	logLik_a = Reduce(rbind,logLik_a)
+	logLik_theta = Reduce(rbind,logLik_theta)
+	
+	pD_Gelman04_a = 2 * var(logLik_a)
+	pD_Gelman04_t = 2 * var(logLik_theta)
+    
+	-2* mean(logLik_a) - 2 * (pD_Gelman04_a) + 2* mean(logLik_theta) + 2 * (pD_Gelman04_t))
+	
+}
 
