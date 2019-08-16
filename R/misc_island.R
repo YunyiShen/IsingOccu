@@ -204,10 +204,6 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
   # passed 2019/3/18
 
 Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z and detections If have repeat, use this multiple times.
-	# this is still 2 spp case, need to change to multi case
-	#nperiod = ncol(detmat) # detmat is the data of 0 and 1 for detections
-	# length(beta_det) = 2 * ncol(detX[[1]]) + 2 * ncol(X)  # beta for detections
-	#detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
   if(is.null(detX)) {
     detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
     
@@ -465,4 +461,12 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
     (log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_prop_Z_temp)
   
   return(min(1,exp(log_MH_ratio)))
+}
+
+write_json.IsingOccu_samples = function(x,path){
+  n_sample = nrow(x$Z.mcmc)
+  x$theta.mcmc = lapply(x$theta.mcmc,matrix,nrow = n_sample)
+  x$Z.mcmc = matrix(x$Z.mcmc,nrow = n_sample)
+  class(x) = 'list'
+  jsonlite::write_json(x,path)
 }
