@@ -4,12 +4,15 @@ est_logLik_occu = function(A_0,thr_0,Y # all settings for theta_0 model
 	A_dif = as(A_0-A,'dsCMatrix')
 	rm(A_0,A)
 	thr_diff = thr_0-thr	
+	Ham = apply(Y,2,function(X,graph,s){(H(graph,X,s))},graph = A_dif,s = thr_dif) # Hamiltonian with parameters as difference and sample of theta_0
+	robust_cri = (max(Ham)-min(Ham))/max(Ham)
 	partition_ratio = mean(
-		apply(Y,2,function(X,graph,s){exp(-H(graph,X,s))},graph = A_dif,s = thr_dif)
+		exp(-Ham)
 	)# ratio of partitioning function: Z_theta/Z_theta_0
 	
 	# this is the estimation of a single theta, we need to loop through every sample
-	-Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)-log(partition_ratio)
+	logLik_est = -Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)-log(partition_ratio)
+	return(list(logLik_est=logLik_est,robust_cri=robust_cri))
 }
 
 logLik_full = function(theta,envX,detX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z, detmat, A_0,thr_0,Y){
@@ -44,7 +47,7 @@ logLik_full = function(theta,envX,detX,distM,link_map,dist_mainland,link_mainlan
 	
 	logLoccu = est_logLik_occu(A_0,thr_0,Y,A,thr,Z)
 	# sum them up
-	return(logLoccu + logLdata)
+	return(list(logLik = logLoccu$logLik_est + logLdata,robust = logLoccu$robust_cri))
 
 }
 
@@ -143,13 +146,22 @@ deltaDIC = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_main
 	
 	rm(Y,A_mean,thr_mean)
 	
-	logLik_a = Reduce(rbind,logLik_a)
-	logLik_theta = Reduce(rbind,logLik_theta)
+	pure_logLik_a = lapply(logLik_a,function(a){a[[1]]})
+	robust_cri_a = lapply(logLik_a,function(a){a[[2]]})
+
+	pure_logLik_theta = lapply(logLik_theta,function(a){a[[1]]})
+	robust_cri_theta = lapply(logLik_theta,function(a){a[[2]]})	
+	
+	logLik_a = Reduce(rbind,pure_logLik_a)
+	logLik_theta = Reduce(rbind,pure_logLik_theta)
 	
 	pD_Gelman04_a = 2 * var(logLik_a)
 	pD_Gelman04_t = 2 * var(logLik_theta)
     
-	-2* mean(logLik_a) - 2 * (pD_Gelman04_a) + 2* mean(logLik_theta) + 2 * (pD_Gelman04_t))
+	deltaDIC = -2* mean(logLik_a) - 2 * (pD_Gelman04_a) + 2* mean(logLik_theta) + 2 * (pD_Gelman04_t))
 	
+	robust_cri = list(robust_a = Reduce(mean,robust_cri_a),robust_theta = Reduce(mean,robust_cri_theta))
+	
+	return(deltaDIC = deltaDIC,robust_criterion = robust_cri)
 }
 
