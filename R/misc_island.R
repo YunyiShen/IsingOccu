@@ -3,7 +3,7 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
   # pass all graphs as sparse matrix in package Matrix
   nspp = nrow(spp_mat) # which is the interspecific neighborhood matrix
   A = list() # intralayer graphs are passed using lists
-  link_map = as(as.matrix(link_map),"dgCMatrix")
+  link_map = as((link_map),"symmetricMatrix")
   if(int_range=="arth"){
     A = lapply(1:nspp,function(i,eta,distM,d){
       eta[i]*as.matrix(1/((distM)^(2+d[i])))
@@ -20,7 +20,7 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
     else{
       if(int_range=="nn"){
 	  A = lapply(1:nspp, function(i,eta,link_map){
-		    eta[i]*as.matrix((link_map))
+		    eta[i]*((link_map))
 	    },eta,link_map)
       }
       else{
@@ -43,6 +43,8 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   A = Matrix(0,nspp*nsite,nspp*nsite,sparse = T)
   for(i in 2:nspp-1){
     A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]] # diagonal part
+    A_ex[[i]] = NULL # recycle
+    A_in[[i]] = NULL
     for(j in (i+1):nspp){
       
       diag(A[1:nsite + (i-1)*nsite,1:nsite + (j-1)*nsite])=spp_mat[i,j]
@@ -52,6 +54,7 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   }
   i=nspp
   A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]]
+  rm(A_in,A_ex)
   A = as(A,'symmetricMatrix')
   return(A)
 } 
@@ -102,6 +105,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	d_inter = theta$d_inter
 	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
+  rm(A_ex,A_in)
 	thr = lapply(1:nspp,
 	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
 	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
@@ -109,6 +113,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
 	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=( thr))
+  rm(A)
 	negPot = Reduce(rbind,negPot)
 	return(-(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
@@ -182,6 +187,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	d_inter = theta$d_inter
 	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
+  rm(A_in,A_ex)
 	#thr = matrix(0,nspp*ncol(envX))
 	#thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#thr = matrix(thr,length(thr),1)
@@ -198,7 +204,8 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	thr = Reduce(rbind,thr)
 	
 	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses = matrix( c(-1L, 1L),2,1),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
-	return(t(Z))
+	rm(A,thr)
+  return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
   # passed 2019/3/18
