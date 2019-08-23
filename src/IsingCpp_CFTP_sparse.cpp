@@ -1,4 +1,3 @@
-//#include <Rcpp.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h> // to use sparse matrix
 #include <climits>
