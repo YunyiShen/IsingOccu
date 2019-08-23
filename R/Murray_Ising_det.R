@@ -20,7 +20,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	cat("Initializing...\n\n")
 	require(coda)
 	require(IsingSampler)
-	source("misc_island.R")
+	source("./R/misc_island.R")
 	set.seed(seed)
 	
 	#missing_obs = is.na(sum(Z))
@@ -417,7 +417,15 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
   
 	theta.mean =lapply(theta.mcmc,function(thetaa){ apply(thetaa,2,mean,na.rm=T)})
   
-	res = list(theta.mcmc = theta.mcmc,means = theta.mean,Z.mcmc = Z.mcmc,vars=vars_prop, interaction.range =list( int_range_inter,int_range_intra), envX=X)
+	res = list(theta.mcmc = theta.mcmc
+	           ,means = theta.mean
+	           ,Z.mcmc = Z.mcmc,vars=vars_prop
+	           ,distM = distM
+	           ,dist_mainland = dist_mainland
+	           ,linkmap = link_map
+	           ,link_mainland = link_mainland
+	           ,interaction.range =list( inter = int_range_inter,intra = int_range_intra)
+	           ,envX=X, detX = detX,detmat = detmat)
 	class(res)="IsingOccu_island_Ising_det"
 	return(res)
 }

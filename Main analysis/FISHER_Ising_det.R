@@ -3,7 +3,7 @@ source("./R/misc_island.R")
 source("./R/Murray_Ising_det.R")
 
 ###### graph data ######
-link = "./data/"
+link = "./data/APIS/"
 #link = "E:/UW Lab jobs/2. ISING Occupancy model/4. DATA/APIS/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
