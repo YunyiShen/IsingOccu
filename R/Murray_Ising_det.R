@@ -73,7 +73,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	low_acc_Z_missing_obs = 0
 	low_acc_theta_occu = 0
 	low_acc_theta_det = 0
-	propose_Z = 0
+	propose_Z_num = 0
 	propose_Z_missing_obs = 0
 	timing = proc.time()
 	n_para_group = length(theta_curr)
@@ -145,7 +145,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		
 		if(runif(1)<Zprop_rate) {
-			Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
+		  propose_Z_num = propose_Z_num + 1
+		  Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
 		}
 		
 		
@@ -168,8 +169,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		if(i%%report.by == 0) {
 		  
 		  cat("Burn in iteration",i-report.by+1,"to",i,":\n\n")
-		  cat("    # of Z proposed for imperfect detection: ",propose_Z,"\n")
-		  cat("    # of Z acceptance for imperfect detection: " , accept_Z-(report.by-propose_Z),"\n")
+		  cat("    # of Z proposed for imperfect detection: ",propose_Z_num,"\n")
+		  cat("    # of Z acceptance for imperfect detection: " , accept_Z-(report.by-propose_Z_num),"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
@@ -200,7 +201,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	low_acc_Z_missing_obs = 0
 	low_acc_theta_occu = 0
 	low_acc_theta_det = 0
-	propose_Z = 0
+	propose_Z_num = 0
 	propose_Z_missing_obs = 0
 	timing = proc.time()	
 	for(i in 1:(mcmc.iter)){ # for to save 
@@ -272,6 +273,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		Z_prop = Z_curr
 		if(runif(1)<Zprop_rate) {
+		  propose_Z_num = propose_Z_num + 1
 			Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
 		}
 		
@@ -296,8 +298,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%report.by == 0) { # reporting
 		  cat("Sampling iteration",i-report.by+1,"to",i,":\n\n")
-		  cat("    # of Z proposed: ",propose_Z,"\n")
-		  cat("    # of Z acceptance: " , accept_Z-(report.by-propose_Z),"\n")
+		  cat("    # of Z proposed: ",propose_Z_num,"\n")
+		  cat("    # of Z acceptance: " , accept_Z-(report.by-propose_Z_num),"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
@@ -316,7 +318,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		  low_acc_Z_missing_obs = 0
 		  low_acc_theta_occu = 0
 		  low_acc_theta_det = 0
-		  propose_Z = 0
+		  propose_Z_num = 0
 		  propose_Z_missing_obs = 0
 		  timing = proc.time()
 		  }

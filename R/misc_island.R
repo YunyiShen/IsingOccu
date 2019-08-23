@@ -447,14 +447,14 @@ propose_rate_w_constrain = function(theta, envX, distM, link_map,dist_mainland,l
 	thr = Reduce(rbind,thr)
 
   thr_absence = thr[Z_absolute==-1]
-  A_presence = A[Z_absolute==-1,Z_absolute==1] # this act as part of the thr
-  A_absence = A[Z_absolute==-1,Z_absolute==-1]
+  A_presence = A[which(Z_absolute==-1),which(Z_absolute==1)] # this act as part of the thr
+  A_absence = A[which(Z_absolute==-1),which(Z_absolute==-1)]
   
   rm(A,thr)
   
   thr = thr_absence + rowSums(A_presence)
   
-  Ham = apply(matrix(Z,ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A, thr = thr)
+  Ham = apply(matrix(Z,ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A_absence, thr = thr)
   
   return(sum(-Ham))
 }
