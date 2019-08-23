@@ -42,9 +42,9 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   nsite = nrow(A_ex[[1]])
   A = Matrix(0,nspp*nsite,nspp*nsite,sparse = T)
   for(i in 2:nspp-1){
-    A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]] # diagonal part
-    A_ex[[i]] = NULL # recycle
-    A_in[[i]] = NULL
+    A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[1]] + A_in[[1]] # diagonal part
+    A_ex[[1]] = NULL # recycle
+    A_in[[1]] = NULL
     for(j in (i+1):nspp){
       
       diag(A[1:nsite + (i-1)*nsite,1:nsite + (j-1)*nsite])=spp_mat[i,j]
@@ -53,7 +53,7 @@ getfullGraph = function(A_ex,A_in,spp_mat){
     }
   }
   i=nspp
-  A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]]
+  A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[1]] + A_in[[1]]
   rm(A_in,A_ex)
   A = as(A,'symmetricMatrix')
   return(A)
