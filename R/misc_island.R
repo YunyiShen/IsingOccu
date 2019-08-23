@@ -109,6 +109,7 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
 	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=( thr))
+	rm(A)
 	negPot = Reduce(rbind,negPot)
 	return(-(negPot)) # if we have repeat, just make Z_vec has two cols 
 	
@@ -182,6 +183,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	d_inter = theta$d_inter
 	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
+	rm(A_ex,A_in)
 	#thr = matrix(0,nspp*ncol(envX))
 	#thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
 	#thr = matrix(thr,length(thr),1)
@@ -198,6 +200,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	thr = Reduce(rbind,thr)
 	
 	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses = matrix( c(-1L, 1L),2,1),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
+	rm(A)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019
 }
@@ -418,11 +421,8 @@ propose_Z = function(theta, constrains, envX, distM, link_map,dist_mainland,link
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
   Z_prop = IsingSamplerCpp(n=nrep,graph = A, thresholds = thr, beta=1, responses = c(-1L, 1L),nIter = nIter,exact = T,constrain = constrains)
+  rm(A)
   return(t(Z_prop))
-
-
-
-
 }
          
 propose_rate_w_constrain = function(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z,Z_absolute){
