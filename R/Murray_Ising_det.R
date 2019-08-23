@@ -77,6 +77,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	propose_Z_missing_obs = 0
 	timing = proc.time()
 	n_para_group = length(theta_curr)
+	constrains = Z_absolute
+	constrains[constrains==-1]=NA
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 
 	  theta_prop = theta_curr
@@ -90,7 +92,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	  # MH ratio
 	  
 	  Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-	                            ,Z_curr ,Z_curr
+	                            ,Z_curr 
 	                            ,Z_temp
 	                            ,detmat
 	                            ,vars_prior
@@ -119,7 +121,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 		
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-						,Z_curr ,Z_curr
+						,Z_curr
 						,Z_temp
 						,detmat
 						,vars_prior
@@ -143,32 +145,22 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		
 		if(runif(1)<Zprop_rate) {
-		  absence = which(Z_absolute==-1)
-		  #abs_obs = absence[!absence%in%no_obs]
-		  flip = sample(absence,1)
-			Z_prop[flip]=-Z_prop[flip]
-			propose_Z = propose_Z + 1
-			
+			Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
 		}
 		
 		
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-						,Z_curr ,Z_prop
-						,Z_temp
-						,detmat
-						,vars_prior
-						 
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
+		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop, Z_absolute
+                      ,detmat,envX, detX
+                      ,distM,link_map
+                      ,dist_mainland,link_mainland
+                      ,int_range_intra,int_range_inter)
 		r = runif(1)
-		if(is.na(Murray_ratio)) {
-		  Murray_ratio = 0
+		if(is.na(MH_ratio)) {
+		  MH_ratio = 0
 		  #cat("ZNA\n")
 		  }
-		if(Murray_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
-		if(r<=Murray_ratio){
+		if(MH_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
+		if(r<=MH_ratio){
 			Z_curr = Z_prop
 			accept_Z = accept_Z + 1
 		}
@@ -225,7 +217,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		# MH ratio
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-						,Z_curr ,Z_curr
+						,Z_curr
 						,Z_temp
 						,detmat
 						,vars_prior
@@ -254,7 +246,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 
 		
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-		                          ,Z_curr=Z_curr ,Z_prop = Z_curr
+		                          ,Z_curr
 		                          ,Z_temp
 		                          ,detmat
 		                          ,vars_prior
@@ -280,33 +272,26 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		Z_prop = Z_curr
 		if(runif(1)<Zprop_rate) {
-		  absence = which(Z_absolute==-1)
-		  #abs_obs = absence[!absence%in%no_obs]
-		  flip = sample(absence,1)
-		  Z_prop[flip]=-Z_prop[flip]
-		  propose_Z = propose_Z + 1
-		  
+			Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
 		}
 		
 		
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-		                          ,Z_curr ,Z_prop
-		                          ,Z_temp
-		                          ,detmat
-		                          ,vars_prior
-		                           
-		                          ,X, detX
-		                          ,distM,link_map
-		                          ,dist_mainland , link_mainland
-		                          ,int_range_intra,int_range_inter)
+		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop, Z_absolute
+                      ,detmat,envX, detX
+                      ,distM,link_map
+                      ,dist_mainland,link_mainland
+                      ,int_range_intra,int_range_inter)
 		r = runif(1)
-		if(is.na(Murray_ratio)) Murray_ratio = 0
-		if(Murray_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
-		if(r<=Murray_ratio){
-		  #theta_curr=theta_prop
-		  Z_curr = Z_prop
-		  accept_Z = accept_Z + 1
+		if(is.na(MH_ratio)) {
+		  MH_ratio = 0
+		  #cat("ZNA\n")
+		  }
+		if(MH_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
+		if(r<=MH_ratio){
+			Z_curr = Z_prop
+			accept_Z = accept_Z + 1
 		}
+
 		
 		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%report.by == 0) { # reporting

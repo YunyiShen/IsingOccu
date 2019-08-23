@@ -398,44 +398,71 @@ IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dis
   return(negPot+logLdata)
 }
 
+propose_Z = function(theta, constrains, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter){
+  nsite = nrow(envX)
+	beta_occu = theta$beta_occu
+	eta_intra = theta$eta_intra # intra spp, intra island if apply
+	d_intra = theta$d_intra
+	spp_mat = theta$spp_mat
+	nspp = nrow(spp_mat)
+  A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
+	eta_inter = theta$eta_inter # assume there is one 
+	d_inter = theta$d_inter
+	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
+	A=getfullGraph(A_ex,A_in,spp_mat)
+	rm(A_ex,A_in)
+	thr = lapply(1:nspp,
+	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
+	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
+		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
+	thr = Reduce(rbind,thr)
+  Z_prop = IsingSamplerCpp(n=nrep,graph = A, thresholds = thr, beta=1, responses = c(-1L, 1L),nIter = nIter,exact = T,constrain = constrains)
+  return(t(Z_prop))
 
 
-Murray.ratio = function(theta_curr ,theta_prop
-						,Z_curr ,Z_prop
-						,Z_temp 
-						,detmat,no_obs
-						,vars_prior
-						,envX, detX
-						,distM,link_map
-						,dist_mainland,link_mainland
-						,int_range_intra="nn",int_range_inter="exp"){
-	#log_H_theta_tuta_Z_temp_prop = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_prop)
-	# then auxiliented variable x_prop is same to detmat, together with Z_temp_prop from underlaying Isingmodel. It was proposed using likelihood function with parameter theta_prop and in the main sampler, which is important in canceling out the normalizing constant.
-	log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
-	log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
-	#log_pi_theta_prop = sum(log_pi_theta_prop)
-	#prior of proposed theta
-	log_q_theta_Z_prop_detmat = IsingOccu_multi.logL.innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX, no_obs)
-	# theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-	log_H_theta_curr_Z_temp = -sum(Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
 
-	#### end of the numerator part, start the denominator
 
-	#log_H_theta_tuta_Z_temp_curr = Hamiltonian(theta_tuta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp_curr)
-	log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(theta_temp,0,sd=sqrt(vars_prior))))},vars_prior)
-	log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-	log_q_theta_Z_curr_detmat = IsingOccu_multi.logL.innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX, no_obs)
-	log_H_theta_prop_Z_temp = -sum(Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
+}
+         
+propose_rate_w_constrain = function(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z,Z_absolute){
+  nsite = nrow(envX)
+	beta_occu = theta$beta_occu
+	eta_intra = theta$eta_intra # intra spp, intra island if apply
+	d_intra = theta$d_intra
+	spp_mat = theta$spp_mat
+	nspp = nrow(spp_mat)
+	nrep = length(Z)/(nsite * nspp)
+	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
+	eta_inter = theta$eta_inter # assume there is one 
+	d_inter = theta$d_inter
+	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
+	A=getfullGraph(A_ex,A_in,spp_mat)
+	rm(A_ex,A_in)
+	thr = lapply(1:nspp,
+	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
+	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
+		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
+	thr = Reduce(rbind,thr)
 
-	log_MH_ratio = (log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_curr_Z_temp)-
-				   (log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_prop_Z_temp)
-
-	return(min(1,exp(log_MH_ratio)))
+  thr_absence = thr[Z_absolute==-1]
+  A_presence = A[Z_absolute==-1,Z_absolute==1] # this act as part of the thr
+  A_absence = A[Z_absolute==-1,Z_absolute==-1]
+  
+  rm(A,thr)
+  
+  thr = thr_absence + rowSums(A_presence)
+  
+  Ham = apply(matrix(Z,ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A, thr = thr)
+  
+  return(sum(-Ham))
 }
 
+
 Murray.ratio.Ising_det = function(theta_curr ,theta_prop
-                        ,Z_curr ,Z_prop
-                        ,Z_temp 
+                        ,Z
+                        ,Z_temp
                         ,detmat
                         ,vars_prior
                         ,envX, detX
@@ -446,7 +473,7 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
   
   #prior of proposed theta
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+  log_q_theta_prop_Z_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z ,detmat = detmat, detX)
   # theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
   log_H_theta_curr_Z_temp = -sum(Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
   
@@ -454,15 +481,33 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   
   log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector( theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
   log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+  log_q_theta_curr_Z_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z ,detmat = detmat, detX)
   log_H_theta_prop_Z_temp = -sum(Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
   
-  log_MH_ratio = (log_pi_theta_prop + log_q_theta_Z_prop_detmat + log_H_theta_curr_Z_temp)-
-    (log_pi_theta_curr + log_q_theta_Z_curr_detmat + log_H_theta_prop_Z_temp)
+  log_MH_ratio = (log_pi_theta_prop + log_q_theta_prop_Z_detmat + log_H_theta_curr_Z_temp)-
+    (log_pi_theta_curr + log_q_theta_curr_Z_detmat + log_H_theta_prop_Z_temp)
   
   return(min(1,exp(log_MH_ratio)))
 }
 
+MH_ratio_Z = function(theta, Z_curr, Z_prop, Z_absolute
+                      ,detmat,envX, detX
+                      ,distM,link_map
+                      ,dist_mainland,link_mainland
+                      ,int_range_intra="nn",int_range_inter="exp"){
+  # numerator
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+  log_p_theta_Z_curr = propose_rate_w_constrain(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr,Z_absolute)
+
+  # denominator
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+  log_p_theta_Z_prop = propose_rate_w_constrain(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop,Z_absolute)
+  
+  MH_ratio = log_q_theta_Z_prop_detmat + log_p_theta_Z_curr - log_q_theta_Z_curr_detmat - log_p_theta_Z_prop
+  return(min(1,exp(MH_ratio)))
+}       
+
+         
 write_json.IsingOccu_samples = function(x,path){
   n_sample = nrow(x$Z.mcmc)
   x$theta.mcmc = lapply(x$theta.mcmc,matrix,nrow = n_sample)
