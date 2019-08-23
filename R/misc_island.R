@@ -52,7 +52,7 @@ getfullGraph = function(A_ex,A_in,spp_mat){
   }
   i=nspp
   A[1:nsite + (i-1)*nsite,1:nsite + (i-1)*nsite]=A_ex[[i]] + A_in[[i]]
-  A = as(A,'symmetricMatrix')
+  A = as(A,'dsCMatrix')
   return(A)
 } 
   # passed 2019/3/18
