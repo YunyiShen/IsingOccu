@@ -77,7 +77,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	propose_Z_missing_obs = 0
 	timing = proc.time()
 	n_para_group = length(theta_curr)
-	constrains = Z_absolute
+	constrains = as.vector( Z_absolute)
 	constrains[constrains==-1]=NA
 	for(i in 1:burn.in){# to burn in 
 		#propose theta 

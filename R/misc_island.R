@@ -199,7 +199,7 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	             },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
 	
-	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses = matrix( c(-1L, 1L),2,1),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + thr)
+	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses =  c(-1L, 1L),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + as.vector( thr))
 	rm(A)
 	return(t(Z))
 	# test for 2spp case, passed 3/18/2019

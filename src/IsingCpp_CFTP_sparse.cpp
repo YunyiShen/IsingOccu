@@ -34,7 +34,7 @@ NumericVector PplusMinMax(int i, const arma::sp_mat& J, IntegerVector s, Numeric
   //int N = J.n_rows;
   NumericVector TwoOpts(2);
   
-  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
+  for (arma::sp_mat::const_col_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
   {
     if (i != it.row())
     {
@@ -176,7 +176,7 @@ double Pplus(int i, const arma::sp_mat& J, IntegerVector s, NumericVector h, dou
   //int N = J.n_rows;
   
   
-  for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
+  for (arma::sp_mat::const_col_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
   {
     if (i != it.row())
     {
@@ -263,26 +263,26 @@ IntegerMatrix IsingProcess(int nSample, const arma::sp_mat& graph, NumericVector
 // OVERAL FUNCTION //
 // [[Rcpp::export]]
 IntegerMatrix IsingSamplerCpp(int n, const arma::sp_mat& graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
-IntegerMatrix constrain)
+IntegerVector constrain)
 {
   int Ni = graph.n_rows;
   IntegerMatrix Res(n,Ni);
   IntegerVector state(Ni);
-  IntegerVector constrainVec(Ni);
+  //IntegerVector constrainVec(Ni);
   if (exact)
   {
     for (int s=0;s<n;s++)
     {
-      for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
-      state = IsingEx(graph, thresholds, beta, nIter, responses, exact, constrainVec);
+      //for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
+      state = IsingEx(graph, thresholds, beta, nIter, responses, exact, constrain);
       for (int i=0;i<Ni;i++) Res(s,i) = state[i];
     }
   } else 
   {
     for (int s=0;s<n;s++)
     {
-      for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
-      state = IsingMet(graph, thresholds, beta, nIter, responses, constrainVec);
+      //for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
+      state = IsingMet(graph, thresholds, beta, nIter, responses, constrain);
       for (int i=0;i<Ni;i++) Res(s,i) = state[i];
     }
   }
@@ -301,7 +301,7 @@ double H(const arma::sp_mat& J, IntegerVector s, NumericVector h)
   for (int i=0;i<N;i++)
   {
     Res -= h[i] * s[i];
-    for (arma::sp_mat::const_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
+    for (arma::sp_mat::const_col_iterator it = J.begin_col(i); it != J.end_col(i); ++it)
     {
       if (it.row()!=i) Res -= *it * s[i] * s[it.row()] * .5;
     }
