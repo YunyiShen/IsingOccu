@@ -71,17 +71,17 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 50, burn.in = 5
+                                  , mcmc.iter = 500000, burn.in = 25000
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.05
+                                  , Zprop_rate = 0.1
                                  
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 1,nIter = 30)
+                                  , ini = theta,thin.by = 25,report.by = 1,nIter = 30)
 
 
 save.image("FM_Mainland_island.RData")
