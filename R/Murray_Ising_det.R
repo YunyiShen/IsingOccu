@@ -187,7 +187,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		  low_acc_Z_missing_obs = 0
 		  low_acc_theta_occu = 0
 		  low_acc_theta_det = 0
-		  propose_Z = 0
+		  propose_Z_num = 0
 		  propose_Z_missing_obs = 0
 		  timing = proc.time()
 		  }
