@@ -61,6 +61,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	Z_curr = Z_absolute
 	Z_temp = Z_absolute
 	
+	MRF_curr = getMRF(ini,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+	
 	theta_curr = ini
 	
 	cat("Burn in...\n")
@@ -86,19 +88,22 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	  
 	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-	  Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
+		
+	  MRF_prop = getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+	  
+	  
+	  Z_temp = rIsingOccu_multi(MRF_prop,n=nrep,method = "CFTP",nIter = nIter)
 	  # MH ratio
 	  
-	  Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
 	                            ,Z_curr ,Z_curr
 	                            ,Z_temp
 	                            ,detmat
-	                            ,vars_prior
-	                             
-	                            ,X, detX
-	                            ,distM,link_map
-	                            ,dist_mainland , link_mainland
-	                            ,int_range_intra,int_range_inter)
+	                            ,theta_curr$beta_det
+	                            ,theta_prop$beta_det
+	                            , detX
+							    , theta_curr$spp_mat_det, theta_prop$spp_mat_det
+	                            )
 	  r = runif(1)
 	  if(is.na(Murray_ratio)){
 	    Murray_ratio = 0
@@ -107,7 +112,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	  if(Murray_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 	  if(r<=Murray_ratio){
 	    theta_curr=theta_prop
-	    #Z_temp = Z_temp
+	    MRF_curr = MRF_prop
 	    accept_theta_occu = accept_theta_occu + 1
 	  }
 	    
@@ -118,16 +123,16 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
 		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 		
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-						,Z_curr ,Z_curr
-						,Z_temp
-						,detmat
-						,vars_prior
-						 
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
+	                            ,Z_curr ,Z_curr
+	                            ,Z_temp
+	                            ,detmat
+	                            ,theta_curr$beta_det
+	                            ,theta_prop$beta_det
+	                            , detX
+							    , theta_curr$spp_mat_det, theta_prop$spp_mat_det
+	                            )
+
 		r = runif(1)
 		if(is.na(Murray_ratio)) {
 		  Murray_ratio=0
@@ -152,16 +157,16 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		}
 		
 		
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-						,Z_curr ,Z_prop
-						,Z_temp
-						,detmat
-						,vars_prior
-						 
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_curr, getlogprior(theta_prop,theta_curr,vars_prior)
+	                            ,Z_curr ,Z_prop
+	                            ,Z_temp
+	                            ,detmat
+	                            ,theta_curr$beta_det
+	                            ,theta_prop$beta_det
+	                            , detX
+							                , theta_curr$spp_mat_det, theta_curr$spp_mat_det
+	                            )
+
 		r = runif(1)
 		if(is.na(Murray_ratio)) {
 		  Murray_ratio = 0
@@ -220,20 +225,22 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	  
 	  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig	#	theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
 	  theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-		Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
+	  MRF_prop = getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+	  
+	  
+	  Z_temp = rIsingOccu_multi(MRF_prop,n=nrep,method = "CFTP",nIter = nIter)
+	  # MH ratio
+	  
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
+	                            ,Z_curr ,Z_curr
+	                            ,Z_temp
+	                            ,detmat
+	                            ,theta_curr$beta_det
+	                            ,theta_prop$beta_det
+	                            , detX
+							    , theta_curr$spp_mat_det, theta_prop$spp_mat_det
+	                            )
 
-		
-		# MH ratio
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-						,Z_curr ,Z_curr
-						,Z_temp
-						,detmat
-						,vars_prior
-						 
-						,X, detX
-						,distM,link_map
-						,dist_mainland , link_mainland
-						,int_range_intra,int_range_inter)
 		r = runif(1)
 		if(is.na(Murray_ratio)){
 		  Murray_ratio = 0
@@ -241,7 +248,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		if(Murray_ratio<exp(-10)) low_acc_theta_occu = low_acc_theta_occu + 1
 		if(r<=Murray_ratio){
 			theta_curr=theta_prop
-			#Z_temp = Z_temp
+			MRF_curr = MRF_prop
 			accept_theta_occu = accept_theta_occu + 1
 		}
 		
@@ -253,15 +260,16 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 
 		
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-		                          ,Z_curr=Z_curr ,Z_prop = Z_curr
-		                          ,Z_temp
-		                          ,detmat
-		                          ,vars_prior
-		                          ,X, detX
-		                          ,distM,link_map
-		                          ,dist_mainland , link_mainland
-		                          ,int_range_intra,int_range_inter)
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
+	                            ,Z_curr ,Z_curr
+	                            ,Z_temp
+	                            ,detmat
+	                            ,theta_curr$beta_det
+	                            ,theta_prop$beta_det
+	                            , detX
+							    , theta_curr$spp_mat_det, theta_prop$spp_mat_det
+	                            )
+
 		r = runif(1)
 		if(is.na(Murray_ratio)) Murray_ratio = 0
 		if(Murray_ratio<exp(-10)) low_acc_theta_det = low_acc_theta_det + 1
@@ -289,16 +297,16 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		}
 		
 		
-		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_curr
-		                          ,Z_curr ,Z_prop
-		                          ,Z_temp
-		                          ,detmat
-		                          ,vars_prior
-		                           
-		                          ,X, detX
-		                          ,distM,link_map
-		                          ,dist_mainland , link_mainland
-		                          ,int_range_intra,int_range_inter)
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_curr, getlogprior(theta_prop,theta_curr,vars_prior)
+	                            ,Z_curr ,Z_prop
+	                            ,Z_temp
+	                            ,detmat
+	                            ,theta_curr$beta_det
+	                            ,theta_prop$beta_det
+	                            , detX
+							    , theta_curr$spp_mat_det, theta_curr$spp_mat_det
+	                            )
+
 		r = runif(1)
 		if(is.na(Murray_ratio)) Murray_ratio = 0
 		if(Murray_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
