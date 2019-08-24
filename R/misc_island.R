@@ -420,9 +420,20 @@ propose_Z = function(theta, constrains, envX, distM, link_map,dist_mainland,link
 		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
 	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
 	thr = Reduce(rbind,thr)
-  Z_prop = IsingSamplerCpp(n=nrep,graph = A, thresholds = thr, beta=1, responses = c(-1L, 1L),nIter = nIter,exact = T,constrain = constrains)
-  rm(A)
-  return(t(Z_prop))
+  thr_absence = thr[Z_absolute==-1]
+  A_presence = A[which(Z_absolute==-1),which(Z_absolute==1)] # this act as part of the thr
+  A_absence = A[which(Z_absolute==-1),which(Z_absolute==-1)]
+  
+  rm(A,thr)
+  
+  thr = thr_absence + rowSums(A_presence)
+
+
+  Z_prop_abs = IsingSamplerCpp(n=nrep,graph = A_absence, thresholds = thr, beta=1, responses = c(-1L, 1L),nIter = nIter,exact = T,constrain = constrains)
+  Z_prop = Z_absolute
+  Z_prop[Z_absolute==-1]=t(Z_prop_abs)
+  Ham = apply(matrix(t(Z_prop_abs),ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A_absence, thr = thr)
+  return(list(Z = matrix( Z_prop,ncol = nrep),negPot = sum(-Ham)))
 }
          
 propose_rate_w_constrain = function(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z,Z_absolute){
@@ -454,7 +465,7 @@ propose_rate_w_constrain = function(theta, envX, distM, link_map,dist_mainland,l
   
   thr = thr_absence + rowSums(A_presence)
   
-  Ham = apply(matrix(Z,ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A_absence, thr = thr)
+  Ham = apply(matrix(Z[Z_absolute==-1],ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A_absence, thr = thr)
   
   return(sum(-Ham))
 }
@@ -496,13 +507,12 @@ MH_ratio_Z = function(theta, Z_curr, Z_prop, Z_absolute
                       ,dist_mainland,link_mainland
                       ,int_range_intra="nn",int_range_inter="exp"){
   # numerator
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
-  log_p_theta_Z_curr = propose_rate_w_constrain(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr,Z_absolute)
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop$Z ,detmat = detmat, detX)
+  log_p_theta_Z_curr = Z_curr$negPot
 
   # denominator
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
-  log_p_theta_Z_prop = propose_rate_w_constrain(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop,Z_absolute)
-  
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr$Z ,detmat = detmat, detX)
+  log_p_theta_Z_prop = Z_prop$negPot
   MH_ratio = log_q_theta_Z_prop_detmat + log_p_theta_Z_curr - log_q_theta_Z_curr_detmat - log_p_theta_Z_prop
   return(min(1,exp(MH_ratio)))
 }       
