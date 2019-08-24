@@ -390,7 +390,7 @@ getlogprior = function(theta_prop,theta_curr,vars_prior){
 
 }
 
-Murray.ratio.Ising_det = function(MRF_prop,MRF_curr,log_pi
+Murray.ratio.Ising_det = function(MRF_curr,MRF_prop,log_pi
                         ,Z_curr ,Z_prop
                         ,Z_temp 
                         ,detmat

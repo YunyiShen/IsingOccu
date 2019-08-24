@@ -123,7 +123,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
 		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 		
-	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_curr, getlogprior(theta_prop,theta_curr,vars_prior)
 	                            ,Z_curr ,Z_curr
 	                            ,Z_temp
 	                            ,detmat
@@ -260,7 +260,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 
 		
-	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
+	  Murray_ratio=Murray.ratio.Ising_det(MRF_curr ,MRF_curr, getlogprior(theta_prop,theta_curr,vars_prior)
 	                            ,Z_curr ,Z_curr
 	                            ,Z_temp
 	                            ,detmat
