@@ -53,14 +53,14 @@ link_map =
 nrep = 1
 nspp = 2
 
-vars_prop = list( beta_occu = rep(5e-3,nspp * ncol(envX))
-                  ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
+vars_prop = list( beta_occu = rep(1e-2,nspp * ncol(envX))
+                  ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(4e-4,nspp)
                   ,eta_inter = rep(5e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 2.5e-3
-                  ,spp_mat_det = 2.5e-3)
+                  ,spp_mat_det = 1e-2)
 
 detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
 Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
@@ -71,17 +71,17 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 5000, burn.in = 10
+                                  , mcmc.iter = 5000, burn.in = 500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 0.8
+                                  , Zprop_rate = 0.03
                                  
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 1,nIter = 30)
+                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 30)
 
 
 save.image("FM_Mainland_island.RData")
