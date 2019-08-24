@@ -277,6 +277,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 			Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
 		}
 		
+		if(sum(is.na(Z_prop))>0) Z_prop = Z_curr
 		
 		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop, Z_absolute
                       ,detmat,envX, detX
