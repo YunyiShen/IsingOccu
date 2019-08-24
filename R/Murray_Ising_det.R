@@ -162,7 +162,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	                            ,Z_temp
 	                            ,detmat
 	                            ,theta_curr$beta_det
-	                            ,theta_prop$beta_det
+	                            ,theta_curr$beta_det
 	                            , detX
 							                , theta_curr$spp_mat_det, theta_curr$spp_mat_det
 	                            )
@@ -302,7 +302,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	                            ,Z_temp
 	                            ,detmat
 	                            ,theta_curr$beta_det
-	                            ,theta_prop$beta_det
+	                            ,theta_curr$beta_det
 	                            , detX
 							    , theta_curr$spp_mat_det, theta_curr$spp_mat_det
 	                            )
