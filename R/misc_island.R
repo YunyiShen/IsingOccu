@@ -405,9 +405,10 @@ propose_Z = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
   nperiod = ncol(detmat)
   sppmat_det = theta$spp_mat_det
   Pdets = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)
-  rs = runif(length(Pdets))
+  Pdets_flip = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_curr,detmat)
+  rs = runif(length(Pdets)*ncol(sppmat_det))
   
-  flip_or_not = rep( log(rs)+log(Zprop_rate)>=Pdets , ncol(sppmat_det) )# if Pdet is so tiny there, we flip all -1s at that site
+  flip_or_not = ( log(rs)-log(Zprop_rate)<=rep(Pdets_flip-Pdets,ncol(sppmat_det)))
   
   Z_prop = Z_curr
   
@@ -441,8 +442,10 @@ propose_rate = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_
   
   rm(Z_prop_temp,Z_curr_temp,Z_abso_temp)
   
-  P_prop_Z =(1-exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_prop,detmat)))*Zprop_rate # probability of flipping
-  P_curr_Z =(1-exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)))*Zprop_rate 
+  P_prop_Z =Zprop_rate * sapply(exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_prop,detmat) - 
+								  Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_prop,detmat)),min,1) # probability of flipping
+  P_curr_Z =Zprop_rate * sapply(exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_curr,detmat) - 
+								  Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)),min,1)
   
   prop2curr = sum(apply(flip_site,2,function(flip,P){sum(log(P[flip]))},P = P_prop_Z)) +  # fliped site, from prop to curr
               sum(apply(No_flip,2,function(No_flip,P){sum(log(1-P[No_flip]))},P = P_prop_Z)) # sites that can flip but did not 
