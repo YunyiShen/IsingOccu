@@ -1,10 +1,10 @@
+# sampling Z from detection 
 Hamdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
-  sppmat_det = as(sppmat_det,"dgCMatrix")
+    sppmat_det = as(sppmat_det,"dgCMatrix")
 	if(sum(spp_exist)==0 | sum(!is.na(dethis))==0){return(0)} # no species there, probability one to be no detection, or no observation here
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
-	  # thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detected 
 	  # do not include thr_abs since if two species never coexist we cannot infer "what if they coexist", i.e. thr_exis will be total colinear with thr_exis
 	  thr = thr_exis
 	  #thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
@@ -54,10 +54,36 @@ Hamdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 
 Hamdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
   Hamdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
-    sum(Hamdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]])) # change 25/8/2019
+    sum(Hamdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]]))
   },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat)
   return(Reduce('+',Hamdets))
 }
+
+
+propose_Z = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
+  nperiod = ncol(detmat)
+  sppmat_det = theta$spp_mat_det
+  Pdets = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)
+  Pdets_flip = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_curr,detmat) # if flip will increase the likelihood of detection, flip
+  rs = runif(length(Pdets)*ncol(sppmat_det))
+  flip_or_not = ( log(rs)-log(Zprop_rate)<=rep(Pdets_flip-Pdets,ncol(sppmat_det)))
+  Z_prop = Z_curr
+  which_flip = which(Z_absolute==-1 & flip_or_not) 
+  Z_prop[which_flip] = -Z_prop[which_flip]
+  
+  return(Z_prop)
+}
+
+propose_Z_rep = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
+  temp = lapply(1:ncol(Z_curr), function(i,theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
+    propose_Z(theta, envX, detX[[i]],detmat[[i]],Z_curr[,i],Z_absolute[,i],Zprop_rate) 
+  },theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
+  
+  return(as.matrix(Reduce(cbind,temp))) # matrix
+}       
+
+
+
 
 propose_rate = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
   sppmat_det = theta$spp_mat_det
@@ -129,4 +155,32 @@ MH_ratio_Z = function(theta, Z_curr, Z_prop,Z_absolute,Zprop_rate
   MH_ratio = log_q_theta_Z_prop_detmat + log_p_theta_Z_curr - log_q_theta_Z_curr_detmat - log_p_theta_Z_prop
   return(min(1,exp(MH_ratio)))
 }       
+
+
+propose_Z_plain = function(Z_curr,Z_absolute,Zprop_rate){
+  Z_prop = Z_curr
+  if(runif(1)<Zprop_rate){
+    absence = which(Z_absolute==-1)
+    #abs_obs = absence[!absence%in%no_obs]
+    flip = sample(absence,1)
+    Z_prop[flip]=-Z_prop[flip]
+  }
+  return(Z_prop)
+}       
+
+
+
+MH_ratio_Z_plain = function(theta, Z_curr, Z_prop,Z_absolute,Zprop_rate
+                      ,detmat,envX, detX
+                      ,distM,link_map
+                      ,dist_mainland,link_mainland
+                      ,int_range_intra="nn",int_range_inter="exp"){
+  # numerator
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+
+  # denominator
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+  MH_ratio = log_q_theta_Z_prop_detmat - log_q_theta_Z_curr_detmat 
+  return(min(1,exp(MH_ratio)))
+}
 

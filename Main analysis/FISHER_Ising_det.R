@@ -1,6 +1,6 @@
-source("./R/misc_island.R")
+source("./R/misc.R")
 #source("Moller_island.R")
-source("./R/Murray_Ising_det.R")
+source("./R/Main_Sampler.R")
 require(Matrix)
 require(Rcpp)
 Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")

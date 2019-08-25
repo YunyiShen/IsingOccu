@@ -1,3 +1,4 @@
+## misc helper functions
 getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #it can be used multiple times for interislan and intra-island
 {
   # pass all graphs as sparse matrix in package Matrix
@@ -209,25 +210,6 @@ Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 }
 
 
-IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX,no_obs){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
-	nspp = nrow(theta$spp_mat)
-	beta_det = theta$beta_det
-	negPot = Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)
-	negpot = -sum(negPot)
-	nrep = ncol(Z)
-	#beta_det = matrix(detbeta,nrow = length(detbeta),ncol = 1)#
-	logLdata=0
-	for(i in 1:nrep){
-		P_det = Pdet_multi(ncol(detmat[[i]]), envX,detX[[i]], beta_det,nspp) # detX should be a list of list 
-		LP_Z1 = as.matrix(rowSums(detmat[[i]] * log(P_det) + (1-detmat[[i]]) * log(1-P_det)))
-		LP_Z0 = as.matrix(log(1*(rowSums(detmat[[i]])==0) + 1e-13 * (1-(rowSums(detmat[[i]])==0)))) # I(data = 0), do not want err for those have detections
-		temp = as.numeric((Z[,i]+1)/2) * LP_Z1 + as.numeric(1-((Z[,i]+1)/2)) * LP_Z0
-		temp[no_obs[,i]] = 0 # not so good, assume no_obs is a matrix with 1 shows there is no camera/camera fail there (no observation)
-		logLdata = logLdata +  sum(temp)
-	}
-	return(negPot+logLdata)
-}
-  # passed 2019/3/18
 
 IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
   nspp = nrow(theta$spp_mat)
@@ -240,61 +222,7 @@ IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dis
   return(negPot+logLdata)
 }
 
-propose_Z = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
-  nperiod = ncol(detmat)
-  sppmat_det = theta$spp_mat_det
-  Pdets = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)
-  Pdets_flip = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_curr,detmat)
-  rs = runif(length(Pdets)*ncol(sppmat_det))
-  
-  flip_or_not = ( log(rs)-log(Zprop_rate)<=rep(Pdets_flip-Pdets,ncol(sppmat_det)))
-  
-  Z_prop = Z_curr
-  
-  which_flip = which(Z_absolute==-1 & flip_or_not)
-  
-  Z_prop[which_flip] = -Z_prop[which_flip]
-  
-  return(Z_prop)
-}
 
-propose_Z_rep = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
-  temp = lapply(1:ncol(Z_curr), function(i,theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
-    propose_Z(theta, envX, detX[[i]],detmat[[i]],Z_curr[,i],Z_absolute[,i],Zprop_rate) 
-  },theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
-  
-  return(as.matrix(Reduce(cbind,temp))) # matrix
-}       
-
-Murray.ratio.Ising_det = function(theta_curr ,theta_prop
-                        ,Z
-                        ,Z_temp
-                        ,detmat
-                        ,vars_prior
-                        ,envX, detX
-                        ,distM,link_map
-                        ,dist_mainland,link_mainland
-                        ,int_range_intra="nn",int_range_inter="exp"){
-  log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector(theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
-  log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
-  
-  #prior of proposed theta
-  log_q_theta_prop_Z_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_prop, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z ,detmat = detmat, detX)
-  # theta_prop should be sample from independent Gaussian distribution with mean theta_curr, Z_prop should be directly sample from a uniform configuration (of course where exist detection should be 1 with probability 1, actually sample all 0s, then we can cancel out the proposal probability from the MH ratio)
-  log_H_theta_curr_Z_temp = -sum(Hamiltonian(theta_curr,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
-  
-  #### end of the numerator part, start the denominator
-  
-  log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector( theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
-  log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
-  log_q_theta_curr_Z_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta_curr, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z ,detmat = detmat, detX)
-  log_H_theta_prop_Z_temp = -sum(Hamiltonian(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_temp))
-  
-  log_MH_ratio = (log_pi_theta_prop + log_q_theta_prop_Z_detmat + log_H_theta_curr_Z_temp)-
-    (log_pi_theta_curr + log_q_theta_curr_Z_detmat + log_H_theta_prop_Z_temp)
-  
-  return(min(1,exp(log_MH_ratio)))
-}
 
          
 write_json.IsingOccu_samples = function(x,path){
