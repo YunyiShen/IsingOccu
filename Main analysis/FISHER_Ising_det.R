@@ -74,14 +74,14 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , mcmc.iter = 5000, burn.in = 100
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 1
+                                  , Zprop_rate = .0001
                                  
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 1,report.by = 100,nIter = 30)
+                                  , ini = theta,thin.by = 1,report.by = 10,nIter = 30)
 
 
 save.image("FM_Mainland_island.RData")

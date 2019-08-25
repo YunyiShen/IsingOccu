@@ -305,7 +305,7 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 		Z_site = Z[rows1,]
 		Pdet_Ising_single_site(thr1, Z_site, dethis, sppmat_det)
 	},thr_list,detmat,as.matrix( Z),sppmat_det,nsite,nspp)# loop over sites
-	return(Reduce('+',Pdet))
+	return(Reduce(rbind,Pdet)) # change 25/8/2019
 }
 
 ## sampleIsingdet
@@ -353,7 +353,7 @@ Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det
 
 Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
   Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
-    Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]])
+    sum(Pdet_Ising(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z[,k],detmat[[k]])) # change 25/8/2019
   },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat)
   return(Reduce('+',Pdets))
 }
@@ -396,80 +396,71 @@ IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dis
   beta_det = theta$beta_det
   negPot = Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)
   negPot = -sum(negPot)
-  nrep = ncol(Z)
+  nrep = ncol(Z) # Z should be a matrix with ncol equals to number of repeats, always.
   logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$spp_mat_det,Z,detmat)
   return(negPot+logLdata)
 }
 
-propose_Z = function(theta, constrains, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter){
-  nsite = nrow(envX)
-	beta_occu = theta$beta_occu
-	eta_intra = theta$eta_intra # intra spp, intra island if apply
-	d_intra = theta$d_intra
-	spp_mat = theta$spp_mat
-	nspp = nrow(spp_mat)
-  A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	eta_inter = theta$eta_inter # assume there is one 
-	d_inter = theta$d_inter
-	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
-	A=getfullGraph(A_ex,A_in,spp_mat)
-	rm(A_ex,A_in)
-	thr = lapply(1:nspp,
-	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
-	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
-		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
-	thr = Reduce(rbind,thr)
-  thr_absence = thr[Z_absolute==-1]
-  A_presence = A[which(Z_absolute==-1),which(Z_absolute==1)] # this act as part of the thr
-  A_absence = A[which(Z_absolute==-1),which(Z_absolute==-1)]
+propose_Z = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
+  nperiod = ncol(detmat)
+  sppmat_det = theta$spp_mat_det
+  Pdets = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)
+  rs = runif(length(Pdets))
   
-  rm(A,thr)
+  flip_or_not = rep( log(rs)+log(Zprop_rate)>=Pdets , ncol(sppmat_det) )# if Pdet is so tiny there, we flip all -1s at that site
   
-  thr = thr_absence + rowSums(A_presence)
-
-
-  Z_prop_abs = IsingSamplerCpp(n=nrep,graph = A_absence, thresholds = thr, beta=1, responses = c(-1L, 1L),nIter = nIter,exact = T,constrain = constrains)
-  Z_prop = Z_absolute
-  Z_prop[Z_absolute==-1]=t(Z_prop_abs)
-  Ham = apply(matrix(t(Z_prop_abs),ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A_absence, thr = thr)
-  return(list(Z = matrix( Z_prop,ncol = nrep),negPot = sum(-Ham)))
-}
-         
-propose_rate_w_constrain = function(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z,Z_absolute){
-  nsite = nrow(envX)
-	beta_occu = theta$beta_occu
-	eta_intra = theta$eta_intra # intra spp, intra island if apply
-	d_intra = theta$d_intra
-	spp_mat = theta$spp_mat
-	nspp = nrow(spp_mat)
-	nrep = length(Z)/(nsite * nspp)
-	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	eta_inter = theta$eta_inter # assume there is one 
-	d_inter = theta$d_inter
-	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
-	A=getfullGraph(A_ex,A_in,spp_mat)
-	rm(A_ex,A_in)
-	thr = lapply(1:nspp,
-	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
-	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
-		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
-	thr = Reduce(rbind,thr)
-
-  thr_absence = thr[Z_absolute==-1]
-  A_presence = A[which(Z_absolute==-1),which(Z_absolute==1)] # this act as part of the thr
-  A_absence = A[which(Z_absolute==-1),which(Z_absolute==-1)]
+  Z_prop = Z_curr
   
-  rm(A,thr)
+  which_flip = which(Z_absolute==-1 & flip_or_not)
   
-  thr = thr_absence + rowSums(A_presence)
+  Z_prop[which_flip] = -Z_prop[which_flip]
   
-  Ham = apply(matrix(Z[Z_absolute==-1],ncol = nrep),2,function(Z,A,thr){H(A,Z,thr)},A = A_absence, thr = thr)
-  
-  return(sum(-Ham))
+  return(Z_prop)
 }
 
+propose_Z_rep = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
+  temp = lapply(1:ncol(Z_curr), function(i,theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
+    propose_Z(theta, envX, detX[[i]],detmat[[i]],Z_curr[,i],Z_absolute[,i],Zprop_rate) 
+  },theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
+  
+  return(as.matrix(Reduce(cbind,temp))) # matrix
+}       
+
+propose_rate = function(theta, envX, detX,detmat,Z_prop,Z_curr){
+  sppmat_det = theta$spp_mat_det
+  nperiod = ncol(detmat)
+  nspp = ncol(sppmat_det)
+  Z_prop_temp = matrix(Z_prop,ncol = nspp)
+  Z_curr_temp = matrix(Z_curr,ncol = nspp)
+  
+  flip_site =rowSums( Z_prop_temp==Z_curr_temp )==0 # find flipped sites
+  Pdets_prop_Z = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_prop,detmat)
+  Pdets_curr_Z = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)
+  
+  return(list(
+  prop2curr = sum(log(1-exp(Pdets_prop_Z[flip_site]))),
+  curr2prop = sum(log(1-exp(Pdets_curr_Z[flip_site])))
+    )
+  )
+}
+
+propose_rate_rep = function(theta, envX, detX,detmat,Z_prop,Z_curr){
+  nrep = ncol(Z_curr)
+  temp = lapply(1:nrep,function(i,theta, envX, detX,detmat,Z_prop,Z_curr){
+    propose_rate(theta, envX, detX[[i]],detmat[[i]],Z_prop[,i],Z_curr[,i])
+  },theta, envX, detX,detmat,Z_prop,Z_curr)
+  
+  prop2curr = lapply(temp,function(t){t$prop2curr})
+  curr2prop = lapply(temp,function(t){t$curr2prop})
+  
+  return(
+    list(
+      prop2curr = Reduce('+',prop2curr),
+      curr2prop = Reduce('+',curr2prop)
+    )
+  )
+  
+}
 
 Murray.ratio.Ising_det = function(theta_curr ,theta_prop
                         ,Z
@@ -501,18 +492,19 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   return(min(1,exp(log_MH_ratio)))
 }
 
-MH_ratio_Z = function(theta, Z_curr, Z_prop, Z_absolute
+MH_ratio_Z = function(theta, Z_curr, Z_prop
                       ,detmat,envX, detX
                       ,distM,link_map
                       ,dist_mainland,link_mainland
                       ,int_range_intra="nn",int_range_inter="exp"){
+  propose_rate_Z = propose_rate_rep(theta, envX, detX,detmat,Z_prop,Z_curr)
   # numerator
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop$Z ,detmat = detmat, detX)
-  log_p_theta_Z_curr = Z_curr$negPot
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+  log_p_theta_Z_curr = propose_rate_Z$prop2curr
 
   # denominator
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr$Z ,detmat = detmat, detX)
-  log_p_theta_Z_prop = Z_prop$negPot
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+  log_p_theta_Z_prop = propose_rate_Z$curr2prop
   MH_ratio = log_q_theta_Z_prop_detmat + log_p_theta_Z_curr - log_q_theta_Z_curr_detmat - log_p_theta_Z_prop
   return(min(1,exp(MH_ratio)))
 }       

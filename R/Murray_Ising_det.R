@@ -58,12 +58,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	Z_absolute = (sapply(detmat_nona,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 	rm(detmat_nona)
 	
-	Z_curr = list(Z_prop = Z_absolute,
-	              negPot =propose_rate_w_constrain(ini, envX
-	                                               , distM, link_map
-	                                               ,dist_mainland,link_mainland
-	                                               ,int_range_intra
-	                                               ,int_range_inter,Z_absolute,Z_absolute))
+	Z_curr = Z_absolute
 	Z_temp = Z_absolute
 	
 	theta_curr = ini
@@ -97,7 +92,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	  # MH ratio
 	  
 	  Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-	                            ,Z_curr$Z 
+	                            ,Z_curr 
 	                            ,Z_temp
 	                            ,detmat
 	                            ,vars_prior
@@ -126,7 +121,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 		
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-						,Z_curr$Z
+						,Z_curr
 						,Z_temp
 						,detmat
 						,vars_prior
@@ -149,13 +144,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		Z_prop = Z_curr
 		
 		
-		if(runif(1)<Zprop_rate) {
-		  propose_Z_num = propose_Z_num + 1
-		  Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
-		}
+		propose_Z_num = propose_Z_num + 1
+		Z_prop = propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)	
 		
 		
-		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop, Z_absolute
+		
+		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop
                       ,detmat,envX, detX
                       ,distM,link_map
                       ,dist_mainland,link_mainland
@@ -174,8 +168,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		if(i%%report.by == 0) {
 		  
 		  cat("Burn in iteration",i-report.by+1,"to",i,":\n\n")
-		  cat("    # of Z proposed for imperfect detection: ",propose_Z_num,"\n")
-		  cat("    # of Z acceptance for imperfect detection: " , accept_Z-(report.by-propose_Z_num),"\n")
+		  #cat("    # of Z proposed for imperfect detection: ",propose_Z_num,"\n")
+		  cat("    # of Z acceptance for imperfect detection: " , accept_Z,"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
@@ -223,7 +217,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		# MH ratio
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-						,Z_curr$Z
+						,Z_curr
 						,Z_temp
 						,detmat
 						,vars_prior
@@ -252,7 +246,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 
 		
 		Murray_ratio=Murray.ratio.Ising_det(theta_curr ,theta_prop
-		                          ,Z_curr$Z
+		                          ,Z_curr
 		                          ,Z_temp
 		                          ,detmat
 		                          ,vars_prior
@@ -277,14 +271,13 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		
 		
 		Z_prop = Z_curr
-		if(runif(1)<Zprop_rate) {
-		  propose_Z_num = propose_Z_num + 1
-			Z_prop = propose_Z(theta_curr, constrains,envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,nrep,nIter)	
-		}
 		
-		if(sum(is.na(Z_prop$Z))>0) Z_prop = Z_curr
+		Z_prop = propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)	
 		
-		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop, Z_absolute
+		
+		if(sum(is.na(Z_prop))>0) Z_prop = Z_curr
+		
+		MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop
                       ,detmat,envX, detX
                       ,distM,link_map
                       ,dist_mainland,link_mainland
@@ -301,11 +294,11 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 		}
 
 		
-		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr$Z
+		if(i %% thin.by==0) Z.mcmc[i/thin.by,]=Z_curr
 		if(i%%report.by == 0) { # reporting
 		  cat("Sampling iteration",i-report.by+1,"to",i,":\n\n")
-		  cat("    # of Z proposed: ",propose_Z_num,"\n")
-		  cat("    # of Z acceptance: " , accept_Z-(report.by-propose_Z_num),"\n")
+		  #cat("    # of Z proposed: ",propose_Z_num,"\n")
+		  cat("    # of Z acceptance: " , accept_Z,"\n")
 		  cat("    # of Z acceptance ratio <exp(-10): ",low_acc_Z,"\n\n")
 		  cat("    # of occupancy theta acceptance: " , accept_theta_occu,"\n")
 		  cat("    # of occupancy acceptance ratio <exp(-10): ",low_acc_theta_occu,"\n\n")
