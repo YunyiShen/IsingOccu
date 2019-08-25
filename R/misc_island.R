@@ -426,29 +426,45 @@ propose_Z_rep = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
   return(as.matrix(Reduce(cbind,temp))) # matrix
 }       
 
-propose_rate = function(theta, envX, detX,detmat,Z_prop,Z_curr){
+propose_rate = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
   sppmat_det = theta$spp_mat_det
   nperiod = ncol(detmat)
   nspp = ncol(sppmat_det)
   Z_prop_temp = matrix(Z_prop,ncol = nspp)
   Z_curr_temp = matrix(Z_curr,ncol = nspp)
+  Z_abso_temp = matrix(Z_absolute,ncol = nspp)
   
-  flip_site =rowSums( Z_prop_temp==Z_curr_temp )==0 # find flipped sites
-  Pdets_prop_Z = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_prop,detmat)
-  Pdets_curr_Z = Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)
+  
+  flip_site = Z_prop_temp!=Z_curr_temp # find flipped sites
+  
+  No_flip = Z_abso_temp==-1 & !flip_site
+  
+  rm(Z_prop_temp,Z_curr_temp,Z_abso_temp)
+  
+  P_prop_Z =(1-exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_prop,detmat)))*Zprop_rate # probability of flipping
+  P_curr_Z =(1-exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)))*Zprop_rate 
+  
+  prop2curr = sum(apply(flip_site,2,function(flip,P){sum(log(P[flip]))},P = P_prop_Z)) +  # fliped site, from prop to curr
+              sum(apply(No_flip,2,function(No_flip,P){sum(log(1-P[No_flip]))},P = P_prop_Z)) # sites that can flip but did not 
+  
+  curr2prop = sum(apply(flip_site,2,function(flip,P){sum(log(P[flip]))},P = P_curr_Z)) + # fliped site, from curr to prop
+              sum(apply(No_flip,2,function(No_flip,P){sum(log(1-P[No_flip]))},P = P_curr_Z)) 
+  
+
+    
   
   return(list(
-  prop2curr = sum(log(1-exp(Pdets_prop_Z[flip_site]))),
-  curr2prop = sum(log(1-exp(Pdets_curr_Z[flip_site])))
+  prop2curr = prop2curr,
+  curr2prop = curr2prop
     )
   )
 }
 
-propose_rate_rep = function(theta, envX, detX,detmat,Z_prop,Z_curr){
+propose_rate_rep = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
   nrep = ncol(Z_curr)
-  temp = lapply(1:nrep,function(i,theta, envX, detX,detmat,Z_prop,Z_curr){
-    propose_rate(theta, envX, detX[[i]],detmat[[i]],Z_prop[,i],Z_curr[,i])
-  },theta, envX, detX,detmat,Z_prop,Z_curr)
+  temp = lapply(1:nrep,function(i,theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
+    propose_rate(theta, envX, detX[[i]],detmat[[i]],Z_prop[,i],Z_curr[,i],Z_absolute[,i],Zprop_rate)
+  },theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate)
   
   prop2curr = lapply(temp,function(t){t$prop2curr})
   curr2prop = lapply(temp,function(t){t$curr2prop})
@@ -492,12 +508,12 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   return(min(1,exp(log_MH_ratio)))
 }
 
-MH_ratio_Z = function(theta, Z_curr, Z_prop
+MH_ratio_Z = function(theta, Z_curr, Z_prop,Z_absolute,Zprop_rate
                       ,detmat,envX, detX
                       ,distM,link_map
                       ,dist_mainland,link_mainland
                       ,int_range_intra="nn",int_range_inter="exp"){
-  propose_rate_Z = propose_rate_rep(theta, envX, detX,detmat,Z_prop,Z_curr)
+  propose_rate_Z = propose_rate_rep(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate)
   # numerator
   log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
   log_p_theta_Z_curr = propose_rate_Z$prop2curr
