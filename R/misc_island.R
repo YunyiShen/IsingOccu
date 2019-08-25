@@ -115,67 +115,12 @@ Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int
 	
 }
 
-negHamiltonian_posterior = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
-	H = matrix(0,1,2)
-	namestr = H
-	beta_occu = theta$beta_occu # this will be a matrix for cols are species
-	beta_det = theta$beta_det
-	eta_intra = theta$eta_intra # intra spp, intra island if apply
-	d_intra = theta$d_intra
-	eta_inter = theta$eta_inter # assume there is a 
-	d_inter = theta$d_inter
-	spp_mat = theta$spp_mat
-	eta_inter = theta$eta_inter
-	nspp = sqrt(length(spp_mat))
-	spp_mat = matrix(spp_mat,nspp,nspp)
-	ncov = ncol(envX)
-	nsites = nrow(envX)
-	
-	A = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	B = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat)
-	k = 1
-	for(i in 1:nspp){ # intralayer terms:
-		#H[[i]]=list()
-		for(j in 1:ncov){ # species i, envj
-			H[k] = sum(beta_occu[j+(i-1)*ncov]*envX[,j]*Z_vec[1:nsites + (i-1) * nsites,])
-			
-			namestr[k]=paste0("spp_",i,"_beta_",j)
-			k = k + 1
-		}
-		H[k] = .5 * t(as.matrix( Z_vec[1:nsites + (i-1) * nsites,]))%*%A[[i]]%*%as.matrix( Z_vec[1:nsites + (i-1) * nsites,]) # intra-island 
-		
-		namestr[k]=paste0("spp_",i,"_Intra_Island")
-		k = k + 1
-		H[k] = .5 * t(as.matrix( Z_vec[1:nsites + (i-1) * nsites,]))%*%B[[i]]%*%as.matrix( Z_vec[1:nsites + (i-1) * nsites,]) # inter-island
-		
-		namestr[k]=paste0("spp_",i,"_Inter_Island")
-		k = k + 1
-		thr_mainland = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-		H[k] = sum(thr_mainland*Z_vec[1:nsites + (i-1) * nsites,])
-
-		namestr[k]=paste0("spp_",i,"_Mainland")
-		k = k + 1
-	}
-	for(i in 2:nspp-1){
-		for(j in (i+1):nspp){
-			H[k] = spp_mat[i,j] * (t(Z_vec[1:nsites + (i-1) * nsites,])%*%(Z_vec[1:nsites + (j-1) * nsites,]))
-			namestr[k]=paste0("Cor_spp_",i,"_spp_",j)
-			k = k + 1
-			
-		}
-	}
-	names(H)=namestr
-	return(H)
-}
-  # passed 2019/3/19
 
 rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
-	#require(IsingSamplerCpp)
 	nsite = nrow(envX)
 	beta_occu = theta$beta_occu
 	eta_intra = theta$eta_intra # intra spp, intra island if apply
 	d_intra = theta$d_intra
-	#eta_inter = theta$eta_inter
 	spp_mat = theta$spp_mat
 	nspp = nrow(spp_mat)
 	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
@@ -184,14 +129,6 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
 	A=getfullGraph(A_ex,A_in,spp_mat)
 	rm(A_ex,A_in)
-	#thr = matrix(0,nspp*ncol(envX))
-	#thr = apply(matrix(1:nspp),1, function(k,beta_occu,envX){ envX %*% beta_occu[1:ncol(envX)+(k-1)*ncol(envX)]},beta_occu,envX)
-	#thr = matrix(thr,length(thr),1)
-	#thr_mainland = thr
-	#for(i in 1:nspp){
-	#  thr[1:nsite + (i-1)*nsite] = envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)]
-	#	thr_mainland[1:nsite + (i-1)*nsite] = mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	#}
 	thr = lapply(1:nspp,
 	             function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
 	               envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
@@ -202,35 +139,8 @@ rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainlan
 	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses =  c(-1L, 1L),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + as.vector( thr))
 	rm(A)
 	return(t(Z))
-	# test for 2spp case, passed 3/18/2019
 }
   # passed 2019/3/18
-
-Pdet_multi = function(nperiod, envX,detX, beta_det, nspp){ # likelihood given Z and detections If have repeat, use this multiple times.
-  if(is.null(detX)) {
-    detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
-    
-  }
-  else detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX)
-  npardet = ncol(detDesign[[1]])
-	#Pdet = list()
-	#nrep = length(detX)
-	#for(j in 1:nrep){
-	  P_det = matrix(0,nrow = 1,ncol = nperiod)
-	  P_det = P_det[-1,]
-	  for(i in 1:nspp){
-		  Xbeta_temp = lapply(detDesign,function(w,beta1){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]))
-		  P_det_temp = lapply(Xbeta_temp,function(W){exp(W) / (1 + exp(W))}) # just a logistic regression for detection
-		  P_det_temp = (matrix(unlist(P_det_temp),nrow = nrow(envX),ncol = nperiod)) # detection probability, row is site i col is period j
-		  P_det = rbind(P_det,P_det_temp)
-	  }
-	  #Pdet[[j]] = P_det
-	#}
-	return(P_det)
-}
-
-  # passed, will return a matrix, with nrow = nspp*nsite, ncol = nperiod,
-  #  1:nsite for species 1 and 1:nsite+(i-1)*nsite rows for species i.
   
 Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
@@ -256,24 +166,6 @@ Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	
 }
 
-Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, method = "CFTP"){
-	spp_exist = Z==1
-	dethis[,!spp_exist] = -1# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
-	if(sum(spp_exist)==0) return(dethis)
-	if(prod(spp_exist)==0){
-	  thr_exis = as.matrix( thr[,spp_exist])
-	  thr_abs = - apply(matrix(sppmat_det[!spp_exist,spp_exist],sum(!spp_exist),sum(spp_exist)),2,sum) # condition on some species not exist here thus never be detection
-	  # check here, may be sth wrong 
-	  thr = apply(matrix(1:ncol(thr_exis)),1,function(k,ww,kk){ww[,k]+kk[k]},thr_exis,( thr_abs))
-	}
-	graph = sppmat_det[spp_exist,spp_exist]
-	dethis_exist = dethis[,spp_exist]
-	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
-		IsingSamplerCpp(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,exact = (method=="CFTP"),constrain = NA+thr[k,])
-	},matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph),nIter,n,method)
-	dethis[,spp_exist] = t(dethis_exist)
-	return(dethis)
-}
 
 extract_thr = function(i,thr_list){
 	nspp = length(thr_list)
@@ -308,48 +200,6 @@ Pdet_Ising = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 	return(Reduce(rbind,Pdet)) # change 25/8/2019
 }
 
-## sampleIsingdet
-Sample_Ising_detection = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter=100,n=1, method = "CFTP"){
-	#require(IsingSamplerCpp)
-  #detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX) # This is the full design matrix list of detection probability p at time
-  if(is.null(detX)) {
-    detDesign = lapply(1:nperiod,function(dummy,envX){envX},envX)
-    
-  }
-  else detDesign = lapply(detX,function(x,y){ as.matrix( cbind(y,x))},y = envX)
-  
-  npardet = ncol(detDesign[[1]])
-  nsite = nrow(envX)
-  nspp = nrow(sppmat_det)
-  thr_list = lapply( 1:nspp, function(i,detDesign,beta_det,naprdet,n_row,nperiod){ 
-    temp = lapply(detDesign,function(w,beta1,i){w%*%beta1},beta1 = matrix( beta_det[1:npardet + (i-1) * npardet]),i=i)
-    thr = (matrix(unlist(temp),nrow = n_row,ncol = nperiod))
-    return(thr) # now here is basically a matrix, for each species at site and period
-  },detDesign,beta_det,npardet,nrow(envX),nperiod) # this is gonna be  a list for all species, 
-  
-	detmat_list = lapply(1:nsite,function(i,thr_list,detmat,Z,sppmat_det,nsite,nspp,nIter,n, method){
-		thr = extract_thr(i,thr_list)
-		rows1 = i + (1:nspp-1)*nsite
-		dethis = t(detmat[rows1,])
-		Z_site = Z[rows1]
-		Sample_Ising_det_single_site(thr, Z_site, dethis, sppmat_det,nIter,n, method)
-	},thr_list,detmat,Z,sppmat_det,nsite,nspp,nIter,n, method)# loop over sites
-	
-	det_Ising_spp_list = lapply(1:nspp,function(k,det_list){
-	  sapply(det_list,function(sitelist,k){
-	    t(sitelist[,k])
-	  },k=k)
-	},detmat_list)
-	detmat = Reduce(cbind,det_Ising_spp_list)
-	
-	return(t(detmat))
-}
-
-Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter=100,n=1, method = "CFTP"){
-  detmat = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method){
-    Sample_Ising_detection(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z,detmat[[k]],nIter,n, method)
-  },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method)
-}
 
 Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
   Pdets = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
@@ -358,17 +208,6 @@ Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
   return(Reduce('+',Pdets))
 }
 
-Sample_detection = function(nrep,nperiod,envX,detX,beta_det,nspp,Z){
-  detmat = list()
-  nsite = nrow(envX)
-  for(i in 1:nrep){
-    r = matrix( runif(nperiod * nspp * nsite) , nspp * nsite,nperiod )
-    Pdet = Pdet_multi(nperiod, envX,detX[[i]], beta_det, nspp)
-    detmat[[i]] = apply(  1.0 * (r<Pdet),2,function(det,Z){det*Z},Z=(Z[,i]==1) )  
-  }
-  return(detmat)
-}
-  # passed 2019/3/19
 
 IsingOccu_multi.logL.innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX,no_obs){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
 	nspp = nrow(theta$spp_mat)
@@ -427,60 +266,6 @@ propose_Z_rep = function(theta, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate){
   return(as.matrix(Reduce(cbind,temp))) # matrix
 }       
 
-propose_rate = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
-  sppmat_det = theta$spp_mat_det
-  nperiod = ncol(detmat)
-  nspp = ncol(sppmat_det)
-  Z_prop_temp = matrix(Z_prop,ncol = nspp)
-  Z_curr_temp = matrix(Z_curr,ncol = nspp)
-  Z_abso_temp = matrix(Z_absolute,ncol = nspp)
-  
-  
-  flip_site = Z_prop_temp!=Z_curr_temp # find flipped sites
-  
-  No_flip = Z_abso_temp==-1 & !flip_site
-  
-  rm(Z_prop_temp,Z_curr_temp,Z_abso_temp)
-  
-  P_prop_Z =Zprop_rate * sapply(exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_prop,detmat) - 
-								  Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_prop,detmat)),min,1) # probability of flipping
-  P_curr_Z =Zprop_rate * sapply(exp( Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,-Z_curr,detmat) - 
-								  Pdet_Ising(nperiod,envX,detX,theta$beta_det,sppmat_det,Z_curr,detmat)),min,1)
-  
-  prop2curr = sum(apply(flip_site,2,function(flip,P){sum(log(P[flip]))},P = P_prop_Z)) +  # fliped site, from prop to curr
-              sum(apply(No_flip,2,function(No_flip,P){sum(log(1-P[No_flip]))},P = P_prop_Z)) # sites that can flip but did not 
-  
-  curr2prop = sum(apply(flip_site,2,function(flip,P){sum(log(P[flip]))},P = P_curr_Z)) + # fliped site, from curr to prop
-              sum(apply(No_flip,2,function(No_flip,P){sum(log(1-P[No_flip]))},P = P_curr_Z)) 
-  
-
-    
-  
-  return(list(
-  prop2curr = prop2curr,
-  curr2prop = curr2prop
-    )
-  )
-}
-
-propose_rate_rep = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
-  nrep = ncol(Z_curr)
-  temp = lapply(1:nrep,function(i,theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate){
-    propose_rate(theta, envX, detX[[i]],detmat[[i]],Z_prop[,i],Z_curr[,i],Z_absolute[,i],Zprop_rate)
-  },theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate)
-  
-  prop2curr = lapply(temp,function(t){t$prop2curr})
-  curr2prop = lapply(temp,function(t){t$curr2prop})
-  
-  return(
-    list(
-      prop2curr = Reduce('+',prop2curr),
-      curr2prop = Reduce('+',curr2prop)
-    )
-  )
-  
-}
-
 Murray.ratio.Ising_det = function(theta_curr ,theta_prop
                         ,Z
                         ,Z_temp
@@ -510,23 +295,6 @@ Murray.ratio.Ising_det = function(theta_curr ,theta_prop
   
   return(min(1,exp(log_MH_ratio)))
 }
-
-MH_ratio_Z = function(theta, Z_curr, Z_prop,Z_absolute,Zprop_rate
-                      ,detmat,envX, detX
-                      ,distM,link_map
-                      ,dist_mainland,link_mainland
-                      ,int_range_intra="nn",int_range_inter="exp"){
-  propose_rate_Z = propose_rate_rep(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate)
-  # numerator
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
-  log_p_theta_Z_curr = propose_rate_Z$prop2curr
-
-  # denominator
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
-  log_p_theta_Z_prop = propose_rate_Z$curr2prop
-  MH_ratio = log_q_theta_Z_prop_detmat + log_p_theta_Z_curr - log_q_theta_Z_curr_detmat - log_p_theta_Z_prop
-  return(min(1,exp(MH_ratio)))
-}       
 
          
 write_json.IsingOccu_samples = function(x,path){
