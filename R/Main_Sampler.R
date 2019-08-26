@@ -14,7 +14,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
                     ,distM,link_map
                     ,dist_mainland , link_mainland
                     ,int_range_intra="nn",int_range_inter="exp"
-                    ,seed = 42,ini,thin.by = 100,report.by=100,nIter=100){ # ini has same formate of theta
+                    ,seed = 42,ini,thin.by = 100,report.by=100,nIter=100, Importance = F){ # ini has same formate of theta
   
   cat("Initializing...\n\n")
   require(coda)
@@ -142,14 +142,19 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     Z_prop = Z_curr
     
     
-    propose_Z_num = propose_Z_num + 1
-    Z_prop = propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)  
-    
-    
-    
-    MH_ratio=MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
+	if(Importance){
+      Z_prop = propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
+	  MH_ratio=MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
                       ,detmat,envX, detX
                       )
+	}
+	else{
+      Z_prop = propose_Z_plain(Z_curr,Z_absolute,Zprop_rate)
+	  MH_ratio = MH_ratio_Z_plain(theta_curr, MRF_curr,Z_curr, Z_prop
+                      ,detmat,envX, detX
+                      )
+    }
+
 
     r = runif(1)
     if(is.na(MH_ratio)) {
@@ -268,14 +273,18 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     
     Z_prop = Z_curr
     
-    Z_prop = propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)  
-    
-    
-    if(sum(is.na(Z_prop))>0) Z_prop = Z_curr
-    
-    MH_ratio=MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
+	if(Importance){
+      Z_prop = propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
+	  MH_ratio=MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
                       ,detmat,envX, detX
                       )
+	}
+	else{
+      Z_prop = propose_Z_plain(Z_curr,Z_absolute,Zprop_rate)
+	  MH_ratio = MH_ratio_Z_plain(theta_curr, MRF_curr,Z_curr, Z_prop
+                      ,detmat,envX, detX
+                      )
+    }
     r = runif(1)
     if(is.na(MH_ratio)) {
       MH_ratio = 0
