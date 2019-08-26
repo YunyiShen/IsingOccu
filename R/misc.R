@@ -76,7 +76,30 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 	return(A)
 	# test for 2spp passed 3/18/2019
 }
-  # passed 2019/3/18
+
+
+getMRF = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp"){
+  	nsite = nrow(envX)
+	beta_occu = theta$beta_occu
+	eta_intra = theta$eta_intra # intra spp, intra island if apply
+	d_intra = theta$d_intra
+	spp_mat = theta$spp_mat
+	nspp = nrow(spp_mat)
+	#nrep = ncol(Z_vec)
+	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
+	eta_inter = theta$eta_inter # assume there is a 
+	d_inter = theta$d_inter
+	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
+	A=getfullGraph(A_ex,A_in,spp_mat)
+    rm(A_ex,A_in)
+	thr = lapply(1:nspp,
+	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
+	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
+		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
+	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
+	thr = Reduce(rbind,thr)
+    return(list(A = A,thr = thr))
+}
 
 IsingStateProb = function (s, graph, thresholds, beta, responses = c(-1L, 1L)) 
 {
@@ -90,58 +113,21 @@ IsingStateProb = function (s, graph, thresholds, beta, responses = c(-1L, 1L))
   sapply(s, function(x) exp(-beta * H(graph, x, ( thresholds)))/Z)
 }
 
-Hamiltonian = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_vec){
-	nsite = nrow(envX)
-	beta_occu = theta$beta_occu
-	eta_intra = theta$eta_intra # intra spp, intra island if apply
-	d_intra = theta$d_intra
-	spp_mat = theta$spp_mat
-	nspp = nrow(spp_mat)
+Hamiltonian = function(MRF,Z_vec){
 	nrep = ncol(Z_vec)
-	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	eta_inter = theta$eta_inter # assume there is a 
-	d_inter = theta$d_inter
-	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
-	A=getfullGraph(A_ex,A_in,spp_mat)
-	thr = lapply(1:nspp,
-	  function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
-	    envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
-		      mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	    },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
-	thr = Reduce(rbind,thr)
-	negPot = lapply(1:nrep,function(i,Z,J,h){-H(J,Z[,i],h)},Z=Z_vec,J=A,h=( thr))
-	rm(A)
-	negPot = Reduce(rbind,negPot)
-	return(-(negPot)) # if we have repeat, just make Z_vec has two cols 
+	Ham = lapply(1:nrep,function(i,Z,J,h){H(J,Z[,i],h)},Z=Z_vec,J=MRF$A,h=( MRF$thr))
+  
+	Ham = Reduce(rbind,Ham)
+	return(Ham) # if we have repeat, just make Z_vec has two cols 
 	
 }
 
 
-rIsingOccu_multi = function(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp",n=1,method = "CFTP",nIter = 100){
-	nsite = nrow(envX)
-	beta_occu = theta$beta_occu
-	eta_intra = theta$eta_intra # intra spp, intra island if apply
-	d_intra = theta$d_intra
-	spp_mat = theta$spp_mat
-	nspp = nrow(spp_mat)
-	A_in = getintralayerGraph(distM,link_map$intra,eta_intra,d_intra,int_range = int_range_intra,spp_mat)
-	eta_inter = theta$eta_inter # assume there is a 
-	d_inter = theta$d_inter
-	A_ex = getintralayerGraph(distM,link_map$inter,eta_inter,d_inter,int_range = int_range_inter,spp_mat) # graph among islands, if apply, distM should only contain graph 
-	A=getfullGraph(A_ex,A_in,spp_mat)
-	rm(A_ex,A_in)
-	thr = lapply(1:nspp,
-	             function(i,envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter){
-	               envX %*% beta_occu[1:ncol(envX)+(i-1)*ncol(envX)] + 
-	                 mainland_thr(dist_mainland,link_mainland,eta_inter[i],d_inter[i],int_range_inter)
-	             },envX,beta_occu,dist_mainland,link_mainland,eta_inter,d_inter,int_range_inter)
-	thr = Reduce(rbind,thr)
-	
-	Z = IsingSamplerCpp(n=n,graph = A,thresholds=thr, responses =  c(-1L, 1L),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + as.vector( thr))
-	rm(A)
-	return(t(Z))
+rIsingOccu_multi = function(MRF,n=1,method = "CFTP",nIter = 100){
+	Z = IsingSamplerCpp(n=n,graph = MRF$A,thresholds=MRF$thr, responses = matrix( c(-1L, 1L),2,1),beta = 1,nIter=nIter,exact = (method=="CFTP"),constrain = NA + MRF$thr)
+  return(t(Z))
+	# test for 2spp case, passed 3/18/2019
 }
-  # passed 2019/3/18
   
 Pdet_Ising_single_site = function(thr, Z, dethis, sppmat_det){
 	spp_exist = Z==1
@@ -211,17 +197,15 @@ Pdet_Ising_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 
 
 
-IsingOccu_Ising_det_multi_logL_innorm = function(theta, envX, distM,link_map,dist_mainland,link_mainland,int_range_intra="nn",int_range_inter="exp", Z ,detmat, detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
-  nspp = nrow(theta$spp_mat)
+IsingOccu_Ising_det_multi_logL_innorm = function(MRF, beta_det,sppmat_det, Z ,detmat, envX,detX){ # the in-normalized log likelihood of IsingOccu Model beta is matrix here detX should be a list of list detmat should be a list, they should have the same length
+  nspp = nrow(sppmat_det)
   nperiod = ncol(detmat[[1]])
-  beta_det = theta$beta_det
-  negPot = Hamiltonian(theta,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z)
+  negPot = Hamiltonian(MRF,Z)
   negPot = -sum(negPot)
-  nrep = ncol(Z) # Z should be a matrix with ncol equals to number of repeats, always.
-  logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta$beta_det,theta$spp_mat_det,Z,detmat)
+  nrep = ncol(Z)
+  logLdata = Pdet_Ising_rep(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat)
   return(negPot+logLdata)
 }
-
 
 
          

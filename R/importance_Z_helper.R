@@ -139,18 +139,16 @@ propose_rate_rep = function(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zp
   
 }
 
-MH_ratio_Z = function(theta, Z_curr, Z_prop,Z_absolute,Zprop_rate
+MH_ratio_Z = function(theta, MRF,Z_curr, Z_prop,Z_absolute,Zprop_rate
                       ,detmat,envX, detX
-                      ,distM,link_map
-                      ,dist_mainland,link_mainland
-                      ,int_range_intra="nn",int_range_inter="exp"){
+                      ){
   propose_rate_Z = propose_rate_rep(theta, envX, detX,detmat,Z_prop,Z_curr,Z_absolute,Zprop_rate)
   # numerator
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(MRF, theta$beta_det,theta$spp_mat_det, Z_prop ,detmat, envX,detX)
   log_p_theta_Z_curr = propose_rate_Z$prop2curr
 
   # denominator
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(MRF, theta$beta_det,theta$spp_mat_det, Z_curr ,detmat, envX,detX)
   log_p_theta_Z_prop = propose_rate_Z$curr2prop
   MH_ratio = log_q_theta_Z_prop_detmat + log_p_theta_Z_curr - log_q_theta_Z_curr_detmat - log_p_theta_Z_prop
   return(min(1,exp(MH_ratio)))
@@ -170,16 +168,14 @@ propose_Z_plain = function(Z_curr,Z_absolute,Zprop_rate){
 
 
 
-MH_ratio_Z_plain = function(theta, Z_curr, Z_prop,Z_absolute,Zprop_rate
+MH_ratio_Z_plain = function(theta, MRF,Z_curr, Z_prop
                       ,detmat,envX, detX
-                      ,distM,link_map
-                      ,dist_mainland,link_mainland
-                      ,int_range_intra="nn",int_range_inter="exp"){
+                      ){
   # numerator
-  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_prop ,detmat = detmat, detX)
+  log_q_theta_Z_prop_detmat = IsingOccu_Ising_det_multi_logL_innorm(MRF, theta$beta_det,theta$spp_mat_det, Z_prop ,detmat, envX,detX)
 
   # denominator
-  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(theta, envX, distM, link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter,Z_curr ,detmat = detmat, detX)
+  log_q_theta_Z_curr_detmat = IsingOccu_Ising_det_multi_logL_innorm(MRF, theta$beta_det,theta$spp_mat_det, Z_curr ,detmat, envX,detX)
   MH_ratio = log_q_theta_Z_prop_detmat - log_q_theta_Z_curr_detmat 
   return(min(1,exp(MH_ratio)))
 }

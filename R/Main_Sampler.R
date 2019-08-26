@@ -62,6 +62,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
   Z_curr = Z_absolute
   Z_temp = Z_absolute
   
+  MRF_curr = getMRF(ini,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
   theta_curr = ini
   
   cat("Burn in...\n")
@@ -89,10 +90,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     
     theta_prop$spp_mat=theta_prop$spp_mat * spp_neig  #  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
     theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-    Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
     # MH ratio
     
-    Murray_ratio=Murray_ratio_occu_theta(theta_curr ,theta_prop
+	MRF_prop = getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+	Z_temp = rIsingOccu_multi(MRF_prop,n=1,method = "CFTP",nIter)
+	
+    Murray_ratio=Murray_ratio_occu_theta(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
                         ,Z_curr
                         ,Z_temp
                         ,vars_prior
@@ -108,6 +111,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     if(r<=Murray_ratio){
       theta_curr=theta_prop
       #Z_temp = Z_temp
+      MRF_curr = MRF_prop
       accept_theta_occu = accept_theta_occu + 1
     }
       
@@ -143,11 +147,10 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     
     
     
-    MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop,Z_absolute,Zprop_rate
+    MH_ratio=MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
                       ,detmat,envX, detX
-                      ,distM,link_map
-                      ,dist_mainland,link_mainland
-                      ,int_range_intra,int_range_inter)
+                      )
+
     r = runif(1)
     if(is.na(MH_ratio)) {
       MH_ratio = 0
@@ -206,11 +209,15 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     
     theta_prop$spp_mat=theta_prop$spp_mat * spp_neig  #  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
     theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-    Z_temp = rIsingOccu_multi(theta_prop,X,distM,link_map,dist_mainland , link_mainland,int_range_intra,int_range_inter,n=nrep,method = "CFTP",nIter = nIter)
+	
+	  
+	  MRF_prop = getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+	Z_temp = rIsingOccu_multi(MRF_prop,n=1,method = "CFTP",nIter)
 
+	
     
     # MH ratio
-    Murray_ratio=Murray_ratio_occu_theta(theta_curr ,theta_prop
+    Murray_ratio=Murray_ratio_occu_theta(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,vars_prior)
                         ,Z_curr
                         ,Z_temp
                         ,vars_prior
@@ -225,6 +232,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     if(r<=Murray_ratio){
       theta_curr=theta_prop
       #Z_temp = Z_temp
+      MRF_curr = MRF_prop
       accept_theta_occu = accept_theta_occu + 1
     }
     
@@ -265,11 +273,9 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     
     if(sum(is.na(Z_prop))>0) Z_prop = Z_curr
     
-    MH_ratio=MH_ratio_Z(theta_curr, Z_curr, Z_prop,Z_absolute,Zprop_rate
+    MH_ratio=MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
                       ,detmat,envX, detX
-                      ,distM,link_map
-                      ,dist_mainland,link_mainland
-                      ,int_range_intra,int_range_inter)
+                      )
     r = runif(1)
     if(is.na(MH_ratio)) {
       MH_ratio = 0
