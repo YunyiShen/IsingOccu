@@ -54,12 +54,12 @@ nrep = 1
 nspp = 2
 
 vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
-                  ,beta_det = rep(2.5e-3,nspp * ( ncol(envX)) ) # no extra det thing
+                  ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(2.5e-3,nspp)
                   ,eta_inter = rep(2.5e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 1e-3
+                  ,spp_mat = 1e-2
                   ,spp_mat_det = 2.5e-3)
 
 detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
@@ -74,7 +74,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , mcmc.iter = 15000, burn.in = 1500
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
-                                  , Zprop_rate = 1e-4
+                                  , Zprop_rate = .1
                                  
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
@@ -84,7 +84,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , ini = theta,thin.by = 5,report.by = 100,nIter = 30)
 
 
-save.image("CF_Mainland_island_importance_sampling_test.RData")
+save.image("CF_Mainland_island.RData")
 
 
 

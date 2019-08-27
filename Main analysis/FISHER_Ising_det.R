@@ -54,9 +54,9 @@ nrep = 1
 nspp = 2
 
 vars_prop = list( beta_occu = rep(5e-3,nspp * ncol(envX))
-                  ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
+                  ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(5e-3,nspp)
-                  ,eta_inter = rep(5e-3,nspp)
+                  ,eta_inter = rep(1e-2,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-3
@@ -84,7 +84,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , ini = theta,thin.by = 5,report.by = 100,nIter = 30)
 
 
-save.image("FM_Mainland_island_importance_sampling_test.RData")
+save.image("FM_Mainland_island.RData")
 
 
 
