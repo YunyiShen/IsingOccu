@@ -163,8 +163,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
       }
     if(MH_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
     if(r<=MH_ratio){
+      accept_Z = accept_Z + 1 - (sum(Z_prop==Z_curr)==length(Z_prop))
       Z_curr = Z_prop
-      accept_Z = accept_Z + 1
     }
     
     if(i%%report.by == 0) {
@@ -292,8 +292,8 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
       }
     if(MH_ratio<exp(-10)) low_acc_Z = low_acc_Z + 1
     if(r<=MH_ratio){
+      accept_Z = accept_Z + 1 - (sum(Z_prop==Z_curr)==length(Z_prop))
       Z_curr = Z_prop
-      accept_Z = accept_Z + 1
     }
 
     
