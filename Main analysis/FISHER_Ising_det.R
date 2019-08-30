@@ -71,7 +71,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 15000, burn.in = 1500
+                                  , mcmc.iter = 200000, burn.in = 10000
                                   , vars_prop = vars_prop
                                   , vars_prior = 200000
                                   , Zprop_rate = .05
@@ -81,10 +81,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 5,report.by = 100,nIter = 30)
+                                  , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island.RData")
+save.image("FM_Mainland_island_200K.RData")
 
 
 
