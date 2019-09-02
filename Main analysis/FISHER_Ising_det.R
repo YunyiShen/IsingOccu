@@ -33,7 +33,7 @@ Z_sample = matrix(c(full$Fisher,full$Marten))
 
 ###### analysis ######
 
-spp_mat = matrix(1,2,2)
+spp_mat = matrix(0,2,2)
 diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
@@ -84,7 +84,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_200K.RData")
+save.image("FM_Mainland_island_nointeraction_200K.RData")
 
 
 
