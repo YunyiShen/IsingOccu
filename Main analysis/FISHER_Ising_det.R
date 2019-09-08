@@ -9,7 +9,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 link = "./data/APIS/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
-link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
+link_inner = 0*as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
 link_inner = as(link_inner,'dsCMatrix')
 link_outer = as.matrix( read.csv(paste0(link,"link_outer_full.csv"),row.names = 1))
 link_outer = 0 * link_outer # this makes it a mainland-island system
@@ -33,7 +33,7 @@ Z_sample = matrix(c(full$Fisher,full$Marten))
 
 ###### analysis ######
 
-spp_mat = matrix(0,2,2)
+spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
@@ -84,7 +84,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_nointeraction_200K.RData")
+save.image("FM_Mainland_island_nointra_200K.RData")
 
 
 

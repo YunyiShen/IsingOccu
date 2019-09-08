@@ -2,8 +2,9 @@ source("./R/est_logLik.R")
 source("./R/misc.R")
 Rcpp::sourceCpp('./src/IsingCpp_CFTP_sparse.cpp')
 require(Matrix)
-FM_MI = read_json("FM_MI_50K.json",T)
-FM_SS = read_json("FM_SS_50K.json",T)
+require(jsonlite)
+FM_MI = read_json("./Main analysis/Results/imperfect_obs/50K_samples/FM_MI_50K.json",T)
+FM_SS = read_json("./Main analysis/Results/imperfect_obs/50K_samples/FM_SS_50K.json",T)
 
 FM_MI$means$spp_mat = matrix(FM_MI$means$spp_mat,2,2)
 FM_MI$means$spp_mat_det = matrix(FM_MI$means$spp_mat_det,2,2)
@@ -25,11 +26,11 @@ deltaDIC_MIminusSS = deltaDIC(theta_a_mcmc = make_list_version_mcmc( FM_MI$theta
                                ,theta_mcmc = make_list_version_mcmc( FM_SS$theta.mcmc,theta)
                                ,envX=FM_MI$envX
                                ,link_map = link_map
-                               ,link_mainland = link_mainland * exp(-2*distM_mainland)
+                               ,link_mainland = link_mainland * exp(-distM_mainland)
                                ,int_range_intra="nn"
                                ,int_range_inter="nn"
                                ,Z_mcmc = FM_SS$Z.mcmc
                                , detX = NULL
                                , theta_point = FM_SS$means
                                , detmat=detmat, nrep=1
-                               , nY = 3000,nIter = 100,method = "CFTP")
+                               , nY = 15000,nIter = 50,method = "CFTP")
