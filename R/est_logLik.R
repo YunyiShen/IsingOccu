@@ -155,10 +155,10 @@ deltaDIC = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_main
 	logLik_a = Reduce(rbind,pure_logLik_a)
 	logLik_theta = Reduce(rbind,pure_logLik_theta)
 	
-	pD_Gelman04_a = .5 * var(logLik_a)
-	pD_Gelman04_t = .5 * var(logLik_theta)
+	pD_Gelman04_a = 2 * var(logLik_a)
+	pD_Gelman04_t = 2 * var(logLik_theta)
     
-	deltaDIC = - mean(logLik_a) - 2 * (pD_Gelman04_a) +  mean(logLik_theta) + 2 * (pD_Gelman04_t)
+	deltaDIC = - 2 * mean(logLik_a) + 2 * (pD_Gelman04_a) +  mean(logLik_theta) - 2 * (pD_Gelman04_t)
 	
 	robust_cri = list(robust_a = Reduce(mean,robust_cri_a),robust_theta = Reduce(mean,robust_cri_theta))
 	
