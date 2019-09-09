@@ -33,4 +33,4 @@ deltaDIC_MIminusSS = deltaDIC(theta_a_mcmc = make_list_version_mcmc( FM_MI$theta
                                , detX = NULL
                                , theta_point = FM_SS$means
                                , detmat=detmat, nrep=1
-                               , nY = 15000,nIter = 50,method = "CFTP")
+                               , nY = 50000,nIter = 50,method = "CFTP")

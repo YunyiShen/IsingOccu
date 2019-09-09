@@ -157,9 +157,10 @@ logBF = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_mainlan
 	
 	#pD_Gelman04_a = 2 * var(logLik_a)
 	#pD_Gelman04_t = 2 * var(logLik_theta)
-    
+
 	#deltaDIC = - 2 * mean(logLik_a) + 2 * (pD_Gelman04_a) +  mean(logLik_theta) - 2 * (pD_Gelman04_t)
 	deltalogBF =  mean(logLik_a) - mean(logLik_theta) 
+
 	
 	robust_cri = list(robust_a = Reduce(mean,robust_cri_a),robust_theta = Reduce(mean,robust_cri_theta))
 	
