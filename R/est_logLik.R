@@ -71,7 +71,7 @@ make_list_version_mcmc = function(mcmc_list,theta_0){ # gonna return a list, wit
 # passed Aug 12 2019
 
 # we calculate the deltaDIC: DIC(theta_a)-DIC(theta), luckly delta DIC is summable
-deltaDIC = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_mainland_a,int_range_intra_a="nn",int_range_inter_a="exp",Z_a_mcmc, detX_a, theta_a_point
+logBF = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_mainland_a,int_range_intra_a="nn",int_range_inter_a="exp",Z_a_mcmc, detX_a, theta_a_point
 					,theta_mcmc,envX,link_map,link_mainland,int_range_intra="nn",int_range_inter="exp",Z_mcmc, detX, theta_point, detmat, nrep, nY = 3000,nIter = 100,method = "CFTP"){
     nsite = nrow(envX)
 	beta_occu_point = theta_point$beta_occu
@@ -155,13 +155,14 @@ deltaDIC = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_main
 	logLik_a = Reduce(rbind,pure_logLik_a)
 	logLik_theta = Reduce(rbind,pure_logLik_theta)
 	
-	pD_Gelman04_a = 2 * var(logLik_a)
-	pD_Gelman04_t = 2 * var(logLik_theta)
+	#pD_Gelman04_a = 2 * var(logLik_a)
+	#pD_Gelman04_t = 2 * var(logLik_theta)
     
-	deltaDIC = - 2 * mean(logLik_a) + 2 * (pD_Gelman04_a) +  mean(logLik_theta) - 2 * (pD_Gelman04_t)
+	#deltaDIC = - 2 * mean(logLik_a) + 2 * (pD_Gelman04_a) +  mean(logLik_theta) - 2 * (pD_Gelman04_t)
+	deltalogBF =  mean(logLik_a) - mean(logLik_theta) 
 	
 	robust_cri = list(robust_a = Reduce(mean,robust_cri_a),robust_theta = Reduce(mean,robust_cri_theta))
 	
-	return(list(deltaDIC = deltaDIC,robust_criterion = robust_cri))
+	return(list(deltaBF = deltaBF,robust_criterion = robust_cri))
 }
 
