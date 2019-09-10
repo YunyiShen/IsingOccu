@@ -164,6 +164,6 @@ logBF = function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_mainlan
 	
 	robust_cri = list(robust_a = Reduce(mean,robust_cri_a),robust_theta = Reduce(mean,robust_cri_theta))
 	
-	return(list(deltaBF = deltaBF,robust_criterion = robust_cri))
+	return(list(logBF = deltalogBF,robust_criterion = robust_cri))
 }
 

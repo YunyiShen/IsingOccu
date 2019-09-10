@@ -12,7 +12,7 @@ FM_MI$means$spp_mat_det = matrix(FM_MI$means$spp_mat_det,2,2)
 FM_SS$means$spp_mat = matrix(FM_SS$means$spp_mat,2,2)
 FM_SS$means$spp_mat_det = matrix(FM_SS$means$spp_mat_det,2,2)
 
-deltaDIC_MIminusSS = deltaDIC(theta_a_mcmc = make_list_version_mcmc( FM_MI$theta.mcmc,theta)
+logBF_MIminusSS = logBF(theta_a_mcmc = make_list_version_mcmc( FM_MI$theta.mcmc,theta)
                                ,envX_a=FM_MI$envX
                                ,distM = distM_full
                                ,link_map_a = list(inter = 0*link_outer,intra=link_inner)
@@ -33,4 +33,4 @@ deltaDIC_MIminusSS = deltaDIC(theta_a_mcmc = make_list_version_mcmc( FM_MI$theta
                                , detX = NULL
                                , theta_point = FM_SS$means
                                , detmat=detmat, nrep=1
-                               , nY = 50000,nIter = 50,method = "CFTP")
+                               , nY = 15000,nIter = 50,method = "CFTP")
