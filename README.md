@@ -1,5 +1,5 @@
 ---
-bibliography: '/_figs_/IslandCommunityCopy.bib'
+bibliography: '_figs_/IslandCommunityCopy.bib'
 ---
 
 Spatial Explicit Island Community Occupancy Modeling using Markov Random Field Model with Imperfect Observation, Study of Carnivore Community in Apostle Island National Lakeshore
