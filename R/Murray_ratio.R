@@ -1,6 +1,6 @@
 ## various M-H ratios and Murray ratios used in sampler
 
-getlogprior = function(theta_prop,theta_curr,vars_prior){
+getlogprior_normal = function(theta_prop,theta_curr,vars_prior){
   log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector(theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
   log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
   
@@ -8,7 +8,19 @@ getlogprior = function(theta_prop,theta_curr,vars_prior){
   log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
 
   return(list(prop = log_pi_theta_prop,curr = log_pi_theta_curr))
+}
 
+getlogprior_uniform = function(theta_prop,theta_curr,lim_prior){
+  log_pi_theta_prop = lapply(1:length(theta_prop),function(i,theta,lim_prior){ 
+	  sum(log(dunif(as.vector(theta[[i]]),-as.vector(lim_prior[[i]]),as.vector(lim_prior[[i]]))))}
+							 ,theta_prop,lim_prior)
+  log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
+  
+  log_pi_theta_curr = lapply(1:length(theta_curr),function(i,theta,lim_prior){ 
+	  sum(log(dunif(as.vector(theta[[i]]),-as.vector(lim_prior[[i]]),as.vector(lim_prior[[i]]))))}
+							 ,theta_curr,lim_prior)
+  log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
+  return(list(prop = log_pi_theta_prop,curr = log_pi_theta_curr))
 }
 
 Murray_ratio_occu_theta = function( MRF_curr, MRF_prop, log_pi
@@ -35,27 +47,22 @@ Murray_ratio_occu_theta = function( MRF_curr, MRF_prop, log_pi
   return(min(1,exp(log_MH_ratio)))
 }
 
-MH.ratio.Ising_det = function(theta_curr ,theta_prop
+MH.ratio.Ising_det = function(theta_curr ,theta_prop,log_pi
                         ,Z
                         ,detmat
                         ,vars_prior
                         ,envX, detX
                         ){
   nrep = ncol(Z)
-  nperiod = ncol(detmat[[1]])
-  log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector(theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
-  log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
-  
+  nperiod = ncol(detmat[[1]])  
   #prior of proposed theta
   log_q_theta_prop_Z_detmat = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta_prop$beta_det,theta_prop$spp_mat_det,Z,detmat)  
   #### end of the numerator part, start the denominator
   
-  log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector( theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
-  log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
   log_q_theta_curr_Z_detmat = Pdet_Ising_rep(nrep,nperiod,envX,detX,theta_curr$beta_det,theta_curr$spp_mat_det,Z,detmat)
   
-  log_MH_ratio = (log_pi_theta_prop + log_q_theta_prop_Z_detmat)-
-    (log_pi_theta_curr + log_q_theta_curr_Z_detmat )
+  log_MH_ratio = (log_pi$prop + log_q_theta_prop_Z_detmat)-
+    (log_pi$curr + log_q_theta_curr_Z_detmat )
   
   return(min(1,exp(log_MH_ratio)))
 }
