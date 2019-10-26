@@ -40,7 +40,7 @@ envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(-.3,-.3),
              beta_det = c(-.3,-.3),
-             eta_intra = c(.2,.2),
+             eta_intra = c(.1,.1),
              eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
              spp_mat = 0.3 * spp_mat,
@@ -57,10 +57,20 @@ vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = rep(1e-3,nspp)
-                  #,d_intra=rep(2.5e-5,nspp)
-                  #,d_inter = rep(1e-4,nspp)
+                  ,d_intra=rep(2.5e-5,nspp)
+                  ,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-3
                   ,spp_mat_det = 2.5e-3)
+detX = NULL
+
+para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
+                   ,beta_det = rep(1000,2 * (ncol(envX)) )
+                   ,eta_intra = rep(2e-1,nspp)
+                   ,eta_inter = rep(1000,nspp*(nspp-1)/2)
+                   ,d_intra=rep(1000,nspp)
+                   ,d_inter = rep(1000,nspp)
+                   ,spp_mat = 1000
+                   ,spp_mat_det = 1000)
 
 detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
 Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
@@ -71,9 +81,9 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 80000, burn.in = 10000
+                                  , mcmc.iter = 800, burn.in = 100
                                   , vars_prop = vars_prop
-                                  , vars_prior = 200000
+                                  , para_prior = para_prior
                                   , Zprop_rate = .05
                                  
                                   , distM=distM_full,link_map=link_map
@@ -81,7 +91,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 20,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 1,report.by = 10,nIter = 30)
 
 
 save.image("CF_Mainland_island_80k.RData")

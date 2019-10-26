@@ -1,7 +1,7 @@
 ## main sampler:
 IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
                     ,mcmc.iter = 10000, burn.in = 10 
-                    , vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
+                    ,vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
                                         ,beta_det = rep(1e-5,2 * (ncol(detX[[1]][[1]]) + ncol(X)) )
                                         ,eta_intra = rep(1e-5,nspp)
                                         ,eta_inter = rep(1e-5,nspp*(nspp-1)/2)
@@ -35,6 +35,9 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
   set.seed(seed)
   if(uni_prior) getlogprior = getlogprior_uniform
   else getlogprior = getlogprior_normal
+	
+  vars_prop = vars_prop[names(ini)]
+  para_prior = para_prior[names(ini)]
   
   cat("Setting for imperfect observation and missing sites:\n")
   if(Zprop_rate==0) cat("    Perfect observation, given by Z\n")
@@ -94,9 +97,11 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
   for(i in 1:burn.in){# to burn in 
     #propose theta 
     theta_prop = theta_curr
+
     for(j in c(1:length(theta_curr))[-c(2,n_para_group)]){ # no detection proposing
-      theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
+      	theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
     }
+	
     
     theta_prop$spp_mat=theta_prop$spp_mat * spp_neig  #  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
     theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
@@ -127,9 +132,12 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
       
     
     theta_prop = theta_curr
+
     theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
     theta_prop[[n_para_group]] = matrix( rnorm(length(theta_curr[[n_para_group]]),mean = 0,sd = sqrt(vars_prop[[n_para_group]])),nrow(theta_curr[[n_para_group]]),ncol(theta_curr[[n_para_group]]) )+ theta_curr[[n_para_group]]
-    theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
+    
+	  
+	theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
     theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
     
     Murray_ratio=MH.ratio.Ising_det(theta_curr ,theta_prop,getlogprior(theta_prop,theta_curr,para_prior)
@@ -218,9 +226,11 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
   for(i in 1:(mcmc.iter)){ # for to save 
     #propose theta 
     theta_prop = theta_curr
+
     for(j in c(1:length(theta_curr))[-c(2,n_para_group)]){ # no detection proposing
-      theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
+    	theta_prop[[j]] = matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
     }
+	
     
     theta_prop$spp_mat=theta_prop$spp_mat * spp_neig  #  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
     theta_prop$spp_mat = .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
@@ -253,8 +263,10 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     
     
     theta_prop = theta_curr
+
     theta_prop[[2]] = matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
     theta_prop[[n_para_group]] = matrix( rnorm(length(theta_curr[[n_para_group]]),mean = 0,sd = sqrt(vars_prop[[n_para_group]])),nrow(theta_curr[[n_para_group]]),ncol(theta_curr[[n_para_group]]) )+ theta_curr[[n_para_group]]
+    
     theta_prop$spp_mat_det=theta_prop$spp_mat_det * spp_neig
     theta_prop$spp_mat_det = .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
 

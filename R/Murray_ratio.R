@@ -19,7 +19,7 @@ getlogprior_uniform = function(theta_prop,theta_curr,lim_prior){
   log_pi_theta_curr = lapply(1:length(theta_curr),function(i,theta,lim_prior){ 
 	  sum(log(dunif(as.vector(theta[[i]]),-as.vector(lim_prior[[i]]),as.vector(lim_prior[[i]]))))}
 							 ,theta_curr,lim_prior)
-  log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
+  log_pi_theta_curr = sum(unlist(log_pi_theta_prop))
   return(list(prop = log_pi_theta_prop,curr = log_pi_theta_curr))
 }
 
