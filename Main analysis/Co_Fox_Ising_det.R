@@ -91,10 +91,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
 
 
-save.image("CF_Mainland_island_80k_unif_prior.RData")
+save.image("CF_Mainland_island_200k_unif_prior.RData")
 
 
 
