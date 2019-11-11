@@ -213,6 +213,15 @@ List getMRF(const List & theta,
 }
 
 
-
+arma::mat Hamiltonian(const List & MRF , const arma::mat & Z_vec){
+	nrep = Z_vec.n_cols;
+	arma::mat Ham(nrep,1)
+	arma::sp_mat A = MRF["A"];
+	arma::mat thr = MRF["thr"];
+	for(int i=0 ; i<nrep ; ++i){
+		Ham.row(i).col(0) = H(A,Z.col(i),thr);
+	}
+	return(Ham);
+}
 
 
