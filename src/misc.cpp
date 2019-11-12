@@ -243,7 +243,7 @@ double IsingStateProbCpp(const arma::mat &s,
 			temp.row(j) = response.row(t mod 2);//use binary number coding
 			t = t>>1;
 		}
-		Z += exp(-H(graph,temp,thr))
+		Z += exp(-H(graph,temp,thr));
 	}
 
 	return(exp(-H(graph,s,thr))/Z);
