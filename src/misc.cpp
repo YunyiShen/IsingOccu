@@ -226,12 +226,12 @@ arma::mat HamiltonianCpp(const List & MRF , const arma::mat & Z_vec){
 
 
 double IsingStateProbCpp(const arma::mat &s,
-						 const arma::mat &graph,
-						 const arma::mat &thr,
-						 const arma::mat &response){
+						 const arma::sp_mat &graph,
+						 const NumericVector &thr,
+						 const IntegerVector &response){
 
 	int N = graph.n_rows;
-	int n_possible = exp(log(2)*N);
+	int n_possible = pow(2,N);
 	int t=0;
 	double Z=0;
 	
@@ -239,8 +239,8 @@ double IsingStateProbCpp(const arma::mat &s,
 	
 	for(int i = 0; i<n_possible ; ++i){
 		t = i;
-		for(j = 0; j<N ; ++j){
-			temp.row(j) = response.row(t mod 2);//use binary number coding
+		for(int j = 0; j<N ; ++j){
+			temp[j] = response[t % 2];//use binary number coding
 			t = t>>1;
 		}
 		Z += exp(-H(graph,temp,thr));
@@ -256,11 +256,11 @@ double IsingStateProbCpp(const arma::mat &s,
 double Isingdet_single_siteCpp(const arma::mat & thr,
 							   const arma::mat & Z,
 							   const arma::mat & det,
-							   const arma::mat & spp_mat_det,
-							   const arma::mat & response){
+							   const arma::sp_mat & spp_mat_det,
+							   const IntegerVector & response){
 	uvec ext = find(Z-min(Z));//find which species exist here;
 	arma::mat graph = spp_mat_det.submat(ext,ext);//the graph of coexisted species
-	arma::mat thr_ext = thr.cols(ext).t();//col matrix of thr
+	NumericVector thr_ext =  thr.cols(ext).t();//col matrix of thr
 	
 	double res;
 	res = IsingStateProbCpp(det,graph,thr,response);
@@ -274,10 +274,10 @@ double Pdet_Ising_repCpp(const int & nrep, // number of repeats
 					  const arma::mat & envX,
 					  const List & detX, // make sure this design matrix for det is well prepared in R
 					  const arma::mat & beta_det,
-					  const arma::mat & sppmat_det,
+					  const arma::sp_mat & sppmat_det,
 					  const arma::mat & Z, // columes as repeats
 					  const List & detmat, // elements are detections at certain rep
-					  const arma::mat & response
+					  const IntegerVector & response
 					 ){
 	double Pdets=0;
 	double P_rep = 0;
@@ -300,7 +300,7 @@ double Pdet_Ising_repCpp(const int & nrep, // number of repeats
 			for(int w = 0 ; w<n_site ; ++w){
 				if( sum(detmat_i.col(j))!=INT_MIN ){
 				P_site += Isingdet_single_siteCpp(thr_j.row(w), Z_i.row(w)
-											   , detmat_i.col(j), sppmat_det,response);
+											   ,  detmat_i.col(j), sppmat_det,response);
 				}// at least have observations
 							
 			}
