@@ -213,7 +213,7 @@ List getMRF(const List & theta,
 }
 
 
-arma::mat Hamiltonian(const List & MRF , const arma::mat & Z_vec){
+arma::mat HamiltonianCpp(const List & MRF , const arma::mat & Z_vec){
 	nrep = Z_vec.n_cols;
 	arma::mat Ham(nrep,1)
 	arma::sp_mat A = MRF["A"];
@@ -223,5 +223,107 @@ arma::mat Hamiltonian(const List & MRF , const arma::mat & Z_vec){
 	}
 	return(Ham);
 }
+
+
+double IsingStateProbCpp(const arma::mat &s,
+						 const arma::mat &graph,
+						 const arma::mat &thr,
+						 const arma::mat &response){
+
+	int N = graph.n_rows;
+	int n_possible = exp(log(2)*N);
+	int t=0;
+	double Z=0;
+	
+	arma::mat temp(N,1)
+	
+	for(int i = 0; i<n_possible ; ++i){
+		t = i;
+		for(j = 0; j<N ; ++j){
+			temp.row(j) = response.row(t mod 2);//use binary number coding
+			t = t>>1;
+		}
+		Z += exp(-H(graph,temp,thr))
+	}
+
+	return(exp(-H(graph,s,thr))/Z);
+	
+
+}
+
+
+
+double Isingdet_single_siteCpp(const arma::mat & thr,
+							   const arma::mat & Z,
+							   const arma::mat & det,
+							   const arma::mat & spp_mat_det,
+							   const arma::mat & response){
+	uvec ext = find(Z-min(Z));//find which species exist here;
+	arma::mat graph = spp_mat_det.submat(ext,ext);//the graph of coexisted species
+	arma::mat thr_ext = thr.cols(ext).t();//col matrix of thr
+	
+	double res;
+	res = IsingStateProbCpp(det,graph,thr,response);
+	return(res);
+
+}
+
+
+double Pdet_Ising_repCpp(const int & nrep, // number of repeats
+					  const int & nperiod, // number of detection periods per rep
+					  const arma::mat & envX,
+					  const List & detX, // make sure this design matrix for det is well prepared in R
+					  const arma::mat & beta_det,
+					  const arma::mat & sppmat_det,
+					  const arma::mat & Z, // columes as repeats
+					  const List & detmat, // elements are detections at certain rep
+					  const arma::mat & response
+					 ){
+	double Pdets=0;
+	double P_rep = 0;
+	double P_site = 0;
+	int n_site = Z.n_rows; // number of sites
+	int n_spp = sppmat_det.n_rows;
+	int n_par = beta_det.n_rows/n_spp;
+	
+	arma::mat beta_det_m = beta_det.reshape(n_par,n_spp)
+	
+	for(int i = 0; i<nrep ; ++i){
+		List detX_i = detX[i]; // detection design matrix at repeat i;
+		arma::mat detmat_i = detmat[i];// detection history matrix
+		arma::mat Z_i = Z.col(i);
+		Z_i = Z_i.reshape(n_site,n_spp);
+		for(int j = 0 ; j<n_period ; ++j){
+			
+			arma::mat detX_j = detX_i[j]; // detection design matrix at repeat i and period j 			
+			arma::mat thr_j = detX_j * beta_det_m; // this will give the external field in detection at each site, for each species			
+			for(int w = 0 ; w<n_site ; ++w){
+				if( sum(detmat_i.col(j))!=INT_MIN ){
+				P_site += Isingdet_single_siteCpp(thr_j.row(w), Z_i.row(w)
+											   , detmat_i.col(j), sppmat_det,response);
+				}// at least have observations
+							
+			}
+			P_rep += P_site;
+			P_site = 0;
+		}
+		Pdets += P_rep;	
+		P_rep = 0;
+	}
+	return(Pdets);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
