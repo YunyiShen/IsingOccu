@@ -260,6 +260,10 @@ IntegerMatrix IsingProcess(int nSample, const arma::sp_mat& graph, NumericVector
   return(Res);
 }
 
+
+
+
+
 // OVERAL FUNCTION //
 // [[Rcpp::export]]
 IntegerMatrix IsingSamplerCpp(int n, const arma::sp_mat& graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
@@ -308,6 +312,37 @@ double H(const arma::sp_mat& J, IntegerVector s, NumericVector h)
   }
   return(Res);
 }
+
+
+// [[Rcpp::export]]
+double PartitionCpp(
+    const arma::sp_mat & graph,
+    const NumericVector & thr,
+    const double & beta,
+    const IntegerVector &response){
+  
+  int N = graph.n_rows;
+  int n_possible = pow(2,N);
+  int t=0;
+  double Z=0;
+  
+  IntegerVector temp(N);
+  
+  for(int i = 0; i<n_possible ; ++i){
+    t = i;
+    for(int j = 0; j<N ; ++j){
+      temp[j] = response[t % 2];//use binary number coding
+      t = t>>1;
+    }
+    Z+=exp(-beta * H(graph,temp,thr));
+  }
+  
+  return(Z);
+  
+  
+}
+
+
 
 
 // Likelihood without Z
