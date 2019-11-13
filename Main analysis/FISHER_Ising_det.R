@@ -9,7 +9,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 link = "./data/APIS/"
 island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 
-link_inner = 0*as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
+link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
 link_inner = as(link_inner,'dsCMatrix')
 link_outer = as.matrix( read.csv(paste0(link,"link_outer_full.csv"),row.names = 1))
 link_outer = 0 * link_outer # this makes it a mainland-island system
@@ -56,7 +56,7 @@ nspp = 2
 vars_prop = list( beta_occu = rep(5e-3,nspp * ncol(envX))
                   ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(5e-3,nspp)
-                  ,eta_inter = rep(1e-2,nspp)
+                  ,eta_inter = rep(5e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-3
@@ -88,11 +88,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
+                                            , ini = theta,thin.by = 100,report.by = 100,nIter = 30)
 
 
 save.image("FM_Mainland_island_200k_unif_prior.RData")
-
+## This is a long chain, in case 80k works, I do not need to restart
 
 
 
