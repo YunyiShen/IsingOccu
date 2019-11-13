@@ -2,6 +2,7 @@
 #include <RcppArmadillo.h> // to use sparse matrix
 #include <climits>
 #include <string>
+#include <math.h> // to use pow
 using namespace Rcpp;
 
 
@@ -237,13 +238,14 @@ double IsingStateProbCpp(const arma::mat &s,
 	
 	arma::mat temp(N,1)
 	
+	//calculating the partitioning function for small number of nodes
 	for(int i = 0; i<n_possible ; ++i){
 		t = i;
 		for(int j = 0; j<N ; ++j){
 			temp[j] = response[t % 2];//use binary number coding
 			t = t>>1;
 		}
-		Z += exp(-H(graph,temp,thr));
+		Z += exp(-H(graph,temp,thr));// this part was checked.
 	}
 
 	return(exp(-H(graph,s,thr))/Z);
@@ -299,7 +301,7 @@ double Pdet_Ising_repCpp(const int & nrep, // number of repeats
 			arma::mat thr_j = detX_j * beta_det_m; // this will give the external field in detection at each site, for each species			
 			for(int w = 0 ; w<n_site ; ++w){
 				if( sum(detmat_i.col(j))!=INT_MIN ){
-				P_site += Isingdet_single_siteCpp(thr_j.row(w), Z_i.row(w)
+					P_site += Isingdet_single_siteCpp(thr_j.row(w), Z_i.row(w)
 											   ,  detmat_i.col(j), sppmat_det,response);
 				}// at least have observations
 							
@@ -312,6 +314,62 @@ double Pdet_Ising_repCpp(const int & nrep, // number of repeats
 	}
 	return(Pdets);
 }
+
+
+double IsingOccu_Ising_det_multi_logL_innormCpp( const List & MRF,
+					  const int & nrep, // number of repeats
+					  const int & nperiod, // number of detection periods per rep
+					  const arma::mat & envX,
+					  const List & detX, // make sure this design matrix for det is well prepared in R
+					  const arma::mat & beta_det,
+					  const arma::sp_mat & sppmat_det,
+					  const arma::mat & Z, // columes as repeats
+					  const List & detmat, // elements are detections at certain rep
+					  const IntegerVector & response
+					 ){
+	double Pdets=0;
+	double P_rep = 0;
+	double P_site = 0;
+	int n_site = Z.n_rows; // number of sites
+	int n_spp = sppmat_det.n_rows;
+	int n_par = beta_det.n_rows/n_spp;
+	double negPot = 0;
+	
+	arma::mat beta_det_m = beta_det.reshape(n_par,n_spp)
+	
+	arma::sp_mat graph = MRF["A"];
+	arma::mat thr = MRF["thr"];
+	
+	for(int i = 0; i<nrep ; ++i){
+		List detX_i = detX[i]; // detection design matrix at repeat i;
+		arma::mat detmat_i = detmat[i];// detection history matrix
+		arma::mat Z_i = Z.col(i);
+		negPot -= H(graph,Z_i,thr);// negative Hamiltonian
+		Z_i = Z_i.reshape(n_site,n_spp);
+		
+ 		for(int j = 0 ; j<n_period ; ++j){
+			
+			arma::mat detX_j = detX_i[j]; // detection design matrix at repeat i and period j 			
+			arma::mat thr_j = detX_j * beta_det_m; // this will give the external field in detection at each site, for each species			
+			for(int w = 0 ; w<n_site ; ++w){
+				if( sum(detmat_i.col(j))!=INT_MIN ){
+					P_site += Isingdet_single_siteCpp(thr_j.row(w), Z_i.row(w)
+											   ,  detmat_i.col(j), sppmat_det,response);
+				}// at least have observations
+							
+			}
+			P_rep += P_site;
+			P_site = 0;
+		}
+		Pdets += P_rep;	
+		P_rep = 0;
+	}
+	return(Pdets+negPot);
+}
+
+
+
+
 
 
 
