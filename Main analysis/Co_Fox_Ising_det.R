@@ -53,10 +53,10 @@ link_map =
 nrep = 1
 nspp = 2
 
-vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = c(5e-3,1e-2)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = rep(5e-3,nspp)
+                  ,eta_intra = c(1e-3,5e-3)
+                  ,eta_inter = c(5e-3,1e-2)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
                   ,spp_mat = 1e-2
@@ -81,7 +81,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 100000, burn.in = 25000
+                                  , mcmc.iter = 200000, burn.in = 50000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = .05
@@ -91,10 +91,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 50,report.by = 100,nIter = 30)
+                                  , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
 
 
-save.image("CF_Mainland_island_100k_unif_prior.RData")
+save.image("CF_Mainland_island_200k_unif_prior.RData")
 # latest tuned parameter in 20191112
 
 

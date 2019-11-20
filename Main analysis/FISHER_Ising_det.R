@@ -53,10 +53,10 @@ link_map =
 nrep = 1
 nspp = 2
 
-vars_prop = list( beta_occu = rep(5e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = c(5e-3,5e-3)
                   ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(5e-3,nspp)
-                  ,eta_inter = rep(5e-3,nspp)
+                  ,eta_inter = c(5e-3,5e-3)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-3
@@ -69,7 +69,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
                    ,eta_intra = rep(5e-1,nspp)
-                   ,eta_inter = rep(1000,nspp*(nspp-1)/2)
+                   ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
                    ,spp_mat = 1000
@@ -78,7 +78,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 200000, burn.in = 50000
+                                            , mcmc.iter = 700000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
@@ -88,10 +88,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 100,report.by = 100,nIter = 30)
+                                            , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_200k_unif_prior.RData")
+save.image("FM_Mainland_island_700k_2_unif_prior.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 
