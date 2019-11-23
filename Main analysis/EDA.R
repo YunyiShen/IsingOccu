@@ -15,6 +15,7 @@ set.seed(42)
 Z_abs = read.csv("./data/APIS/PA_all_full.csv",stringsAsFactors = F)
 dist = read.csv("./data/APIS/dist_to_mainland.csv",stringsAsFactors = F)
 Posi = read.csv("./data/APIS/CT_posi_only_island.csv")
+camera_days = read.csv("./data/APIS/cameradays.csv")
 
 islands_list = unique(substr(Z_abs$X,1,nchar(Z_abs$X)-2))
 
@@ -35,9 +36,11 @@ Z_abs_01$Y = Posi$Y
 Z_abs_01$lat = Posi$Lat
 Z_abs_01$long = Posi$Long
 
+Z_abs_01$cameradays = camera_days$V1
+
 
 ## check the map
-map_data = Z_abs_01[,c("long","lat","Fisher","Marten","FM","Coyote","Fox_red","CF")]
+map_data = Z_abs_01[,c("long","lat","Fisher","Marten","FM","Coyote","Fox_red","CF","cameradays")]
 map_data[,3:8] = lapply(map_data[,3:8],as.factor)
 
 
@@ -76,7 +79,11 @@ CF_map = ggmap(APIS_map) +
   geom_point(aes(x=long,y=lat,color= CF),data = map_data,size = 1.2)+
   theme(text = element_text(size=15))
 
-#ggsave("Co_Fox_map.png",dpi=500)
+camera_map = ggmap(APIS_map) + 
+  geom_point(aes(x=long,y=lat,color= cameradays),data = map_data,size = 1.2)+
+  theme(text = element_text(size=15))
+
+ggsave("camera_map.png",dpi=500)
 
 png("maps.png",height=1800,width=4500,res = 300)
 
