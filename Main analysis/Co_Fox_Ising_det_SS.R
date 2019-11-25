@@ -12,9 +12,11 @@ island = read.csv(paste0(link,"CT_posi_only_island.csv"))
 link_inner = as.matrix( read.csv(paste0(link, "link_inner.csv"),row.names = 1))
 link_inner = as(link_inner,'dsCMatrix')
 link_outer = as.matrix( read.csv(paste0(link,"link_outer_full.csv"),row.names = 1))
-link_outer = 0 * link_outer # this makes it a mainland-island system
+link_outer = link_outer # this makes it a mainland-island system
 link_outer = as(link_outer,'dsCMatrix')
-link_mainland = matrix(1,155,1)
+#link_mainland = matrix(1,155,1)
+link_mainland = as.matrix(read.csv(paste0(link,"link_mainland.csv")))
+
 
 distM_full = as.matrix( read.csv(paste0(link,"distM_full.csv"),row.names = 1))
 distM_mainland = as.matrix( read.csv(paste0(link,"dist_to_mainland.csv"),row.names = 1))
@@ -53,20 +55,20 @@ link_map =
 nrep = 1
 nspp = 2
 
-vars_prop = list( beta_occu = c(5e-3,1e-2)
+vars_prop = list( beta_occu = c(5e-3,5e-3)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = c(1e-3,5e-3)
-                  ,eta_inter = c(5e-3,1e-2)
+                  ,eta_intra = c(1e-3,1e-3)
+                  ,eta_inter = c(1e-3,1e-3)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 1e-2
+                  ,spp_mat = 5e-3
                   ,spp_mat_det = 2.5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
                    ,eta_intra = rep(2.5e-1,nspp)
-                   ,eta_inter = rep(1000,nspp*(nspp-1)/2)
+                   ,eta_inter = rep(2.5e-1,nspp*(nspp-1)/2)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
                    ,spp_mat = 1000
@@ -81,7 +83,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 700000, burn.in = 50000
+                                  , mcmc.iter = 50000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = .05
@@ -91,11 +93,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 250,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 50,report.by = 100,nIter = 30)
 
 
-save.image("CF_Mainland_island_700k_unif_prior.RData")
-# latest tuned parameter in 20191112
+save.image("CF_Mainland_island_100k_unif_prior.RData")
+# latest tuned parameter in 20191125
 
 
 
