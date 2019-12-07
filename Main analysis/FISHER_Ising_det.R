@@ -55,8 +55,8 @@ nspp = 2
 
 vars_prop = list( beta_occu = c(5e-3,5e-3)
                   ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(2e-3,nspp)
-                  ,eta_inter = c(8e-3,8e-3)
+                  ,eta_intra = rep(1e-3,nspp)
+                  ,eta_inter = c(5e-3,5e-3)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-2
@@ -78,7 +78,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 700000, burn.in = 50000
+                                            , mcmc.iter = 500000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
@@ -91,7 +91,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_700k_unif_prior_small_intra.RData")
+save.image("FM_Mainland_island_500k_unif_prior_small_intra2.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 
