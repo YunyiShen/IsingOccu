@@ -68,21 +68,21 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(2.5e-1,nspp)
-                   ,eta_inter = rep(1000,nspp)
+                   ,eta_intra = rep(1,nspp)
+                   ,eta_inter = rep(1,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1000
-                   ,spp_mat_det = 1000)
+                   ,spp_mat = 1
+                   ,spp_mat_det = 1)
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 500000, burn.in = 50000
+                                            , mcmc.iter = 700000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
-                                            
+                                            , uni_prior = F
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"
@@ -91,7 +91,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_500k_unif_prior_small_intra2.RData")
+save.image("FM_Mainland_island_700k_unif_prior_small_intra_interactions.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 

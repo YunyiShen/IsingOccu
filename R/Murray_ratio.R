@@ -1,10 +1,12 @@
 ## various M-H ratios and Murray ratios used in sampler
 
 getlogprior_normal = function(theta_prop,theta_curr,vars_prior){
-  log_pi_theta_prop = lapply(theta_prop,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector(theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
+  n_para = length(theta_prop)
+  
+  log_pi_theta_prop = lapply(1:n_para,function(i,theta_temp,vars_prior){ sum(log(dnorm(as.vector(theta_temp[[i]]),0,sd=sqrt(vars_prior[[i]]))))},theta_prop,vars_prior)
   log_pi_theta_prop = sum(unlist(log_pi_theta_prop))
   
-  log_pi_theta_curr = lapply(theta_curr,function(theta_temp,vars_prior){ sum(log(dnorm(as.vector( theta_temp),0,sd=sqrt(vars_prior))))},vars_prior)
+  log_pi_theta_curr = lapply(1:n_para,function(i,theta_temp,vars_prior){ sum(log(dnorm(as.vector( theta_temp[[i]]),0,sd=sqrt(vars_prior[[i]]))))},theta_curr,vars_prior)
   log_pi_theta_curr = sum(unlist(log_pi_theta_curr))
 
   return(list(prop = log_pi_theta_prop,curr = log_pi_theta_curr))
