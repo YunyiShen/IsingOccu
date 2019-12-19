@@ -1,7 +1,7 @@
 ## for sample simulated data
 
 Sample_Ising_detection_rep = function(nrep,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter=100,n=1, method = "CFTP"){
-  detmat = lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method){
+  lapply(1:nrep,function(k,nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method){
     Sample_Ising_detection(nperiod,envX,detX[[k]],beta_det,sppmat_det,Z,detmat[[k]],nIter,n, method)
   },nperiod,envX,detX,beta_det,sppmat_det,Z,detmat,nIter,n, method)
 }
@@ -46,6 +46,7 @@ Sample_Ising_detection = function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat
 Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, method = "CFTP"){
 	spp_exist = Z==1
 	dethis[,!spp_exist] = -1# convert it to nrow = nperiod, ncol = nspp for single site, single repeat
+	has_obs = !(is.na(rowSums(dethis)))
 	if(sum(spp_exist)==0) return(dethis)
 	if(prod(spp_exist)==0){
 	  thr_exis = as.matrix( thr[,spp_exist])
@@ -57,7 +58,7 @@ Sample_Ising_det_single_site = function(thr, Z, dethis, sppmat_det,nIter,n=1, me
 	dethis_exist = dethis[,spp_exist]
 	dethis_exist = apply(matrix(1:nrow( as.matrix( dethis))),1,function(k,dethis_exist,thr,graph,nIter,n,method){
 		IsingSamplerCpp(n=n,graph = graph, thresholds = thr[k,], beta=1, responses = c(-1L, 1L),nIter = nIter,exact = (method=="CFTP"),constrain = NA+thr[k,])
-	},matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), as.matrix( graph),nIter,n,method)
+	},matrix( dethis,sum(has_obs),sum(spp_exist)), matrix( thr,sum(has_obs),sum(spp_exist)), Matrix( graph,sparse = T),nIter,n,method)
 	dethis[,spp_exist] = t(dethis_exist)
 	return(dethis)
 }
