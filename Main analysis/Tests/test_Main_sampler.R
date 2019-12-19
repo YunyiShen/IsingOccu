@@ -1,6 +1,6 @@
 source("./R/misc.R")
-#source("Moller_island.R")
 source("./R/Main_Sampler.R")
+source("./R/Simu_data_Sampling.R")
 require(Matrix)
 require(Rcpp)
 Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
@@ -27,24 +27,20 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.csv"),header = F)))
-full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
-Z_sample = matrix(c(full$Fisher,full$Marten))
 
-###### analysis ######
+###### True Parameter Setting ######
 
 spp_mat = matrix(1,2,2)
 diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(-.3,-.3),
-             beta_det = c(-.3,-.3),
-             eta_intra = c(.2,.2),
-             eta_inter = c(.2,.2),
-             #d_inter = c(.2,.2),
-             spp_mat = 0.3 * spp_mat,
-             spp_mat_det = -0.3 * spp_mat)
+theta = list(beta_occu = c(-.3,.3),
+             beta_det = c(-.5,-.5),
+             eta_intra = c(.1,.1),
+             eta_inter = c(1,-1),
+             spp_mat = 0 * spp_mat,
+             spp_mat_det = 0 * spp_mat)
 
 link_map = 
   list(inter = link_outer * exp(-2*distM_full),
@@ -52,47 +48,66 @@ link_map =
 
 nrep = 1
 nspp = 2
+nperiod = 10
+nsite = 155
+
+
+
+###### Simulate Data ######
+set.seed(42)
+MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
+			 int_range_intra="nn",int_range_inter="nn")
+
+Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+
+detmat_format = lapply(1:nrep,function(dummy,nperiod,nsite,nspp){
+	matrix(-1,nrow = nsite*nspp,ncol = nperiod)
+},nperiod,nsite,nspp) # just for formating, hopefully it works
+
+detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,
+										 theta$beta_det,theta$spp_mat_det,Z_simu,
+										 detmat_format,nIter=100,n=1, method = "CFTP")
+
+#year1_dethis = detmat_simu[[1]]
+Z_absolute = (sapply(detmat_simu,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
+
+
+###### Run the Model! ######
 
 vars_prop = list( beta_occu = c(5e-3,5e-3)
                   ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = c(5e-3,5e-3)
-                  #,d_intra=rep(2.5e-5,nspp)
-                  #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-2
                   ,spp_mat_det = 1e-2)
 
-detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
-Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
-
-
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(2.5e-1,nspp)
-                   ,eta_inter = rep(1000,nspp)
+                   ,eta_intra = rep(1,nspp)
+                   ,eta_inter = rep(1,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1000
-                   ,spp_mat_det = 1000)
+                   ,spp_mat = 1
+                   ,spp_mat_det = 1)
 
 
-kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
+kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 500000, burn.in = 50000
+                                            , mcmc.iter = 15000, burn.in = 1000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
-                                            
+                                            , uni_prior = F
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
-                                            , int_range_intra="nn",int_range_inter="nn"
-                                            
+                                            , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
                                             , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_500k_unif_prior_small_intra2.RData")
-## This is a long chain, in case 80k works, I do not need to restart
+
+
+
 
 
 
