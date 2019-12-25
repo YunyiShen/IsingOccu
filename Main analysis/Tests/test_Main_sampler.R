@@ -35,11 +35,11 @@ diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(-.3,.3),
-             beta_det = c(-.5,-.5),
+theta = list(beta_occu = c(-.3,-.3),
+             beta_det = c(-.3,-.3),
              eta_intra = c(.1,.1),
-             eta_inter = c(1,-1),
-             spp_mat = 0 * spp_mat,
+             eta_inter = c(.5,.5),
+             spp_mat = -.2 * spp_mat,
              spp_mat_det = 0 * spp_mat)
 
 link_map = 
@@ -48,7 +48,7 @@ link_map =
 
 nrep = 1
 nspp = 2
-nperiod = 10
+nperiod = 8
 nsite = 155
 
 
@@ -72,6 +72,29 @@ detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,
 Z_absolute = (sapply(detmat_simu,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 
 
+require(ggplot2)
+require(ggmap)
+
+Posi = read.csv("./data/APIS/CT_posi_only_island.csv")
+
+map_data = data.frame(Posi,Z1 = Z_simu[1:155],Z2 = Z_simu[156:310])
+
+APIS_map = get_stamenmap(bbox = c(
+  left = -91.05, bottom = 46.75, 
+  right =-90.35, top = 47.10),zoom = 12)
+
+Z1_map = ggmap(APIS_map) + 
+  geom_point(aes(x=Long,y=Lat,color= Z1),data = map_data,size = 1.2)+
+  theme(text = element_text(size=15))
+
+
+Z2_map = ggmap(APIS_map) + 
+  geom_point(aes(x=Long,y=Lat,color= Z2),data = map_data,size = 1.2)+
+  theme(text = element_text(size=15))
+
+
+
+
 ###### Run the Model! ######
 
 vars_prop = list( beta_occu = c(5e-3,5e-3)
@@ -83,26 +106,26 @@ vars_prop = list( beta_occu = c(5e-3,5e-3)
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(1,nspp)
-                   ,eta_inter = rep(1,nspp)
+                   ,eta_intra = rep(3,nspp)
+                   ,eta_inter = rep(3,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1
-                   ,spp_mat_det = 1)
+                   ,spp_mat = 3
+                   ,spp_mat_det = 3)
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 15000, burn.in = 1000
+                                            , mcmc.iter = 50000, burn.in = 5000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
-                                            , uni_prior = F
+                                            , uni_prior = T
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
+                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
 
 
 
