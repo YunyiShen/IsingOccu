@@ -358,7 +358,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
              ,linkmap = link_map
              ,link_mainland = link_mainland
              ,interaction.range =list( inter = int_range_inter,intra = int_range_intra)
-             ,envX=X, detX = detX,detmat = detmat)
+             ,envX=X, detX = detX,detmat = detmat,uni_prior=uni_prior)
   class(res)="IsingOccu_samples"
   return(res)
 }
