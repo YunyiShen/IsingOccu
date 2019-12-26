@@ -38,8 +38,8 @@ envX = matrix(1,155,1)
 theta = list(beta_occu = c(-.3,-.3),
              beta_det = c(-.3,-.3),
              eta_intra = c(.1,.1),
-             eta_inter = c(.5,.5),
-             spp_mat = -.2 * spp_mat,
+             eta_inter = c(.5,-.5),
+             spp_mat = 0 * spp_mat,
              spp_mat_det = 0 * spp_mat)
 
 link_map = 
