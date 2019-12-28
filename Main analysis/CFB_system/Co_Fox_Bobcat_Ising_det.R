@@ -27,21 +27,21 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)[1:310,]))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
-Z_sample = matrix(c(full$Coyote,full$Fox_red))
+Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
 ###### analysis ######
 
-spp_mat = matrix(1,2,2)
+spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(-.3,-.3),
-             beta_det = c(-.3,-.3),
-             eta_intra = c(.1,.1),
-             eta_inter = c(.2,.2),
+theta = list(beta_occu = c(-.3,-.3,-.3),
+             beta_det = c(-.3,-.3,-.3),
+             eta_intra = c(.1,.1,.1),
+             eta_inter = c(.2,.2,.2),
              #d_inter = c(.2,.2),
              spp_mat = 0.3 * spp_mat,
              spp_mat_det = -0.3 * spp_mat)
@@ -51,21 +51,21 @@ link_map =
        intra = link_inner)
 
 nrep = 1
-nspp = 2
+nspp = 3
 
-vars_prop = list( beta_occu = c(5e-3,1e-2)
+vars_prop = list( beta_occu = c(5e-3,5e-3,5e-3)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = c(1e-3,5e-3)
-                  ,eta_inter = c(5e-3,1e-2)
+                  ,eta_intra = c(1e-3,5e-3,5e-3)
+                  ,eta_inter = c(5e-3,1e-2,5e-3)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 1e-2
+                  ,spp_mat = 5e-3
                   ,spp_mat_det = 2.5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(.2,nspp)
+                   ,eta_intra = rep(1,nspp)
                    ,eta_inter = rep(1,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
@@ -81,7 +81,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 700000, burn.in = 50000
+                                  , mcmc.iter = 50000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = .05
@@ -91,10 +91,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 250,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
 
 
-save.image("CF_Mainland_island_700k_norm_prior_small_priors.RData")
+save.image("CFB_Mainland_island_700k_unif_prior.RData")
 # latest tuned parameter in 20191112
 
 

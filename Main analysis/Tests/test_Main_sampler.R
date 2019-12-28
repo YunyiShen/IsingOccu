@@ -35,10 +35,10 @@ diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(-.3,-.3),
+theta = list(beta_occu = c(-.5,.5),
              beta_det = c(-.3,-.3),
              eta_intra = c(.1,.1),
-             eta_inter = c(.5,-.5),
+             eta_inter = c(1,-1),
              spp_mat = 0 * spp_mat,
              spp_mat_det = 0 * spp_mat)
 
@@ -106,12 +106,12 @@ vars_prop = list( beta_occu = c(5e-3,5e-3)
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(3,nspp)
-                   ,eta_inter = rep(3,nspp)
+                   ,eta_intra = rep(1,nspp)
+                   ,eta_inter = rep(1,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 3
-                   ,spp_mat_det = 3)
+                   ,spp_mat = 1
+                   ,spp_mat_det = 1)
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
@@ -120,7 +120,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
-                                            , uni_prior = T
+                                            , uni_prior = F
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"                                          
