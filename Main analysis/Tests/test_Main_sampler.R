@@ -35,12 +35,12 @@ diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(-.5,.5),
+theta = list(beta_occu = c(-.5,-.5),
              beta_det = c(-.3,-.3),
              eta_intra = c(.1,.1),
-             eta_inter = c(1,-1),
-             spp_mat = 0 * spp_mat,
-             spp_mat_det = 0 * spp_mat)
+             eta_inter = c(1,1),
+             spp_mat = -.4 * spp_mat,
+             spp_mat_det = -.2 * spp_mat)
 
 link_map = 
   list(inter = link_outer * exp(-2*distM_full),
