@@ -42,7 +42,7 @@ theta = list(beta_occu = c(-.3,-.3),
              beta_det = c(-.3,-.3),
              eta_intra = c(.2,.2),
              eta_inter = c(.2,.2),
-             #d_inter = c(.2,.2),
+             d_inter = c(.2,.2),
              spp_mat = 0.3 * spp_mat,
              spp_mat_det = -0.3 * spp_mat)
 
@@ -58,7 +58,7 @@ vars_prop = list( beta_occu = c(5e-3,5e-3)
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = c(5e-3,5e-3)
                   #,d_intra=rep(2.5e-5,nspp)
-                  #,d_inter = rep(1e-4,nspp)
+                  ,d_inter = rep(1e-2,nspp)
                   ,spp_mat = 1e-2
                   ,spp_mat_det = 1e-2)
 
@@ -78,20 +78,20 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 700000, burn.in = 50000
+                                            , mcmc.iter = 500000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = .05
                                             , uni_prior = F
                                             , distM=distM_full,link_map=link_map
-                                            , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
-                                            , int_range_intra="nn",int_range_inter="nn"
+                                            , dist_mainland =  distM_mainland , link_mainland =  link_mainland
+                                            , int_range_intra="nn",int_range_inter="exp"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
+                                            , ini = theta,thin.by = 100,report.by = 100,nIter = 30)
 
 
-save.image("FM_Mainland_island_700k_unif_prior_small_intra_interactions.RData")
+save.image("FM_Mainland_island_500k_norm_prior_small_interactions_with_d.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 
