@@ -13,7 +13,7 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
   else{
     if(int_range=="exp"){
 	  A = lapply(1:nspp,function(i,eta,d,distM,link_map){
-		At = eta[i]*as.matrix(exp(-exp(d[i])*distM)) * (link_map)
+		At = (eta[i])*as.matrix((-(d[i])*distM)) * (link_map)
 	    diag(At)=0
 	    return(At)
 	  },eta,d,distM,link_map)
@@ -27,7 +27,7 @@ getintralayerGraph = function(distM,link_map,eta,d,int_range = "exp",spp_mat) #i
       else{
         #print("int_range must be exp or arth, will assume exp")
 		A = lapply(1:nspp,function(i,eta,d,distM,link_map){
-		  At = eta[i]*as.matrix(exp(-exp(d[i])*distM)) * (link_map)
+		  At = (eta[i])*as.matrix(exp(-(d[i])*distM)) * (link_map)
 	      diag(At)=0
 	      return(At)
 	    },eta,d,distM,link_map)
@@ -66,7 +66,7 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 	}
 	else{
 		if(int_range_inter=="exp"){
-			A = eta*as.matrix(exp(-exp(d)*dist_mainland)) * (link_mainland)
+			A = exp(eta)*as.matrix(exp(-(d)*dist_mainland)) * (link_mainland)
 		}
 	  else{
 	    if(int_range_inter=="nn")
