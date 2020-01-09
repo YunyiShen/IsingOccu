@@ -66,7 +66,7 @@ mainland_thr = function(dist_mainland,link_mainland,eta,d,int_range_inter="exp")
 	}
 	else{
 		if(int_range_inter=="exp"){
-			A = exp(eta)*as.matrix(exp(-(d)*dist_mainland)) * (link_mainland)
+			A = (eta)*as.matrix(exp(-(d)*dist_mainland)) * (link_mainland)
 		}
 	  else{
 	    if(int_range_inter=="nn")
