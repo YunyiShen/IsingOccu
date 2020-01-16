@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_240dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -53,20 +53,20 @@ link_map =
 nrep = 1
 nspp = 3
 
-vars_prop = list( beta_occu = c(5e-3,5e-3,5e-3)
+vars_prop = list( beta_occu =rep(2.5e-3,nspp)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = c(1e-3,5e-3,5e-3)
-                  ,eta_inter = c(5e-3,1e-2,5e-3)
+                  ,eta_intra = rep(1e-4,nspp)
+                  ,eta_inter = rep(2.5e-3,nspp)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 5e-3
-                  ,spp_mat_det = 2.5e-3)
+                  ,spp_mat = 1e-3
+                  ,spp_mat_det = 5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(1,nspp)
-                   ,eta_inter = rep(1,nspp)
+                   ,eta_intra = rep(.3,nspp)
+                   ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
                    ,spp_mat = 1
@@ -81,11 +81,11 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 50000, burn.in = 5000
+                                  , mcmc.iter = 20000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
-                                  , Zprop_rate = .05
-                                  , uni_prior = F
+                                  , Zprop_rate = 1
+                                  , uni_prior = T
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"

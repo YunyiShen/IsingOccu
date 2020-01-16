@@ -1,8 +1,6 @@
-source("./R/misc_island.R")
+source("./R/misc.R")
 #source("Moller_island.R")
-source("./R/Murray_Ising_det.R")
-
-###### graph data ######
+source("./R/Main_Sampler.R")
 require(Matrix)
 require(Rcpp)
 Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
@@ -51,6 +49,7 @@ link_map =
        intra = link_inner)
 
 nrep = 1
+nspp = 3
   #    then in the second level list, it is a matrix with nrow = site ncol = ncov, 
 
 #Pdet = Pdet_multi(nperiod, envX,detX[[1]], theta$beta_det, nspp=nrow(spp_mat))
@@ -60,21 +59,30 @@ nrep = 1
 
 #sppmat_det = -0.1 * spp_mat
 #Pdet_Ising(nperiod,envX,detX[[1]],beta_det = theta$beta_det,theta$sppmat_det,Z = Z_sample,detmat[[1]])
-Pdet_Ising_rep(1,27,envX,NULL,1:6/10,theta$spp_mat_det,Z = Z_absolute,detmat)
+#Pdet_Ising_rep(1,27,envX,NULL,1:6/10,theta$spp_mat_det,Z = Z_absolute,detmat)
 
 #no_obs=150:155
 #no_obs = c(no_obs, no_obs + 155, no_obs + 310)
 
 nspp = 3
 
-vars_prop = list( beta_occu = c(0.01,0.01,.01,.04,.04,.04)
-                  ,beta_det = rep(.02,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(2e-4,nspp)
-                  ,eta_inter = rep(1e-4,nspp)
+vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
+                  ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
+                  ,eta_intra = rep(1e-3,nspp)
+                  ,eta_inter = rep(5e-4,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
-                  ,spp_mat = 1e-2
-                  ,spp_mat_det = 1e-2)
+                  ,spp_mat = 5e-3
+                  ,spp_mat_det = 5e-3)
+
+para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
+                   ,beta_det = rep(1000,2 * (ncol(envX)) )
+                   ,eta_intra = rep(.1,nspp)
+                   ,eta_inter = rep(1000,nspp)
+                   ,d_intra=rep(1000,nspp)
+                   ,d_inter = rep(1000,nspp)
+                   ,spp_mat = 1
+                   ,spp_mat_det = 1)
 
 detmat_nona = lapply(detmat,function(mat){
   mat[is.na(mat)]=-1
@@ -91,29 +99,23 @@ datatemp  = data.frame(island,
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 require(ggplot2)
-ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z2))+
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
   geom_point()
 
 
-
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
-                                  , detX =  NULL
-                                  , mcmc.iter = 500, burn.in = 100
-                                  , vars_prop = vars_prop
-                                  , vars_prior = 200000
-                                  , Zprop_rate = 0.5
-                                  #, Zprop_rate_missing_obs = 0
-                                  , distM=distM_full,link_map=link_map
-                                  , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-distM_mainland)
-                                  , int_range_intra="nn",int_range_inter="nn"
-                                  #, Z = Z_sample # just used in formating, if assuming perfect detection, simple giving Z and set Zprop_rate=0
-                                  #, Z = Z_absolute
-                                  , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 50,nIter = 30)
-
-
-
-
+                                            , detX =  NULL
+                                            , mcmc.iter = 20000, burn.in = 5000
+                                            , vars_prop = vars_prop
+                                            , para_prior = para_prior
+                                            , Zprop_rate = 1
+                                            , uni_prior = T
+                                            , distM=distM_full,link_map=link_map
+                                            , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
+                                            , int_range_intra="nn",int_range_inter="nn"
+                                            
+                                            , seed = 42
+                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
 
 
 
