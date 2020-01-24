@@ -1,7 +1,7 @@
 Z1_map
-ggsave("flip_Z1.jpg",width = 18,height = 12,dpi=500)
+ggsave("flip_Z1.jpg",width = 18,height = 12,dpi=500,units = "cm")
 Z2_map
-ggsave("flip_Z2.jpg",width = 18,height = 12,dpi=500)
+ggsave("flip_Z2.jpg",width = 18,height = 12,dpi=500,units = "cm")
 
 plotdata = data.frame(matrix(NA,12,5))
 
