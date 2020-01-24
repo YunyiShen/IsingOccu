@@ -24,7 +24,7 @@ normd = max(max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"BM_GZL_HHD_ZH_20dayfull.csv")))[1:(97*3),])
+detmat = list(as.matrix(read.csv(paste0(link,"BM_GZL_HHD_ZH_20dayfull.csv")))[-(1:97+(97*3)),])
 #full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 #Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -33,7 +33,7 @@ detmat = list(as.matrix(read.csv(paste0(link,"BM_GZL_HHD_ZH_20dayfull.csv")))[1:
 spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 envX = cbind(matrix(1,97,1),island$ELE)
-envX = apply(envX,2,function(k){(k-min(k))/(max(k)-min(k))})
+envX = apply(envX,2,function(k){(k-mean(k))/(sd(k))})
 envX[,1]=1
 
 theta = list(beta_occu = rep(0,6),
@@ -66,18 +66,18 @@ nspp = 3
 
 nspp = 3
 
-vars_prop = list( beta_occu = rep(2.5e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = rep(8e-3,nspp * ncol(envX))
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = rep(5e-4,nspp)
+                  ,eta_inter = rep(5e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-3
                   ,spp_mat_det = 5e-3)
 
-para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(.1,nspp)
+para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
+                   ,beta_det = rep(.03,1000,.03,1000,.03,1000 )
+                   ,eta_intra = rep(.03,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
@@ -105,17 +105,17 @@ ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 20000, burn.in = 5000
+                                            , mcmc.iter = 50000, burn.in = 10000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
-                                            , uni_prior = T
+                                            , uni_prior = F
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
+                                            , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
 
 
 

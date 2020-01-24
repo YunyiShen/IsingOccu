@@ -37,10 +37,11 @@ spp_mat = matrix(1,3,3)
 diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
+envX = cbind(envX)
 
-theta = list(beta_occu = c(-.3,-.3,-.3),
-             beta_det = c(-.3,-.3,-.3),
-             eta_intra = c(.1,.1,.1),
+theta = list(beta_occu = rep(-.3,nspp*ncol(envX)),
+             beta_det = rep(0,nspp*ncol(envX)),
+             eta_intra = c(0,0,0),
              eta_inter = c(.2,.2,.2),
              #d_inter = c(.2,.2),
              spp_mat = 0.3 * spp_mat,
@@ -59,13 +60,13 @@ vars_prop = list( beta_occu =rep(2.5e-3,nspp)
                   ,eta_inter = rep(2.5e-3,nspp)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 1e-3
+                  ,spp_mat = 5e-3
                   ,spp_mat_det = 5e-3)
 detX = NULL
 
-para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(.3,nspp)
+para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
+                   ,beta_det = rep(.01,nspp * (ncol(envX)) )
+                   ,eta_intra = rep(.01,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
@@ -81,20 +82,20 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 20000, burn.in = 5000
+                                  , mcmc.iter = 150000, burn.in = 20000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
-                                  , uni_prior = T
+                                  , uni_prior = F
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
+                                  , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
 
 
-save.image("CFB_Mainland_island_700k_unif_prior.RData")
+save.image("CFB_Mainland_island_150k_norm_prior_low_intra_highdet.RData")
 # latest tuned parameter in 20191112
 
 

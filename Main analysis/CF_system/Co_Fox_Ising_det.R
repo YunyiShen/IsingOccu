@@ -40,7 +40,7 @@ envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(-.3,-.3),
              beta_det = c(-.3,-.3),
-             eta_intra = c(.1,.1),
+             eta_intra = c(0,0),
              eta_inter = c(.2,.2),
              #d_inter = c(.2,.2),
              spp_mat = 0.3 * spp_mat,
@@ -64,8 +64,8 @@ vars_prop = list( beta_occu = c(2.5e-3,2.5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(.3,nspp)
+                   ,beta_det = rep(.01,2 * (ncol(envX)) )
+                   ,eta_intra = rep(.01,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
@@ -81,11 +81,11 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 50000, burn.in = 5000
+                                  , mcmc.iter = 50000, burn.in = 20000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
-                                  , uni_prior = T
+                                  , uni_prior = F
                                   , distM=distM_full,link_map=link_map
                                   , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                   , int_range_intra="nn",int_range_inter="nn"
@@ -94,7 +94,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
 
 
-save.image("CF_Mainland_island_700k_norm_prior_small_priors.RData")
+save.image("CF_Mainland_island_50k_norm_prior_small_intras_high_det.RData")
 # latest tuned parameter in 20191112
 
 

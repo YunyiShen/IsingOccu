@@ -64,14 +64,14 @@ nrep = 1
 nrep = 1
 nspp = 3
 
-vars_prop = list( beta_occu = rep(1e-3,nspp * ncol(envX))
+vars_prop = list( beta_occu = rep(5e-3,nspp * ncol(envX))
                   ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = rep(5e-4,nspp)
+                  ,eta_intra = rep(1e-4,nspp)
+                  ,eta_inter = rep(5e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-3
-                  ,spp_mat_det = 5e-4)
+                  ,spp_mat_det = 5e-3)
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(1000,2 * (ncol(envX)) )
