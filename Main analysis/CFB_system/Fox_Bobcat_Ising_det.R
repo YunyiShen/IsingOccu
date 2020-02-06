@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_120dfull_by_islands.csv"),header = F)[1:310,]))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_240dfull_by_islands.csv"),header = F)[1:310+155,]))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red))
 
@@ -81,7 +81,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 100000, burn.in = 50000
+                                  , mcmc.iter = 50000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1

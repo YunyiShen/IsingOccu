@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_240dfull_by_islands.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_120dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -39,13 +39,13 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 envX = cbind(envX)
 
-theta = list(beta_occu = rep(-.3,nspp*ncol(envX)),
+theta = list(beta_occu = rep(0,nspp*ncol(envX)),
              beta_det = rep(0,nspp*ncol(envX)),
              eta_intra = c(0,0,0),
-             eta_inter = c(.2,.2,.2),
+             eta_inter = c(0,0,0),
              #d_inter = c(.2,.2),
-             spp_mat = 0.3 * spp_mat,
-             spp_mat_det = -0.3 * spp_mat)
+             spp_mat = 0.03 * spp_mat,
+             spp_mat_det = 0.03 * spp_mat)
 
 link_map = 
   list(inter = link_outer * exp(-distM_full),
@@ -70,8 +70,8 @@ para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1
-                   ,spp_mat_det = 1)
+                   ,spp_mat = 1000
+                   ,spp_mat_det = 1000)
 
 detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
 Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
@@ -82,7 +82,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 150000, burn.in = 20000
+                                  , mcmc.iter = 100000, burn.in = 50000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
@@ -92,7 +92,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
 
 
 save.image("CFB_Mainland_island_150k_norm_prior_low_intra_highdet.RData")
