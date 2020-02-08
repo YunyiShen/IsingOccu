@@ -59,13 +59,13 @@ vars_prop = list( beta_occu = c(2.5e-3,2.5e-3)
                   ,eta_inter = c(5e-3,5e-3)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 2.5e-3
+                  ,spp_mat = 5e-3
                   ,spp_mat_det = 5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(.01,2 * (ncol(envX)) )
-                   ,eta_intra = rep(0.01,nspp)
+                   ,eta_intra = rep(0.03,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)

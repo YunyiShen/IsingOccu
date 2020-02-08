@@ -22,7 +22,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
                     ,distM,link_map
                     ,dist_mainland , link_mainland
                     ,int_range_intra="nn",int_range_inter="exp"
-                    ,seed = 42,ini,thin.by = 100,report.by=100,nIter=100, Importance = F){ # ini has same formate of theta
+                    ,seed = 42,ini,thin.by = 100,report.by=100,nIter=100, Importance = F,method="CFTP"){ # ini has same formate of theta
   
   cat("Initializing...\n\n")
   require(coda)
@@ -108,7 +108,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
     # MH ratio
     
 	MRF_prop = getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
-	Z_temp = rIsingOccu_multi(MRF_prop,n=1,method = "CFTP",nIter)
+	Z_temp = rIsingOccu_multi(MRF_prop,n=1,method = method,nIter)
 	
     Murray_ratio=Murray_ratio_occu_theta(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,para_prior)
                         ,Z_curr
@@ -237,7 +237,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
 	
 	  
 	MRF_prop = getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
-	Z_temp = rIsingOccu_multi(MRF_prop,n=1,method = "CFTP",nIter)
+	Z_temp = rIsingOccu_multi(MRF_prop,n=1,method = method,nIter)
 
 	
     
@@ -358,7 +358,7 @@ IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
              ,linkmap = link_map
              ,link_mainland = link_mainland
              ,interaction.range =list( inter = int_range_inter,intra = int_range_intra)
-             ,envX=X, detX = detX,detmat = detmat,uni_prior=uni_prior,para_prior = para_prior)
+             ,envX=X, detX = detX,detmat = detmat,uni_prior=uni_prior,para_prior = para_prior,method = method)
   class(res)="IsingOccu_samples"
   return(res)
 }
