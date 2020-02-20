@@ -39,6 +39,8 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 envX = cbind(envX)
 
+
+nspp = 3
 theta = list(beta_occu = rep(0,nspp*ncol(envX)),
              beta_det = rep(0,nspp*ncol(envX)),
              eta_intra = c(0,0,0),
@@ -66,7 +68,7 @@ detX = NULL
 
 para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
                    ,beta_det = rep(.01,nspp * (ncol(envX)) )
-                   ,eta_intra = rep(.01,nspp)
+                   ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)

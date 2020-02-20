@@ -38,6 +38,7 @@ diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 envX = cbind(envX)
+nspp=2
 
 theta = list(beta_occu = rep(-.3,nspp*ncol(envX)),
              beta_det = rep(-.3,nspp*ncol(envX)),
@@ -68,7 +69,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(0.03,2 * (ncol(envX)) )
+                   ,beta_det = rep(0.05,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
@@ -79,7 +80,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 150000, burn.in = 50000
+                                            , mcmc.iter = 200000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -89,10 +90,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
+                                            , ini = theta,thin.by = 50,report.by = 500,nIter = 30)
 
 
-save.image("FM_Mainland_island_150k_norm_prior_highdet_fastZ_var_0.03.RData")
+save.image("FM_Mainland_island_200k_norm_prior_highdet_fastZ_var_0.05.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 

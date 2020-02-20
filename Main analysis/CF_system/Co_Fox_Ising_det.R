@@ -55,17 +55,17 @@ nspp = 2
 
 vars_prop = list( beta_occu = c(2.5e-3,2.5e-3)
                   ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = c(2.5e-4,2.5e-4)
+                  ,eta_intra = c(2.5e-3,2.5e-3)
                   ,eta_inter = c(5e-3,5e-3)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 2.5e-3
+                  ,spp_mat = 5e-3
                   ,spp_mat_det = 5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
                    ,beta_det = rep(.01,2 * (ncol(envX)) )
-                   ,eta_intra = rep(0.01,nspp)
+                   ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
@@ -81,7 +81,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 100000, burn.in = 50000
+                                  , mcmc.iter = 250000, burn.in = 150000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
@@ -91,10 +91,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
+                                  , ini = theta,thin.by = 100,report.by = 500
+                                  , nIter = 150,method = "MH")
 
 
-save.image("CF_Mainland_island_100k_norm_prior_small_intras_large_sppmat_high_det.RData")
+save.image("CF_Mainland_island_250k_norm_prior_high_det_0.01_240d_MH.RData")
 # latest tuned parameter in 20191112
 
 

@@ -37,7 +37,7 @@ envX = matrix(1,155,1)
 
 theta = list(beta_occu = c(-.5,-.5),
              beta_det = c(-.3,-.3),
-             eta_intra = c(.1,.1),
+             eta_intra = c(0.1,0.1),
              eta_inter = c(1,1),
              spp_mat = -.4 * spp_mat,
              spp_mat_det = -.2 * spp_mat)
@@ -98,20 +98,20 @@ Z2_map = ggmap(APIS_map) +
 ###### Run the Model! ######
 
 vars_prop = list( beta_occu = c(5e-3,5e-3)
-                  ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
+                  ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = c(5e-3,5e-3)
                   ,spp_mat = 1e-2
                   ,spp_mat_det = 1e-2)
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(1,nspp)
-                   ,eta_inter = rep(1,nspp)
+                   ,beta_det = rep(0.03,2 * (ncol(envX)) )
+                   ,eta_intra = rep(1000,nspp)
+                   ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1
-                   ,spp_mat_det = 1)
+                   ,spp_mat = 1000
+                   ,spp_mat_det = 1000)
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
@@ -119,16 +119,16 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , mcmc.iter = 50000, burn.in = 5000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
-                                            , Zprop_rate = .05
+                                            , Zprop_rate = 1
                                             , uni_prior = F
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 30)
+                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 150,method = "MH")
 
 
-
+save.image("Test_MH_Competition_50K_with_intra.RData")
 
 
 
