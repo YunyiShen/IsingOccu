@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_240dfull_by_islands.csv"),header = F)[1:310,]))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_120dfull_by_islands.csv"),header = F)[1:310,]))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red))
 
@@ -64,7 +64,7 @@ vars_prop = list( beta_occu = c(2.5e-3,2.5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(.01,2 * (ncol(envX)) )
+                   ,beta_det = rep(.03,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
@@ -81,7 +81,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 250000, burn.in = 150000
+                                  , mcmc.iter = 1000000, burn.in = 50000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
@@ -95,7 +95,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , nIter = 150,method = "MH")
 
 
-save.image("CF_Mainland_island_250k_norm_prior_high_det_0.01_240d_MH.RData")
+save.image("CF_Mainland_island_1000k_norm_prior_high_det_0.03_120d_MH.RData")
 # latest tuned parameter in 20191112
 
 
