@@ -213,3 +213,51 @@ write_json.IsingOccu_samples = function(x,path){
   class(x) = 'list'
   jsonlite::write_json(x,path)
 }
+		   
+		   
+adjacency.matrix = function(m, n = NULL)
+{
+    if (missing(n))
+    {
+        A = Matrix(0, m^2, m^2,sparse = T)
+        for (i in 1:m^2)
+        {
+            up = i - m
+            down = i + m
+            left = i - 1
+            right = i + 1
+            if (up > 0)
+                A[i, up] = 1
+            if (down <= m^2)
+                A[i, down] = 1
+            if (left %% m != 0)
+                A[i, left] = 1
+            if (i %% m != 0)
+                A[i, right] = 1
+        }
+    }
+    else
+    {
+        A = Matrix(0, m * n, m * n,sparse = T)
+        for (i in 1:(m * n))
+        {
+            up = i - n
+            down = i + n
+            left = i - 1
+            right = i + 1
+            if (up > 0)
+                A[i, up] = 1
+            if (down <= (m * n))
+                A[i, down] = 1
+            if (left %% n != 0)
+                A[i, left] = 1
+            if (i %% n != 0)
+                A[i, right] = 1
+        }
+    }
+    A
+}   
+		   
+		   
+		   
+		   

@@ -1,5 +1,5 @@
 ## main sampler:
-IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX
+IsingOccu.fit.Murray.sampler_Ising_det = function(X,detmat,detX # list with each entry as a period
                     ,mcmc.iter = 10000, burn.in = 10 
                     ,vars_prop = list( beta_occu = rep(1e-5,2 * ncol(X))
                                         ,beta_det = rep(1e-5,2 * (ncol(detX[[1]][[1]]) + ncol(X)) )
