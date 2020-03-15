@@ -7,7 +7,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 
 ## generate graph 
-n_grids = 15 # 15 by 15 grid system
+n_grids = 10# 15 by 15 grid system
 link_inner = adjacency.matrix(n_grids) # nearest neighborhood 
 link_outer = Matrix(0,n_grids^2,n_grids^2,sparse = T)
 link_mainland = matrix(0,n_grids^2,1)
@@ -60,11 +60,11 @@ Z_absolute = (sapply(detmat_simu,function(detmat_i){rowSums((detmat_i+1)/2)>0}))
 
 ###### Run the Model! ######
 
-vars_prop = list( beta_occu = c(5e-3,5e-3)
+vars_prop = list( beta_occu = c(1e-3,1e-3)
                   ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = c(5e-3,5e-3)
-                  ,spp_mat = 1e-2
+                  ,eta_inter = c(1e-3,1e-3)
+                  ,spp_mat = 1e-3
                   ,spp_mat_det = 1e-2)
 
 para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
@@ -91,7 +91,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , ini = theta,thin.by = 10,report.by = 100,nIter = 50,method = "CFTP")
 
 
-save.image("Test_large_grid15by15_Competition_50K_with_intra.RData")
+save.image("Test_large_grid10by10_Competition_50K_with_intra.RData")
 
 
 
