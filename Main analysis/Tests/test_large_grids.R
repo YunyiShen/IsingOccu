@@ -7,7 +7,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 
 ## generate graph 
-n_grids = 10# 15 by 15 grid system
+n_grids = 20# 15 by 15 grid system
 link_inner = adjacency.matrix(n_grids) # nearest neighborhood 
 link_outer = Matrix(0,n_grids^2,n_grids^2,sparse = T)
 link_mainland = matrix(0,n_grids^2,1)
@@ -20,11 +20,11 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,n_grids^2,1)
 envX = cbind(envX ,rnorm(n_grids^2))
 
-theta = list(beta_occu = c(-.5,.5,-.5,.5),
+theta = list(beta_occu = c(-.5,-.5,-.5,.5),
              beta_det = c(-.3,.5,-.3,.5),
              eta_intra = c(0.1,0.1),
              eta_inter = c(1,1),
-             spp_mat = -.4 * spp_mat,
+             spp_mat = 0 * spp_mat,
              spp_mat_det = -.2 * spp_mat)
 
 link_map = 
@@ -79,7 +79,7 @@ para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 50000, burn.in = 5000
+                                            , mcmc.iter = 100000, burn.in = 5000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -91,7 +91,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , ini = theta,thin.by = 10,report.by = 100,nIter = 50,method = "CFTP")
 
 
-save.image("Test_large_grid10by10_Competition_50K_with_intra.RData")
+save.image("Test_large_grid20by20_niche_diff_100K_with_intra.RData")
 
 
 
