@@ -68,7 +68,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(0.1,2 * (ncol(envX)) )
+                   ,beta_det = rep(0.05,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp*(nspp-1)/2)
                    ,d_intra=rep(1000,nspp)
@@ -79,7 +79,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 100000, burn.in = 50000
+                                            , mcmc.iter = 1000000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -89,11 +89,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 100
+                                            , ini = theta,thin.by = 100,report.by = 500
                                             , nIter = 130,method = "MH")
 
 
-save.image("FM_SS_50k_norm_prior_highdet.RData")
+save.image("FM_SS_1000k_norm_prior_highdet0.05.RData")
 
 
 
