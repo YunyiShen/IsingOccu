@@ -57,7 +57,7 @@ Gibbs_Z <- function(theta, envX, detX,detmat,Z_curr,Z_absolute,MRF){
     Ham_plus1 <- A[scan,] %*% Z_curr + thr[scan] # hamiltonian when it is +1
     
     which_site <- scan %% nsite # determin which site to work with 
-    if(which_site==0) which_site = nsite
+    if(which_site==0) which_site <- nsite
     which_spp <- (scan-which_site)/nsite + 1 # determin which species we were working with 
     which_row <- sites_adder + which_site # the row of all species at such site
     
@@ -68,11 +68,11 @@ Gibbs_Z <- function(theta, envX, detX,detmat,Z_curr,Z_absolute,MRF){
     
     det_thr_temp <- extract_thr(which_site,det_thr_list) # this get the thr of such site
     
-    Pplus1 <- Pdet_Ising_single_site(det_thr_temp, Z_temp, dethis, sppmat_det)
+    Pplus1 <- Pdet_Ising_single_site(det_thr_temp, Z_temp, dethis, sppmat_det) # this was logged
     Z_temp[which_spp] <- -1
     Pminus1 <- Pdet_Ising_single_site(det_thr_temp, Z_temp, dethis, sppmat_det)
     
-    PZiplus1 <- (exp(Ham_plus1)*Pplus1)/(exp(-Ham_plus1)*Pminus1+exp(Ham_plus1)*Pplus1)
+    PZiplus1 <- (exp(Ham_plus1+Pplus1))/(exp(-Ham_plus1+Pminus1)+exp(Ham_plus1+Pplus1))
     
     Z_curr[scan,] <- ifelse(runif(1)<PZiplus1,1,-1)
     

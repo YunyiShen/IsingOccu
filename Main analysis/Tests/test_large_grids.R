@@ -33,7 +33,7 @@ link_map =
 
 nrep = 1
 nspp = 2
-nperiod = 5
+nperiod = 10
 nsite = n_grids^2
 
 
@@ -60,12 +60,12 @@ Z_absolute = (sapply(detmat_simu,function(detmat_i){rowSums((detmat_i+1)/2)>0}))
 
 ###### Run the Model! ######
 
-vars_prop = list( beta_occu = c(1e-3,1e-3)
-                  ,beta_det = rep(1e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = c(1e-3,1e-3)
-                  ,spp_mat = 1e-3
-                  ,spp_mat_det = 1e-2)
+vars_prop = list( beta_occu = c(2e-3,2e-3)
+                  ,beta_det = rep(2e-3,nspp * ( ncol(envX)) ) # no extra det thing
+                  ,eta_intra = rep(2e-3,nspp)
+                  ,eta_inter = c(2e-3,2e-3)
+                  ,spp_mat = 2e-3
+                  ,spp_mat_det = 5e-3)
 
 para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
                    ,beta_det = rep(10,nspp * (ncol(envX)) )
@@ -79,7 +79,7 @@ para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 1000, burn.in = 500
+                                            , mcmc.iter = 500, burn.in = 150
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
