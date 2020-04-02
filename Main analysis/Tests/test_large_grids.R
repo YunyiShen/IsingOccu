@@ -7,7 +7,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 
 ## generate graph 
-n_grids = 20# 15 by 15 grid system
+n_grids = 10# 15 by 15 grid system
 link_inner = adjacency.matrix(n_grids) # nearest neighborhood 
 link_outer = Matrix(0,n_grids^2,n_grids^2,sparse = T)
 link_mainland = matrix(0,n_grids^2,1)
@@ -79,7 +79,7 @@ para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 100000, burn.in = 5000
+                                            , mcmc.iter = 1000, burn.in = 500
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -88,7 +88,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 50,method = "CFTP")
+                                            , ini = theta,thin.by = 1,report.by = 50,nIter = 50,method = "CFTP",Gibbs = T)
 
 
 save.image("Test_large_grid20by20_niche_diff_100K_with_intra.RData")

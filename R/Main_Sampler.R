@@ -17,12 +17,12 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
                                         ,d_inter = rep(1000,nspp)
                                         ,spp_mat = 1000
                                         ,spp_mat_det = 1000)
-					,uni_prior = T
+          ,uni_prior = T
                     ,Zprop_rate = .1
                     ,distM,link_map
                     ,dist_mainland , link_mainland
                     ,int_range_intra="nn",int_range_inter="exp"
-                    ,seed = 42,ini,thin.by = 100,report.by=100,nIter=100, Importance = F,method="CFTP"){ # ini has same formate of theta
+                    ,seed = 42,ini,thin.by = 100,report.by=100,nIter=100, Gibbs = F,method="CFTP"){ # ini has same formate of theta
   
   cat("Initializing...\n\n")
   require(coda)
@@ -35,7 +35,7 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
   set.seed(seed)
   if(uni_prior) getlogprior <- getlogprior_uniform
   else getlogprior <- getlogprior_normal
-	
+  
   vars_prop <- vars_prop[names(ini)]
   para_prior <- para_prior[names(ini)]
   
@@ -99,17 +99,17 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
     theta_prop <- theta_curr
 
     for(j in c(1:length(theta_curr))[-c(2,n_para_group)]){ # no detection proposing
-      	theta_prop[[j]] <- matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
+        theta_prop[[j]] <- matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
     }
-	
+  
     
     theta_prop$spp_mat <- theta_prop$spp_mat * spp_neig  #  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
     theta_prop$spp_mat <- .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
     # MH ratio
     
-	MRF_prop <- getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
-	Z_temp <- rIsingOccu_multi(MRF_prop,n=1,method = method,nIter)
-	
+  MRF_prop <- getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+  Z_temp <- rIsingOccu_multi(MRF_prop,n=1,method = method,nIter)
+  
     Murray_ratio <- Murray_ratio_occu_theta(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,para_prior)
                         ,Z_curr
                         ,Z_temp
@@ -136,8 +136,8 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
     theta_prop[[2]] <- matrix( rnorm(length(theta_curr[[2]]),mean = 0,sd = sqrt(vars_prop[[2]])),nrow(theta_curr[[2]]),ncol(theta_curr[[2]]) )+ theta_curr[[2]]
     theta_prop[[n_para_group]] <- matrix( rnorm(length(theta_curr[[n_para_group]]),mean = 0,sd = sqrt(vars_prop[[n_para_group]])),nrow(theta_curr[[n_para_group]]),ncol(theta_curr[[n_para_group]]) )+ theta_curr[[n_para_group]]
     
-	  
-	theta_prop$spp_mat_det <- theta_prop$spp_mat_det * spp_neig
+    
+    theta_prop$spp_mat_det <- theta_prop$spp_mat_det * spp_neig
     theta_prop$spp_mat_det <- .5*(theta_prop$spp_mat_det + t( theta_prop$spp_mat_det)) # must be sym
     
     Murray_ratio <- MH.ratio.Ising_det(theta_curr ,theta_prop,getlogprior(theta_prop,theta_curr,para_prior)
@@ -160,20 +160,14 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
     Z_prop <- Z_curr
     
     
-	if(Importance){
-      Z_prop <- propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
-	  MH_ratio <- MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
-                      ,detmat,envX, detX
-                      )
-	}
-	else{
-      Z_prop <- propose_Z_plain(Z_curr,Z_absolute,Zprop_rate)
-	  MH_ratio <- MH_ratio_Z_plain(theta_curr, MRF_curr,Z_curr, Z_prop
-                      ,detmat,envX, detX
-                      )
-    }
-
-
+  if(Gibbs){
+    Z_curr <- Gibbs_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,MRF_curr)
+  }
+  else{
+    Z_prop <- propose_Z_plain(Z_curr,Z_absolute,Zprop_rate)
+    MH_ratio <- MH_ratio_Z_plain(theta_curr, MRF_curr,Z_curr, Z_prop
+                      ,detmat,envX, detX)
+    
     r <- runif(1)
     if(is.na(MH_ratio)) {
       MH_ratio <- 0
@@ -184,7 +178,7 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
       accept_Z <- accept_Z + 1 - (sum(Z_prop==Z_curr)==length(Z_prop))
       Z_curr <- Z_prop
     }
-    
+    }
     if(i%%report.by == 0) {
       
       cat("Burn in iteration",i-report.by+1,"to",i,":\n\n")
@@ -228,18 +222,18 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
     theta_prop <- theta_curr
 
     for(j in c(1:length(theta_curr))[-c(2,n_para_group)]){ # no detection proposing
-    	theta_prop[[j]] <- matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
+      theta_prop[[j]] <- matrix( rnorm(length(theta_curr[[j]]),mean = 0,sd = sqrt(vars_prop[[j]])),nrow(theta_curr[[j]]),ncol(theta_curr[[j]]) )+ theta_curr[[j]]
     }
-	
+  
     
     theta_prop$spp_mat <- theta_prop$spp_mat * spp_neig  #  theta_prop$spp_mat=theta_prop$spp_mat * spp_neig
     theta_prop$spp_mat <- .5*(theta_prop$spp_mat + t( theta_prop$spp_mat)) # must be sym
-	
-	  
-	MRF_prop <- getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
-	Z_temp <- rIsingOccu_multi(MRF_prop,n=1,method = method,nIter)
+  
+    
+  MRF_prop <- getMRF(theta_prop,envX,distM,link_map,dist_mainland,link_mainland,int_range_intra,int_range_inter)
+  Z_temp <- rIsingOccu_multi(MRF_prop,n=1,method = method,nIter)
 
-	
+  
     
     # MH ratio
     Murray_ratio <- Murray_ratio_occu_theta(MRF_curr ,MRF_prop, getlogprior(theta_prop,theta_curr,para_prior)
@@ -295,29 +289,26 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
     
     Z_prop <- Z_curr
     
-	if(Importance){
-      Z_prop <- propose_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,Zprop_rate)
-	  MH_ratio <- MH_ratio_Z(theta_curr, MRF_curr,Z_curr, Z_prop,Z_absolute,Zprop_rate
-                      ,detmat,envX, detX
-                      )
-	}
-	else{
+  if(Gibbs){
+      Z_curr <- Gibbs_Z_rep(theta_curr, envX, detX,detmat,Z_curr,Z_absolute,MRF_curr)
+  }
+  else{
       Z_prop <- propose_Z_plain(Z_curr,Z_absolute,Zprop_rate)
-	  MH_ratio <- MH_ratio_Z_plain(theta_curr, MRF_curr,Z_curr, Z_prop
+      MH_ratio <- MH_ratio_Z_plain(theta_curr, MRF_curr,Z_curr, Z_prop
                       ,detmat,envX, detX
                       )
-    }
-    r <- runif(1)
-    if(is.na(MH_ratio)) {
-      MH_ratio <- 0
-      #cat("ZNA\n")
+    
+      r <- runif(1)
+      if(is.na(MH_ratio)) {
+        MH_ratio <- 0
+        #cat("ZNA\n")
+        }
+      if(MH_ratio<exp(-10)) low_acc_Z <- low_acc_Z + 1
+      if(r<=MH_ratio){
+        accept_Z <- accept_Z + 1 - (sum(Z_prop==Z_curr)==length(Z_prop))
+        Z_curr <- Z_prop
       }
-    if(MH_ratio<exp(-10)) low_acc_Z <- low_acc_Z + 1
-    if(r<=MH_ratio){
-      accept_Z <- accept_Z + 1 - (sum(Z_prop==Z_curr)==length(Z_prop))
-      Z_curr <- Z_prop
     }
-
     
     if(i %% thin.by==0) Z.mcmc[i/thin.by,] <- Z_curr
     if(i%%report.by == 0) { # reporting
