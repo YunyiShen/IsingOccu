@@ -106,7 +106,7 @@ IsingStateProb <- function (s, graph, thresholds, beta, responses = c(-1L, 1L))
   if (!is.list(s)) 
     s <- list(s)
     N <- length(s[[1]])
-	Z <- PartitionCpp(graph,thresholds,beta,responses)
+    Z <- PartitionCpp(graph,thresholds,beta,responses)
     sapply(s, function(x) exp(-beta * H(graph, x, ( thresholds)))/Z)
 }
 
