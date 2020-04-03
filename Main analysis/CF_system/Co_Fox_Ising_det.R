@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_120dfull_by_islands.csv"),header = F)[1:310,]))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)[1:310,]))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red))
 
@@ -64,7 +64,7 @@ vars_prop = list( beta_occu = c(2.5e-3,2.5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(.05,2 * (ncol(envX)) )
+                   ,beta_det = rep(.1,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)

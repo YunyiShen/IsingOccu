@@ -80,7 +80,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 100000, burn.in = 5000
+                                            , mcmc.iter = 1000000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -90,7 +90,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 500,nIter = 30,Gibbs = T)
+                                            , ini = theta,thin.by = 100,report.by = 1000,nIter = 30,Gibbs = T)
 
 
 save.image("FM_Mainland_island_3000k_norm_prior_highdet_fastZ_var_0.05.RData")
