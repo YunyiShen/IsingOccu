@@ -419,7 +419,7 @@ arma::mat extract_thrCpp(const int & which_site,// different from R version, sta
 } // passed 20200403
 
 // [[Rcpp::export]]
-arma::mat Gibbs_Z_helper_Cpp(const arma::mat & Z_curr, // make sure Z_curr was column vector
+arma::mat Gibbs_Z_helperCpp(const arma::mat & Z_curr, // make sure Z_curr was column vector
                              const arma::vec & scans, // vector of non detection site/species numbers
                              const arma::mat & detmat,
                              const arma::sp_mat & A,
@@ -436,19 +436,21 @@ arma::mat Gibbs_Z_helper_Cpp(const arma::mat & Z_curr, // make sure Z_curr was c
   
   for(int i = 0; i < n_scans ; ++i){
     int scan = scans(i); // the one working on this scan, should be one that was -1 in absolute
-    double Ham_plus1 =  (A.row(scan) * Z_curr)(0,0) + thr(scan); // prior part, Ising model
+    double Ham_plus1 =  (A.row(scan-1) * Z_curr)(0,0) + thr(scan-1); // prior part, Ising model
     
     int which_site = scan % nsite;
+    
     if(which_site==0) which_site = nsite;
-    which_site -= 1;//since c++ start with 0
     int which_spp = (scan-which_site)/nsite;
     uvec adder = regspace<uvec>(0, nspp-1);
-    uvec which_row = adder*nsite+which_site;
+    uvec which_row = adder*nsite+which_site-1;// start from 0
+    //Rcout << which_row<<std::endl;
+    
     arma::vec Z_temp = Z_curr.rows(which_row);//get relavent Z
     
     arma::mat dethist = detmat.rows(which_row);
     dethist = dethist.t();// row as period, columns as species, note that all species were included here.
-    arma::mat det_thr_temp = extract_thrCpp(which_site,
+    arma::mat det_thr_temp = extract_thrCpp(which_site-1, //extract_thr ask index to start with 0,
                                 det_thr,nspp,nperiod,nsite);
     
     Z_temp(which_spp) = responses[1];
@@ -460,9 +462,9 @@ arma::mat Gibbs_Z_helper_Cpp(const arma::mat & Z_curr, // make sure Z_curr was c
 
     
     double PZiplus1=(exp(Ham_plus1+Pplus1))/
-    (exp(Ham_plus1+Pminus1)+exp(Ham_plus1+Pplus1));
+    (exp(-Ham_plus1+Pminus1)+exp(Ham_plus1+Pplus1));
     
-    Z_new(scan) = ifelse(runif(1) < PZiplus1, 
+    Z_new.row(scan-1) = ifelse(runif(1) < PZiplus1, 
                          responses[1], responses[0])[0];
   }
   return(Z_new);

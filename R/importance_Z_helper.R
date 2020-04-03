@@ -51,32 +51,10 @@ Gibbs_Z <- function(theta, envX, detX,detmat,Z_curr,Z_absolute,MRF){
     
 
 
-  sites_adder <- (1:nspp-1)*nsite
+  #sites_adder <- (1:nspp-1)*nsite
   
-  for(scan in minus1s){
-    Ham_plus1 <- A[scan,] %*% Z_curr + thr[scan] # hamiltonian when it is +1
-    
-    which_site <- scan %% nsite # determin which site to work with 
-    if(which_site==0) which_site <- nsite
-    which_spp <- (scan-which_site)/nsite + 1 # determin which species we were working with 
-    which_row <- sites_adder + which_site # the row of all species at such site
-    
-    Z_temp <- Z_curr[which_row,] # grab all species at such site
-    Z_temp[which_spp] <- 1
-    
-    dethis <- t(detmat[which_row,])
-    
-    det_thr_temp <- extract_thrCpp(which_site-1,det_thr_list,nspp,nperiod,nsite) # this get the thr of such site
-    
-    Pplus1 <- Pdet_Ising_single_siteCpp(det_thr_temp, Z_temp, dethis,sppmat_det,c(-1L,1L) ) # this was logged
-    Z_temp[which_spp] <- -1
-    Pminus1 <- Pdet_Ising_single_siteCpp(det_thr_temp, Z_temp, dethis, sppmat_det,c(-1L,1L))
-    
-    PZiplus1 <- (exp(Ham_plus1+Pplus1))/(exp(-Ham_plus1+Pminus1)+exp(Ham_plus1+Pplus1))
-    
-    Z_curr[scan,] <- ifelse(runif(1)<PZiplus1,1,-1)
-    
-  }
+  Z_curr <- Gibbs_Z_helperCpp(Z_curr,minus1s,detmat,MRF$A,MRF$thr,sppmat_det,det_thr_list,nsite,c(-1L,1L))
+  
 
   
   return(Z_curr)
