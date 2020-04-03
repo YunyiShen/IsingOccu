@@ -20,7 +20,7 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,n_grids^2,1)
 envX = cbind(envX ,rnorm(n_grids^2))
 
-theta = list(beta_occu = c(-.5,-.5,-.5,.5),
+theta = list(beta_occu = c(-.5,-.3,-.5,.3),
              beta_det = c(-.3,.3,-.3,.3),
              eta_intra = c(0.15,0.15),
              eta_inter = c(1,1),
@@ -91,4 +91,4 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , ini = theta,thin.by = 1,report.by = 500,nIter = 50,method = "CFTP",Gibbs = T)
 
 
-save.image("Test_large_grid20by20_niche_diff_100K_with_intra.RData")
+save.image("Test_large_grid15by15_niche_diff_200K_with_intra_Gibbs.RData")
