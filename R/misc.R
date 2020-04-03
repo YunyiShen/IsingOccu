@@ -127,7 +127,7 @@ rIsingOccu_multi <- function(MRF,n=1,method = "CFTP",nIter = 100){
 }
   
 Pdet_Ising_single_site <- function(thr, Z, dethis, sppmat_det){
-	spp_exist <- Z==1
+	spp_exist <- c(Z)==1
   sppmat_det <- as(sppmat_det,"dgCMatrix")
 	if(sum(spp_exist)==0 | sum(!is.na(dethis))==0){return(0)} # no species there, probability one to be no detection, or no observation here
 	if(prod(spp_exist)==0){

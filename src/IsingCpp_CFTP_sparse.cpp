@@ -2,7 +2,7 @@
 #include <RcppArmadillo.h> // to use sparse matrix
 #include <climits>
 using namespace Rcpp;
-
+using namespace arma;
 // FUNCTIONS FOR EXACT SAMPLING //
 
 // Inner function to resize list:
@@ -319,7 +319,7 @@ double PartitionCpp(
     const arma::sp_mat & graph,
     const NumericVector & thr,
     const double & beta,
-    const IntegerVector &response){
+    const IntegerVector &responses){
   
   int N = graph.n_rows;
   int n_possible = pow(2,N);
@@ -331,7 +331,7 @@ double PartitionCpp(
   for(int i = 0; i<n_possible ; ++i){
     t = i;
     for(int j = 0; j<N ; ++j){
-      temp[j] = response[t % 2];//use binary number coding
+      temp[j] = responses[t % 2];//use binary number coding
       t = t>>1;
     }
     Z+=exp(-beta * H(graph,temp,thr));
@@ -341,6 +341,135 @@ double PartitionCpp(
   
   
 }
+
+// calculating state probability directly 
+// [[Rcpp::export]]
+double IsingStateProbCpp(const arma::vec & Z, 
+                         const arma::sp_mat & graph,
+                         const arma::vec & thr,
+                         const IntegerVector &responses){
+  double partion = PartitionCpp(graph,
+                          Rcpp::NumericVector(thr.begin(),
+                                              thr.end()),
+                          1,responses);
+  return(exp(- H(graph, IntegerVector(Z.begin(),
+                                     Z.end()),                       
+                       Rcpp::NumericVector(thr.begin(),
+                                              thr.end())))/partion);
+} // passed 2/4/2020
+
+
+
+// [[Rcpp::export]]
+double ColSumsarma(arma::mat A){
+  return(sum( is_na(as<NumericMatrix>(wrap(A)))));
+}
+
+
+// [[Rcpp::export]]
+double Pdet_Ising_single_siteCpp(
+    const arma::mat & det_thr_temp, 
+    const arma::vec & Z_temp, 
+    const arma::mat & dethis, 
+    const arma::mat & sppmat_det,
+    const IntegerVector & responses){
+  
+  int nspp = sppmat_det.n_rows;
+  if(sum(sum(Z_temp))==nspp*responses[0] || (sum( is_na(as<NumericMatrix>(wrap(dethis)))))==dethis.n_elem) return(0); // no species there, probability 1 to be all 0s.
+  arma::uvec spp_exist = find(Z_temp == 1);
+  arma::mat thr_exist = det_thr_temp.cols(spp_exist);
+  arma::mat graph = sppmat_det.submat(spp_exist,spp_exist);
+  arma::vec row_sums_dethis = sum(dethis.t()).t();
+  
+  LogicalVector has_obs_ornot = !is_na(NumericVector(row_sums_dethis.begin(),
+                                                    row_sums_dethis.end())) ;
+  arma::uvec has_obs = find(as<arma::vec>(has_obs_ornot));
+  //arma::uvec has_obs = find(sum(dethis.t() != INT_MIN)==nspp);
+  arma::mat dethis_temp = dethis.submat(has_obs,spp_exist); // delete those rows without observation and columns without species exist
+  arma::mat thr_exist_temp = thr_exist.rows(has_obs);
+  
+  double res = 0;
+  
+  for(int i = 0; i < dethis_temp.n_rows ; ++i ){
+    arma::vec dethis_this = dethis_temp.row(i).t();
+    arma::vec thr_this = thr_exist_temp.row(i).t();
+    res += log(IsingStateProbCpp( dethis_this,sp_mat(graph),
+                              thr_this,
+                              responses)+1e-15);
+  
+  
+  }
+  return(res);  
+} // passed 20200403
+
+// [[Rcpp::export]]
+arma::mat extract_thrCpp(const int & which_site,
+                         const List & det_thr,
+                         const int & nspp,
+                         const int & nperiod,
+                         const int & nsite
+                        ){
+  arma::mat res(nperiod,nspp);
+  
+  for(int i = 0; i<nspp; ++i){
+    arma::mat det_temp = det_thr[i];
+    res.col(i) = det_temp.row(which_site);
+  }
+  return(res);
+}
+
+// [[Rcpp::export]]
+arma::mat Gibbs_Z_helper_Cpp(const arma::mat & Z_curr, // make sure Z_curr was column vector
+                             const arma::vec & scans, // vector of non detection site/species numbers
+                             const arma::mat & detmat,
+                             const arma::sp_mat & A,
+                             const arma::vec & thr,
+                             const arma::mat & sppmat_det,
+                             const List & det_thr,
+                             const int & nsite,
+                             const IntegerVector & responses
+                            ) {
+  int n_scans = scans.n_elem;
+  int nspp = sppmat_det.n_rows;
+  arma::mat Z_new = Z_curr;
+  int nperiod = detmat.n_cols;
+  
+  for(int i = 0; i < n_scans ; ++i){
+    int scan = scans(i); // the one working on this scan, should be one that was -1 in absolute
+    double Ham_plus1 =  (A.row(scan) * Z_curr)(0,0) + thr(scan); // prior part, Ising model
+    
+    int which_site = scan % nsite;
+    if(which_site==0) which_site = nsite;
+    which_site -= 1;//since c++ start with 0
+    int which_spp = (scan-which_site)/nsite;
+    uvec adder = regspace<uvec>(0, nspp-1);
+    uvec which_row = adder*nsite+which_site;
+    arma::vec Z_temp = Z_curr.rows(which_row);//get relavent Z
+    
+    arma::mat dethist = detmat.rows(which_row);
+    dethist = dethist.t();// row as period, columns as species, note that all species were included here.
+    arma::mat det_thr_temp = extract_thrCpp(which_site,
+                                det_thr,nspp,nperiod,nsite);
+    
+    Z_temp(which_spp) = responses[1];
+    double Pplus1 = Pdet_Ising_single_siteCpp(det_thr_temp, 
+                                Z_temp, dethist, sppmat_det,responses);
+    Z_temp(which_spp) = responses[0];
+    double Pminus1 = Pdet_Ising_single_siteCpp(det_thr_temp, 
+                                Z_temp, dethist, sppmat_det,responses);
+
+    
+    double PZiplus1=(exp(Ham_plus1+Pplus1))/
+    (exp(Ham_plus1+Pminus1)+exp(Ham_plus1+Pplus1));
+    
+    Z_new(scan) = ifelse(runif(1) < PZiplus1, 
+                         responses[1], responses[0])[0];
+  }
+  return(Z_new);
+}
+
+
+
 
 
 
@@ -429,159 +558,6 @@ double fveclog(IntegerMatrix Y, NumericVector Theta)
   return(Res);
 }
 //
-//IntegerMatrix vecSampler(int n, int N, NumericVector Theta, int nIter, IntegerVector responses)
-//{
-//   NumericVector thresh(N);
-//   for (int i=0; i<N; i++)
-//   {
-//     thresh[i] = Theta[i];
-//   }
-//   
-//   NumericMatrix graph(N,N);
-//   int c=N+1;
-//   for (int i=0;i<N;i++)
-//   {
-//    for (int j=i; j<N;j++)
-//    {
-//     if (j!=i) 
-//     {
-//       graph(i,j) = Theta[c];
-//      graph(j,i) = Theta[c];
-//       c++;
-//     }
-//    }
-//  }
-//   
-//   return(IsingSamplerCpp(n, graph, thresh, 1.0, nIter, responses, true));
-//}
-//
-//// Uniform distribution (prior):
-//double FakeUnif(NumericVector x, double lower, double upper)
-//{
-//  double Res = 1.0;
-//  
-//  for (int i=0; i < x.length(); i++)
-//  {
-//    if (x[i] < lower || x[i] > upper)
-//    {
-//      Res = 0.0;
-//      break;
-//    }
-//  }
-//  
-//  return(Res);
-//}
-
-
-// Progress bar function:
-/*
-int progress_bar(double x, double N)
-{
-    // how wide you want the progress meter to be
-    int totaldotz=40;
-    double fraction = x / N;
-    // part of the progressmeter that's already "full"
-    int dotz = round(fraction * totaldotz);
-
-    // create the "meter"
-    int ii=0;
-    printf("%3.0f%% [",fraction*100);
-    // part  that's full already
-    for ( ; ii < dotz;ii++) {
-        printf("=");
-    }
-    // remaining part (spaces)
-    for ( ; ii < totaldotz;ii++) {
-        printf(" ");
-    }
-    // and back to line begin - do not forget the fflush to avoid
-    // output buffering problems!
-    printf("]\r");
-    fflush(stdout);
-}
-*/
-
-//
-//// EXCHANGE ALGORTIHM //
-//// [[Rcpp::export]]
-//NumericMatrix ExchangeAlgo(IntegerMatrix Y, double lowerBound, double upperBound, double stepSize, int nIter, IntegerVector responses,
-//    bool simAn, double tempStart, double tempEnd, NumericVector StartValues)
-//{
-//  int Np = Y.nrow();
-//  int Ni = Y.ncol();
-//  
-//  // Number of parameters:
-//  int Npar = Ni + (Ni*(Ni-1))/2;
-//  
-//  // Fantasy matrix:
-//  IntegerMatrix X(Np,Ni);
-//  
-//  // Results matrix:
-//  NumericMatrix Samples(nIter, Npar);
-//  
-//  // Current parameter values:
-//  // NumericVector curPars = runif(Npar, lowerBound, upperBound);
-//  NumericVector curPars(Npar, 0.0);
-//  for (int i=0; i<Npar; i++) curPars[i] = StartValues[i];
-//  NumericVector propPars(Npar);
-//  
-//  double a;
-//  double r;
-//  
-//  // START ITERATING //
-//  for (int it=0; it<nIter; it++)
-//  {
-//   // progress_bar((double)it, (double)nIter);
-//    // For each parameter:
-//    for (int n=0;n<Npar;n++)
-//    {
-//      // Propose new state:
-//      for (int i=0; i<Npar; i++)
-//      {
-//        if (i==n)
-//        {
-//          propPars[i] = curPars[i] + R::rnorm(0.0,stepSize);
-//        } else 
-//        {
-//          propPars[i] = curPars[i];
-//        }
-//      }
-//      
-//      // Simulate data with new state:
-//      X =  vecSampler(Np, Ni, propPars, nIter, responses);
-//      
-//      // Random number:
-//      r = R::runif(0,1);
-//      
-//      // Acceptance probability:
-//      a = FakeUnif(propPars,lowerBound,upperBound)/FakeUnif(curPars,lowerBound,upperBound) * 
-//           exp(fveclog(Y, propPars) + fveclog(X, curPars) - fveclog(Y,curPars) - fvec(X,propPars));
-//      
-//      if (!simAn)
-//      {
-//        if (r < a)
-//        {
-//          curPars[n] = propPars[n];
-//        }  
-//      } else {
-//        if (r < exp(log(a)/ (tempStart - it * (tempStart-tempEnd)/nIter)))
-//        {
-//          curPars[n] = propPars[n];
-//        }  
-//      }
-//      
-//      
-//      Samples(it, n) = curPars[n];
-//    }
-//  }
-//  
-//  
-//  return(Samples);
-//}
- 
-///// Broderick et al 2013:
-
-
 
 // Function to compute expected values:
 // [[Rcpp::export]]
