@@ -28,7 +28,7 @@ MH_ratio_Z_plain <- function(theta, MRF,Z_curr, Z_prop
 Gibbs_Z <- function(theta, envX, detX,detmat,Z_curr,Z_absolute,MRF){
   Z_curr <- as.matrix(Z_curr)
   nperiod <- ncol(detmat)
-  sppmat_det <- theta$spp_mat_det
+  sppmat_det <- as.matrix( theta$spp_mat_det)
   nspp <- nrow(theta$spp_mat_det)
   n_site <- nrow(envX)
   minus1s <- which(Z_absolute==-1) # only scan 
@@ -66,11 +66,11 @@ Gibbs_Z <- function(theta, envX, detX,detmat,Z_curr,Z_absolute,MRF){
     
     dethis <- t(detmat[which_row,])
     
-    det_thr_temp <- extract_thr(which_site,det_thr_list) # this get the thr of such site
+    det_thr_temp <- extract_thrCpp(which_site-1,det_thr_list,nspp,nperiod,nsite) # this get the thr of such site
     
-    Pplus1 <- Pdet_Ising_single_site(det_thr_temp, Z_temp, dethis, sppmat_det) # this was logged
+    Pplus1 <- Pdet_Ising_single_siteCpp(det_thr_temp, Z_temp, dethis,sppmat_det,c(-1L,1L) ) # this was logged
     Z_temp[which_spp] <- -1
-    Pminus1 <- Pdet_Ising_single_site(det_thr_temp, Z_temp, dethis, sppmat_det)
+    Pminus1 <- Pdet_Ising_single_siteCpp(det_thr_temp, Z_temp, dethis, sppmat_det,c(-1L,1L))
     
     PZiplus1 <- (exp(Ham_plus1+Pplus1))/(exp(-Ham_plus1+Pminus1)+exp(Ham_plus1+Pplus1))
     

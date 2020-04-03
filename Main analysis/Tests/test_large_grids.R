@@ -79,7 +79,7 @@ para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 500, burn.in = 150
+                                            , mcmc.iter = 5000, burn.in = 1000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -88,7 +88,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 1,report.by = 50,nIter = 50,method = "CFTP",Gibbs = T)
+                                            , ini = theta,thin.by = 1,report.by = 100,nIter = 50,method = "CFTP",Gibbs = T)
 
 
 save.image("Test_large_grid20by20_niche_diff_100K_with_intra.RData")

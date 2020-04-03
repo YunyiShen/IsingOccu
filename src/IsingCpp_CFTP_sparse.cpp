@@ -403,7 +403,7 @@ double Pdet_Ising_single_siteCpp(
 } // passed 20200403
 
 // [[Rcpp::export]]
-arma::mat extract_thrCpp(const int & which_site,
+arma::mat extract_thrCpp(const int & which_site,// different from R version, start from 0
                          const List & det_thr,
                          const int & nspp,
                          const int & nperiod,
@@ -413,10 +413,10 @@ arma::mat extract_thrCpp(const int & which_site,
   
   for(int i = 0; i<nspp; ++i){
     arma::mat det_temp = det_thr[i];
-    res.col(i) = det_temp.row(which_site);
+    res.col(i) = det_temp.row(which_site).t();
   }
   return(res);
-}
+} // passed 20200403
 
 // [[Rcpp::export]]
 arma::mat Gibbs_Z_helper_Cpp(const arma::mat & Z_curr, // make sure Z_curr was column vector

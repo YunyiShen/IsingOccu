@@ -174,13 +174,13 @@ Pdet_Ising <- function(nperiod,envX,detX,beta_det,sppmat_det,Z,detmat){
 		return(thr1) # now here is basically a matrix, for each species at site and period
 		},detDesign,beta_det,npardet,nrow(envX),nperiod) # this is gonna be  a list for all species, 
 	
-	Pdet <- lapply(1:nsite,function(i,thr_list,detmat,Z,sppmat_det,nsite,nspp){
-		thr1 <- extract_thr(i,thr_list)
+	Pdet <- lapply(1:nsite,function(i,thr_list,detmat,Z,sppmat_det,nsite,nspp,nperiod){
+		thr1 <- extract_thrCpp(i-1,thr_list,nspp,nperiod,nsite)
 		rows1 <- i + (1:nspp-1)*nsite
 		dethis <- t(detmat[rows1,])
 		Z_site <- Z[rows1,]
-		Pdet_Ising_single_site(thr1, Z_site, dethis, sppmat_det)
-	},thr_list,detmat,as.matrix( Z),sppmat_det,nsite,nspp)# loop over sites
+		Pdet_Ising_single_siteCpp(thr1, Z_site, dethis, sppmat_det,c(-1L,1L)  )
+	},thr_list,detmat,as.matrix( Z), as.matrix( sppmat_det),nsite,nspp,nperiod)# loop over sites
 	return(Reduce(rbind,Pdet)) # change 25/8/2019
 }
 
