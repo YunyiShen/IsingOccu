@@ -21,7 +21,7 @@ envX = matrix(1,n_grids^2,1)
 envX = cbind(envX ,rnorm(n_grids^2))
 
 theta = list(beta_occu = c(-.5,-.5,-.5,.5),
-             beta_det = c(-.3,.2,-.3,.2),
+             beta_det = c(-.3,.3,-.3,.3),
              eta_intra = c(0.15,0.15),
              eta_inter = c(1,1),
              spp_mat = 0 * spp_mat,
@@ -33,7 +33,7 @@ link_map =
 
 nrep = 1
 nspp = 2
-nperiod = 5
+nperiod = 6
 nsite = n_grids^2
 
 
@@ -79,7 +79,7 @@ para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 30000, burn.in = 3000
+                                            , mcmc.iter = 150000, burn.in = 5000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1

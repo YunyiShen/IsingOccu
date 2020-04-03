@@ -58,7 +58,7 @@ nspp = 2
 vars_prop = list( beta_occu = rep(5e-3,nspp * ( ncol(envX)))
                   ,beta_det = rep(1e-2,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = c(1e-2,5e-3)
+                  ,eta_inter = c(1e-2,1e-2)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 5e-3
@@ -69,7 +69,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(0.05,2 * (ncol(envX)) )
+                   ,beta_det = rep(0.1,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
@@ -80,7 +80,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 3000000, burn.in = 50000
+                                            , mcmc.iter = 100000, burn.in = 5000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -90,7 +90,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 100,report.by = 500,nIter = 30)
+                                            , ini = theta,thin.by = 10,report.by = 500,nIter = 30,Gibbs = T)
 
 
 save.image("FM_Mainland_island_3000k_norm_prior_highdet_fastZ_var_0.05.RData")

@@ -41,7 +41,7 @@ envX = matrix(1,155,1)
 theta = list(beta_occu = c(-.3,-.3),
              beta_det = c(-.3,-.3),
              eta_intra = c(0,0),
-             eta_inter = c(.2,.2),
+             eta_inter = c(.0,.2),
              #d_inter = c(.2,.2),
              spp_mat = 0.3 * spp_mat,
              spp_mat_det = -0.3 * spp_mat)
@@ -64,7 +64,7 @@ vars_prop = list( beta_occu = c(2.5e-3,2.5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(.03,2 * (ncol(envX)) )
+                   ,beta_det = rep(.05,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
@@ -81,7 +81,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 1000000, burn.in = 50000
+                                  , mcmc.iter = 50000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
@@ -91,8 +91,8 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 100,report.by = 500
-                                  , nIter = 150,method = "MH")
+                                  , ini = theta,thin.by = 10,report.by = 500
+                                  , nIter = 150,method = "MH",Gibbs = T)
 
 
 save.image("CF_Mainland_island_1000k_norm_prior_high_det_0.03_120d_MH.RData")
