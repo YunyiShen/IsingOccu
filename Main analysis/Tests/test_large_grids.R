@@ -7,7 +7,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 
 ## generate graph 
-n_grids = 15# 15 by 15 grid system
+n_grids = 20# 15 by 15 grid system
 link_inner = adjacency.matrix(n_grids) # nearest neighborhood 
 link_outer = Matrix(0,n_grids^2,n_grids^2,sparse = T)
 link_mainland = matrix(0,n_grids^2,1)
@@ -20,8 +20,8 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,n_grids^2,1)
 envX = cbind(envX ,rnorm(n_grids^2))
 
-theta = list(beta_occu = c(-.5,-.3,-.5,.3),
-             beta_det = c(-.3,.3,-.3,.3),
+theta = list(beta_occu = c(-.3,-.5,-.3,.5),
+             beta_det = c(-.5,.3,-.5,.3),
              eta_intra = c(0.15,0.15),
              eta_inter = c(1,1),
              spp_mat = 0 * spp_mat,
@@ -88,7 +88,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 1,report.by = 500,nIter = 50,method = "CFTP",Gibbs = T)
+                                            , ini = theta,thin.by = 20,report.by = 500,nIter = 50,method = "CFTP",Gibbs = T)
 
 
-save.image("Test_large_grid15by15_niche_diff_200K_with_intra_Gibbs.RData")
+save.image("Test_large_grid20by20_niche_diff_200K_with_intra_Gibbs.RData")

@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_120dfull_by_islands.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red,full$Bobcat))
 
@@ -58,16 +58,16 @@ nspp = 3
 
 vars_prop = list( beta_occu =rep(2.5e-3,nspp)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(5e-3,nspp)
+                  ,eta_intra = rep(2.5e-3,nspp)
                   ,eta_inter = rep(2.5e-3,nspp)
                   ,d_intra=rep(2.5e-5,nspp)
                   ,d_inter = rep(2.5e-3,nspp)
-                  ,spp_mat = 5e-3
+                  ,spp_mat = 2.5e-3
                   ,spp_mat_det = 5e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
-                   ,beta_det = rep(.03,nspp * (ncol(envX)) )
+                   ,beta_det = rep(.05,nspp * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
@@ -84,7 +84,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 20000, burn.in = 5000
+                                  , mcmc.iter = 50000, burn.in = 5000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
@@ -94,7 +94,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 10,report.by = 100
+                                  , ini = theta,thin.by = 1,report.by = 1000
                                   , nIter = 130,method = "MH")
 
 
