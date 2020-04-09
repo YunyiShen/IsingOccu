@@ -102,16 +102,27 @@ beta_2 = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
+
+eta_intra_1 = read.csv("./Main analysis/Results/Big_simulation/APIS/N/eta_intra_1.csv",row.names = 1)
+eta_intra_2 = read.csv("./Main analysis/Results/Big_simulation/APIS/N/eta_intra_2.csv",row.names = 1)
+beta_1 = read.csv("./Main analysis/Results/Big_simulation/APIS/N/beta_1.csv",row.names = 1)
+beta_2 = read.csv("./Main analysis/Results/Big_simulation/APIS/N/beta_2.csv",row.names = 1)
+
+gamma_oc = read.csv("./Main analysis/Results/Big_simulation/APIS/N/gamma_oc.csv",row.names = 1)
+gamma_de = read.csv("./Main analysis/Results/Big_simulation/APIS/N/gamma_de.csv",row.names = 1)
+
+
+
 ###### Simulate Data ######
-set.seed(42)
+set.seed(43)
 
 
-for(i in 1:n_dataset){
+for(i in 50:n_dataset){
 	cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
 	  	 int_range_intra="nn",int_range_inter="nn")
 
-  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), T,NA+MRF$thr) ## take true occupancy
 
 
   detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,
@@ -137,37 +148,22 @@ for(i in 1:n_dataset){
                                             , ini = theta,thin.by = 10,report.by = 2500,nIter = 50,method = "CFTP",Gibbs = T)
 
 
-  eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
+    eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
   eta_intra_2[i,] = kk$theta.mcmc$eta_intra[,2]
   beta_1[i,] = kk$theta.mcmc$eta_inter[,1]
   beta_2[i,] = kk$theta.mcmc$eta_inter[,2]
   gamma_oc[i,] = kk$theta.mcmc$spp_mat[,2]
   gamma_de[i,] = kk$theta.mcmc$spp_mat_det[,2]
+  
+  write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/APIS/N/eta_intra_1.csv")
+  write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/APIS/N/eta_intra_2.csv")
+  
+  write.csv(beta_1,"./Main analysis/Results/Big_simulation/APIS/N/beta_1.csv")
+  write.csv(beta_2,"./Main analysis/Results/Big_simulation/APIS/N/beta_2.csv")
+  
+  write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/APIS/N/gamma_oc.csv")
+  write.csv(gamma_de,"./Main analysis/Results/Big_simulation/APIS/N/gamma_de.csv")
+  
+    
 }
-
-write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/APIS/N/eta_intra_1.csv")
-write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/APIS/N/eta_intra_2.csv")
-
-write.csv(beta_1,"./Main analysis/Results/Big_simulation/APIS/N/beta_1.csv")
-write.csv(beta_2,"./Main analysis/Results/Big_simulation/APIS/N/beta_2.csv")
-
-write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/APIS/N/gamma_oc.csv")
-write.csv(gamma_de,"./Main analysis/Results/Big_simulation/APIS/N/gamma_de.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        

@@ -44,7 +44,7 @@ theta = list(beta_occu = c(-.5,-.5),
              beta_det = c(-.2,-.2),
              eta_intra = c(0.2,0.2),
              eta_inter = c(1,1),
-             spp_mat = -.4 * spp_mat,
+             spp_mat = -.3 * spp_mat,
              spp_mat_det = -.2 * spp_mat)
 
 
@@ -93,7 +93,7 @@ gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 ###### Simulate Data ######
 set.seed(42)
 
-n_dataset = 1
+n_dataset = 100
 
 eta_intra_1 = matrix(NA,nrow = n_dataset,ncol = 5000)
 eta_intra_2 = matrix(NA,nrow = n_dataset,ncol = 5000)
@@ -103,15 +103,15 @@ gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
 ###### Simulate Data ######
-set.seed(42)
+set.seed(43)
 
 
-for(i in 1:n_dataset){
+for(i in 37:n_dataset){
   cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
 	  	 int_range_intra="nn",int_range_inter="nn")
 
-  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), T,NA+MRF$thr) ## take true occupancy
 
 
   detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,
@@ -143,29 +143,15 @@ for(i in 1:n_dataset){
   beta_2[i,] = kk$theta.mcmc$eta_inter[,2]
   gamma_oc[i,] = kk$theta.mcmc$spp_mat[,2]
   gamma_de[i,] = kk$theta.mcmc$spp_mat_det[,2]
+  write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/APIS/C/eta_intra_1.csv")
+  write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/APIS/C/eta_intra_2.csv")
+  
+  write.csv(beta_1,"./Main analysis/Results/Big_simulation/APIS/C/beta_1.csv")
+  write.csv(beta_2,"./Main analysis/Results/Big_simulation/APIS/C/beta_2.csv")
+  
+  write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/APIS/C/gamma_oc.csv")
+  write.csv(gamma_de,"./Main analysis/Results/Big_simulation/APIS/C/gamma_de.csv")
+  
+  
 }
-
-write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/APIS/C/eta_intra_1.csv")
-write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/APIS/C/eta_intra_2.csv")
-
-write.csv(beta_1,"./Main analysis/Results/Big_simulation/APIS/C/beta_1.csv")
-write.csv(beta_2,"./Main analysis/Results/Big_simulation/APIS/C/beta_2.csv")
-
-write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/APIS/C/gamma_oc.csv")
-write.csv(gamma_de,"./Main analysis/Results/Big_simulation/APIS/C/gamma_de.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      
