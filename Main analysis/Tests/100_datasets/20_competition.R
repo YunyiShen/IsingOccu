@@ -74,7 +74,7 @@ for(i in 1:n_dataset){
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
 
-  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), T,NA+MRF$thr) ## take true occupancy
 
 
   detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,
@@ -100,16 +100,18 @@ for(i in 1:n_dataset){
   beta_2[i,] = kk$theta.mcmc$beta_occu[,4]
   gamma_oc[i,] = kk$theta.mcmc$spp_mat[,2]
   gamma_de[i,] = kk$theta.mcmc$spp_mat_det[,2]
+  
+  write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/20/C/eta_intra_1.csv")
+  write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/20/C/eta_intra_2.csv")
+  
+  write.csv(beta_1,"./Main analysis/Results/Big_simulation/20/C/beta_1.csv")
+  write.csv(beta_2,"./Main analysis/Results/Big_simulation/20/C/beta_2.csv")
+  
+  write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/20/C/gamma_oc.csv")
+  write.csv(gamma_de,"./Main analysis/Results/Big_simulation/20/C/gamma_de.csv")
+  
 }
 
-write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/20/C/eta_intra_1.csv")
-write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/20/C/eta_intra_2.csv")
-
-write.csv(beta_1,"./Main analysis/Results/Big_simulation/20/C/beta_1.csv")
-write.csv(beta_2,"./Main analysis/Results/Big_simulation/20/C/beta_2.csv")
-
-write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/20/C/gamma_oc.csv")
-write.csv(gamma_de,"./Main analysis/Results/Big_simulation/20/C/gamma_de.csv")
 
 
 

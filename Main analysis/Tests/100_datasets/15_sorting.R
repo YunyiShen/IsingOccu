@@ -20,11 +20,11 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,n_grids^2,1)
 envX = cbind(envX ,rnorm(n_grids^2))
 
-theta = list(beta_occu = c(-.3,.3,-.3,.3),
+theta = list(beta_occu = c(-.3,.5,-.3,.5),
              beta_det = c(-.3,.3,-.3,.3),
              eta_intra = c(0.25,0.25),
              eta_inter = c(1,1),
-             spp_mat = 0.3 * spp_mat,
+             spp_mat = 0.2 * spp_mat,
              spp_mat_det = 0.2 * spp_mat)
 
 link_map = 
@@ -67,15 +67,15 @@ gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
 ###### Simulate Data ######
-set.seed(42)
+set.seed(897683)
 
 
-for(i in 1:n_dataset){
+for(i in 15:n_dataset){
 	cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
 
-  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), T,NA+MRF$thr) ## take true occupancy
 
 
   detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,
@@ -94,23 +94,25 @@ for(i in 1:n_dataset){
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 2500,nIter = 50,method = "CFTP",Gibbs = T)
+                                            , ini = theta,thin.by = 10,report.by = 2500,nIter = 150,method = "MH",Gibbs = T)
   eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
   eta_intra_2[i,] = kk$theta.mcmc$eta_intra[,2]
   beta_1[i,] = kk$theta.mcmc$beta_occu[,2]
   beta_2[i,] = kk$theta.mcmc$beta_occu[,4]
   gamma_oc[i,] = kk$theta.mcmc$spp_mat[,2]
   gamma_de[i,] = kk$theta.mcmc$spp_mat_det[,2]
+  
+  write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/15/S/eta_intra_1.csv")
+  write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/15/S/eta_intra_2.csv")
+  
+  write.csv(beta_1,"./Main analysis/Results/Big_simulation/15/S/beta_1.csv")
+  write.csv(beta_2,"./Main analysis/Results/Big_simulation/15/S/beta_2.csv")
+  
+  write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/15/S/gamma_oc.csv")
+  write.csv(gamma_de,"./Main analysis/Results/Big_simulation/15/S/gamma_de.csv")
+  
+  
 }
-
-write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/15/S/eta_intra_1.csv")
-write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/15/S/eta_intra_2.csv")
-
-write.csv(beta_1,"./Main analysis/Results/Big_simulation/15/S/beta_1.csv")
-write.csv(beta_2,"./Main analysis/Results/Big_simulation/15/S/beta_2.csv")
-
-write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/15/S/gamma_oc.csv")
-write.csv(gamma_de,"./Main analysis/Results/Big_simulation/15/S/gamma_de.csv")
 
 
 

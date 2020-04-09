@@ -93,7 +93,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , nIter = 130,method = "MH",Gibbs = T)
 
 
-save.image("FM_SS_500k_norm_prior_highdet0.1.RData")
+save.image("FM_SS_500k_norm_prior_highdet0.1_Gibbs.RData")
 
 
 
