@@ -101,6 +101,8 @@ for(i in 1:n_dataset){
   beta_2[i,] = kk$theta.mcmc$beta_occu[,4]
   gamma_oc[i,] = kk$theta.mcmc$spp_mat[,2]
   gamma_de[i,] = kk$theta.mcmc$spp_mat_det[,2]
+
+  
   write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/20/S/eta_intra_1.csv")
   write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/20/S/eta_intra_2.csv")
 
@@ -112,8 +114,6 @@ for(i in 1:n_dataset){
 
 
 }
-
-
 
 
 
