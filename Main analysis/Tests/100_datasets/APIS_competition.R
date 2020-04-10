@@ -90,7 +90,7 @@ beta_2 = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
-###### Simulate Data ######
+##### Simulate Data ######
 set.seed(42)
 
 n_dataset = 100
@@ -103,10 +103,10 @@ gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
 ###### Simulate Data ######
-set.seed(43)
+set.seed(128975)
 
 
-for(i in 37:n_dataset){
+for(i in 69:n_dataset){
   cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
 	  	 int_range_intra="nn",int_range_inter="nn")
@@ -154,4 +154,4 @@ for(i in 37:n_dataset){
   
   
 }
-      
+        
