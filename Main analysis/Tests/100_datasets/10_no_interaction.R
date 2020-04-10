@@ -66,11 +66,21 @@ beta_2 = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
+
+eta_intra_1 = read.csv("./Main analysis/Results/Big_simulation/10/N/eta_intra_1.csv",row.names = 1)
+eta_intra_2 = read.csv("./Main analysis/Results/Big_simulation/10/N/eta_intra_2.csv",row.names = 1)
+
+beta_1 = read.csv("./Main analysis/Results/Big_simulation/10/N/beta_1.csv",row.names = 1)
+beta_2 = read.csv("./Main analysis/Results/Big_simulation/10/N/beta_2.csv",row.names = 1)
+gamma_oc = read.csv("./Main analysis/Results/Big_simulation/10/N/gamma_oc.csv",row.names = 1)
+gamma_de = read.csv("./Main analysis/Results/Big_simulation/10/N/gamma_de.csv",row.names = 1)
+
+
 ###### Simulate Data ######
-set.seed(42)
+set.seed(98701)
 
 
-for(i in 1:n_dataset){
+for(i in 20:n_dataset){
 	cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
@@ -94,7 +104,7 @@ for(i in 1:n_dataset){
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 5000,nIter = 50,method = "CFTP",Gibbs = T)
+                                            , ini = theta,thin.by = 10,report.by = 5000,nIter = 150,method = "MH",Gibbs = T)
   eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
   eta_intra_2[i,] = kk$theta.mcmc$eta_intra[,2]
   beta_1[i,] = kk$theta.mcmc$beta_occu[,2]
