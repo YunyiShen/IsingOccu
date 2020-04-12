@@ -32,7 +32,7 @@ IsingOccu.fit.Murray.sampler_Ising_det <- function(X,detmat,detX # list with eac
   source("./R/Murray_ratio.R")
   source('./R/importance_Z_helper.R')
   Rcpp::sourceCpp("./src/IsingCpp_CFTP_sparse.cpp")
-  set.seed(seed)
+  if(!is.null(seed)) set.seed(seed)
   if(uni_prior) getlogprior <- getlogprior_uniform
   else getlogprior <- getlogprior_normal
   
