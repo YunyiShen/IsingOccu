@@ -20,11 +20,11 @@ spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,n_grids^2,1)
 envX = cbind(envX ,rnorm(n_grids^2))
 
-theta = list(beta_occu = c(-.3,.5,-.3,.5),
+theta = list(beta_occu = c(-.3,.3,-.3,.3),
              beta_det = c(-.3,.3,-.3,.3),
              eta_intra = c(0.25,0.25),
              eta_inter = c(1,1),
-             spp_mat = 0.2 * spp_mat,
+             spp_mat = 0.3 * spp_mat,
              spp_mat_det = 0.2 * spp_mat)
 
 link_map = 
@@ -67,10 +67,10 @@ gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
 ###### Simulate Data ######
-set.seed(897683)
+set.seed(42)
 
 
-for(i in 15:n_dataset){
+for(i in 1:n_dataset){
 	cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
@@ -93,7 +93,7 @@ for(i in 15:n_dataset){
                                             , distM=link_map[[1]],link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
-                                            , seed = 42
+                                            , seed = NULL
                                             , ini = theta,thin.by = 10,report.by = 2500,nIter = 150,method = "MH",Gibbs = T)
   eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
   eta_intra_2[i,] = kk$theta.mcmc$eta_intra[,2]
