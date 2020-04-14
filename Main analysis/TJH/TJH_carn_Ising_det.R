@@ -68,7 +68,7 @@ nspp = 3
 
 vars_prop = list( beta_occu = rep(8e-3,nspp * ncol(envX))
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(1e-3,nspp)
+                  ,eta_intra = rep(5e-3,nspp)
                   ,eta_inter = rep(5e-3,nspp)
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
@@ -76,8 +76,8 @@ vars_prop = list( beta_occu = rep(8e-3,nspp * ncol(envX))
                   ,spp_mat_det = 5e-3)
 
 para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
-                   ,beta_det = rep(.03,1000,.03,1000,.03,1000 )
-                   ,eta_intra = rep(.03,nspp)
+                   ,beta_det = rep(.1,1000,.1,1000,.1,1000 )
+                   ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
                    ,d_inter = rep(1000,nspp)
@@ -99,23 +99,23 @@ datatemp  = data.frame(island,
 
 #Z_absolute = (sapply(detmat,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 require(ggplot2)
-ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z3))+
+ggplot(data = datatemp,aes(x=LONG,y=LAT,color = Z2))+
   geom_point()
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 50000, burn.in = 10000
+                                            , mcmc.iter = 100000, burn.in = 10000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
-                                            , Zprop_rate = 1
+                                            
                                             , uni_prior = F
                                             , distM=distM_full,link_map=link_map
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 500,nIter = 30)
+                                            , ini = theta,thin.by = 10,report.by = 5000,nIter = 50,Gibbs = T)
 
 
 

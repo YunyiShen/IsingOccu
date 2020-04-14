@@ -114,10 +114,10 @@ gamma_de = read.csv("./Main analysis/Results/Big_simulation/APIS/S/gamma_de.csv"
 
 
 ###### Simulate Data ######
-set.seed(49)
+set.seed(6797)
 
 
-for(i in 29:n_dataset){
+for(i in 34:n_dataset){
   cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
 	  	 int_range_intra="nn",int_range_inter="nn")
@@ -144,7 +144,7 @@ for(i in 29:n_dataset){
                                             , distM=distM_full,link_map=link_map
                                                 , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"                                          
-                                            , seed = 42
+                                            , seed = NULL
                                             , ini = theta,thin.by = 10,report.by = 5000,nIter = 150,method = "MH",Gibbs = T)
 
 
@@ -163,9 +163,10 @@ for(i in 29:n_dataset){
   
   write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/APIS/S/gamma_oc.csv")
   write.csv(gamma_de,"./Main analysis/Results/Big_simulation/APIS/S/gamma_de.csv")
-  
+  boxplot(t(as.matrix(gamma_oc)))
+  abline(0.25,0)
 }
-          
+            
 
 
 
