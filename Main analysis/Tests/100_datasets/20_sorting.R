@@ -111,7 +111,8 @@ for(i in 1:n_dataset){
 
   write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/20/S/gamma_oc.csv")
   write.csv(gamma_de,"./Main analysis/Results/Big_simulation/20/S/gamma_de.csv")
-
+  boxplot(t(as.matrix(gamma_oc)))
+  abline(0.3,0)
 
 }
 
