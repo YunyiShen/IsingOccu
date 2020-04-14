@@ -117,7 +117,7 @@ gamma_de = read.csv("./Main analysis/Results/Big_simulation/APIS/S/gamma_de.csv"
 set.seed(6797)
 
 
-for(i in 34:n_dataset){
+for(i in 33:n_dataset){
   cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
 	  	 int_range_intra="nn",int_range_inter="nn")
