@@ -67,10 +67,10 @@ gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
 ###### Simulate Data ######
-set.seed(42)
+set.seed(43)
 
 
-for(i in 1:n_dataset){
+for(i in 39:n_dataset){
 	cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
@@ -110,7 +110,8 @@ for(i in 1:n_dataset){
   
   write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/15/S/gamma_oc.csv")
   write.csv(gamma_de,"./Main analysis/Results/Big_simulation/15/S/gamma_de.csv")
-  
+  boxplot(t(as.matrix(gamma_oc)))
+  abline(.3,0)
   
 }
 

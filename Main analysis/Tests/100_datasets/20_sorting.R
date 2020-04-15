@@ -67,7 +67,7 @@ gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 
 ###### Simulate Data ######
-set.seed(42)
+set.seed(12345)
 
 
 for(i in 1:n_dataset){
@@ -94,7 +94,7 @@ for(i in 1:n_dataset){
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = NULL
-                                            , ini = theta,thin.by = 10,report.by = 2500,nIter = 50,method = "CFTP",Gibbs = T)
+                                            , ini = theta,thin.by = 10,report.by = 5000,nIter = 50,method = "CFTP",Gibbs = T)
   eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
   eta_intra_2[i,] = kk$theta.mcmc$eta_intra[,2]
   beta_1[i,] = kk$theta.mcmc$beta_occu[,2]
