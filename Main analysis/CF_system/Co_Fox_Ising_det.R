@@ -91,11 +91,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 100,report.by = 1000
+                                  , ini = theta,thin.by = 300,report.by = 5000
                                   , nIter = 150,method = "MH",Gibbs = T)
 
 
-save.image("CF_Mainland_island_3000k_norm_prior_high_det_0.1_60d_MH_Gibbs.RData")
+save.image("CF_Mainland_island_3000k_norm_prior_high_det_0.1_90d_MH_Gibbs.RData")
 # latest tuned parameter in 20191112
 
 
