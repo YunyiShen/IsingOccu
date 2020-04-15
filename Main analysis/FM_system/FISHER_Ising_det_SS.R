@@ -28,7 +28,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_90dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Fisher,full$Marten))
 
@@ -93,7 +93,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , nIter = 130,method = "MH",Gibbs = T)
 
 
-save.image("FM_SS_500k_norm_prior_highdet0.1_Gibbs.RData")
+save.image("FM_SS_500k_norm_prior_highdet0.1_Gibbs_90d.RData")
 
 
 
