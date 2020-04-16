@@ -55,10 +55,10 @@ link_map =
 nrep = 1
 nspp = 2
 
-vars_prop = list( beta_occu = rep(2.5e-3,nspp * ( ncol(envX)))
+vars_prop = list( beta_occu = rep(5e-3,nspp * ( ncol(envX)))
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
-                  ,eta_inter = 2.5e-3
+                  ,eta_inter = 5e-3
                   #,d_intra=rep(2.5e-5,nspp)
                   #,d_inter = rep(1e-4,nspp)
                   ,spp_mat = 1e-3
@@ -80,7 +80,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 100000, burn.in = 5000
+                                            , mcmc.iter = 1000000, burn.in = 5000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
