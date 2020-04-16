@@ -89,7 +89,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 50,report.by = 1000
+                                            , ini = theta,thin.by = 50,report.by = 5000
                                             , nIter = 130,method = "MH",Gibbs = T)
 
 
