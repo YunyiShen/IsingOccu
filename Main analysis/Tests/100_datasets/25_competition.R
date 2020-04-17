@@ -101,16 +101,19 @@ for(i in 1:n_dataset){
   beta_2[i,] = kk$theta.mcmc$beta_occu[,4]
   gamma_oc[i,] = kk$theta.mcmc$spp_mat[,2]
   gamma_de[i,] = kk$theta.mcmc$spp_mat_det[,2]
+  
+  write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/25/C/eta_intra_1.csv")
+  write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/25/C/eta_intra_2.csv")
+  
+  write.csv(beta_1,"./Main analysis/Results/Big_simulation/25/C/beta_1.csv")
+  write.csv(beta_2,"./Main analysis/Results/Big_simulation/25/C/beta_2.csv")
+  
+  write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/25/C/gamma_oc.csv")
+  write.csv(gamma_de,"./Main analysis/Results/Big_simulation/25/C/gamma_de.csv")
+  
+  boxplot(t(as.matrix(gamma_oc)))
+  abline(-.3,0)
 }
-
-write.csv(eta_intra_1,"./Main analysis/Results/Big_simulation/25/C/eta_intra_1.csv")
-write.csv(eta_intra_2,"./Main analysis/Results/Big_simulation/25/C/eta_intra_2.csv")
-
-write.csv(beta_1,"./Main analysis/Results/Big_simulation/25/C/beta_1.csv")
-write.csv(beta_2,"./Main analysis/Results/Big_simulation/25/C/beta_2.csv")
-
-write.csv(gamma_oc,"./Main analysis/Results/Big_simulation/25/C/gamma_oc.csv")
-write.csv(gamma_de,"./Main analysis/Results/Big_simulation/25/C/gamma_de.csv")
 
 
 
