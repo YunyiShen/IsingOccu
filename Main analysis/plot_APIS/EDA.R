@@ -155,3 +155,31 @@ logistic_site_co = glm(Fox_red~exp(-2*(dist-min(dist))/(max(dist)-min(dist))),da
 
 
 
+png( file="dethist.png", height=6, width=8,units = "in" ,res = 600)
+
+detmat1 = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.csv"),header = F)))
+
+par(mfrow=c(2,2)) 
+image(x=1:17,y=1:155,z=t(detmat1[[1]][1:155,]),xlab = "repeats",ylab = "site",main = "Fisher")
+image(x=1:17,y=1:155,z=t(detmat1[[1]][1:155+155,]),xlab = "repeats",ylab = "site",main = "Marten")
+
+detmat2 = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_90dfull_by_islands.csv"),header = F)[1:310,]))
+
+image(x=1:17,y=1:155,z=t(detmat2[[1]][1:155,]),xlab = "repeats",ylab = "site",main = "Coyote")
+image(x=1:17,y=1:155,z=t(detmat2[[1]][1:155+155,]),xlab = "repeats",ylab = "site",main = "Fox,red")
+
+
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+

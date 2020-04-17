@@ -27,7 +27,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_90dfull_by_islands.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Fisher,full$Marten))
 
@@ -90,10 +90,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 300,report.by = 1000,nIter = 30,Gibbs = T)
+                                            , ini = theta,thin.by = 300,report.by = 5000,nIter = 30,Gibbs = T)
 
 
-save.image("FM_Mainland_island_3000k_norm_prior_highdet_fastZ_var_0.1.RData")
+save.image("FM_Mainland_island_3000k_norm_prior_highdet_var_0.1_Gibbs_60d.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 
