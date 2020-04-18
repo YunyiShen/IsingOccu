@@ -77,38 +77,31 @@ all_posterior_medians_other$medians <- sapply(1:nrow(all_posterior_medians_other
 all_posterior_medians <- rbind(all_posterior_medians_APIS,all_posterior_medians_other)
 
 
-########### make plots #############
-
-##### no interactions
-
-makeaplot <- function(para,setting,all_posterior_medians){
-  ggplot(all_posterior_medians[all_posterior_medians$para==para & 
-                                                all_posterior_medians$setting==setting,],
-                aes(size, medians, fill=factor(spp))) + 
-          geom_boxplot(width=0.6) + 
-          ylim(-1,1)+
-          xlab("")+
-          ylab("")+
-          theme(legend.position="none") + 
-          scale_fill_brewer()+
-          theme(text = element_text(size=14), 
-                axis.text.x = element_text(angle=0,size = 12),
-                plot.margin = margin(.15, .15, .15, .15, "cm"))+
-          geom_hline(yintercept = 0) 
-}
-
-all_plots <- expand.grid(as.character(unique(all_posterior_medians$setting)),
-                         as.character(unique(all_posterior_medians$para))[c(3,4,1,2)]
-                         )
-
-all_ggplots <- lapply(1:nrow(all_plots),function(i,all_plots,all_posterior_medians){
-  makeaplot(all_plots[i,2],all_plots[i,1],all_posterior_medians)
-},all_plots,all_posterior_medians)
 
 
-library(grid)
+###### facet_wrap
 
-cowplot::plot_grid(plotlist=all_ggplots, ncol=3, align='vh')
+settings_name = c("Competition","Neutral","Sorting")
+all_posterior_medians$setting <- factor( settings_name[as.numeric(all_posterior_medians$setting)])
+
+paras_name = c("Env","Autocorr","Interaction_occu","Interaction_det")
+all_posterior_medians$para <- factor( paras_name[as.numeric(all_posterior_medians$para)],
+        levels = c("Interaction_occu","Interaction_det","Env","Autocorr"))
+
+
+ggplot(all_posterior_medians,
+       aes(size, medians, fill=factor(spp))) + 
+  geom_boxplot(width=0.6) + 
+  ylim(-1,1)+
+  xlab("")+
+  ylab("")+
+  theme(legend.position="none") + 
+  scale_fill_brewer()+
+  theme(text = element_text(size=14), 
+        axis.text.x = element_text(angle=0,size = 12),
+        plot.margin = margin(.15, .15, .15, .15, "cm"))+
+  geom_hline(yintercept = 0) + 
+  facet_grid(para~setting,labeller = label_parsed)
+
 ggsave(filename = "bigsimulation_temp.png",width = 9,height = 8,unit="in",dpi=500)
-
 
