@@ -210,6 +210,7 @@ write_json.IsingOccu_samples <- function(x,path){
   n_sample <- nrow(x$Z.mcmc)
   x$theta.mcmc <- lapply(x$theta.mcmc,matrix,nrow = n_sample)
   x$Z.mcmc <- matrix(x$Z.mcmc,nrow = n_sample)
+  x$linkmap <- lapply(x$linkmap,as.matrix)
   class(x) <- 'list'
   jsonlite::write_json(x,path)
 }
