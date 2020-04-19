@@ -76,12 +76,13 @@ all_posterior_medians_other$medians <- sapply(1:nrow(all_posterior_medians_other
 
 all_posterior_medians <- rbind(all_posterior_medians_APIS,all_posterior_medians_other)
 
-
+all_posterior_medians$spp[all_posterior_medians$spp=="gamma_oc"] = "1"
+all_posterior_medians$spp[all_posterior_medians$spp=="gamma_de"] = "1"
 
 
 ###### facet_wrap
 
-settings_name = c("Competition","Neutral","Sorting")
+settings_name = c("Competition","No-Interaction","Sorting")
 all_posterior_medians$setting <- factor( settings_name[as.numeric(all_posterior_medians$setting)])
 
 paras_name = c("Env","Autocorr","Interaction_occu","Interaction_det")
