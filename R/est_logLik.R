@@ -156,15 +156,15 @@ logBF <- function(theta_a_mcmc,envX_a,distM,link_map_a,dist_mainland,link_mainla
 	logLik_a <- Reduce(rbind,pure_logLik_a)
 	logLik_theta <- Reduce(rbind,pure_logLik_theta)
 	
-	#pD_Gelman04_a = 2 * var(logLik_a)
-	#pD_Gelman04_t = 2 * var(logLik_theta)
+	#pD_Gelman04_a = 2 * var(logLik_a,na.rm = T)
+	#pD_Gelman04_t = 2 * var(logLik_theta,na.rm = T)
 
-	#deltaDIC = - 2 * mean(logLik_a) + 2 * (pD_Gelman04_a) +  mean(logLik_theta) - 2 * (pD_Gelman04_t)
-	deltalogBF <-  mean(logLik_a) - mean(logLik_theta) 
+	#deltaDIC = - 2 * mean(logLik_a,na.rm = T) + (pD_Gelman04_a) + 2 * mean(logLik_theta,na.rm = T) - (pD_Gelman04_t)
+	deltalogBF <- - log(mean(1/(exp(logLik_a)),na.rm = T)) + log(mean(1/exp(logLik_theta),na.rm = T) )
 
 	
 	robust_cri <- list(robust_a = Reduce(mean,robust_cri_a),robust_theta = Reduce(mean,robust_cri_theta))
 	
-	return(list(logBF = deltalogBF,robust_criterion = robust_cri))
+	return(list(logBF = deltalogBF,DIC=deltaDIC,robust_criterion = robust_cri))
 }
 
