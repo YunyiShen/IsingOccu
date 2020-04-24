@@ -60,7 +60,41 @@ p_val_grand_coyote <- mean(mean_det_coyote<obs_mean_det_coyote)
 p_val_grand_fox <- mean(mean_det_fox>obs_mean_det_fox)
 
 
+# naive det
 
+nai_det_coyote <- sapply(PP_FM_MI,function(w){
+  det <- w[1:155,]
+  had_det <- rowSums(det==1)>0
+  mean(det[had_det,])
+})
+
+nai_det_fox <- sapply(PP_FM_MI,function(w){
+  det <- w[1:155+155,]
+  had_det <- rowSums(det==1)>0
+  mean(det[had_det,])
+})
+
+
+# naive det
+
+obs_nai_det_coyote <- sapply(detmat,function(w){
+  det <- w[1:155,]
+  had_det <- rowSums(det==1,na.rm = T)>0
+  mean(det[had_det,],na.rm = T)
+})
+
+obs_nai_det_fox <- sapply(detmat,function(w){
+  det <- w[1:155+155,]
+  had_det <- rowSums(det==1,na.rm = T)>0
+  mean(det[had_det,],na.rm = T)
+})
+
+
+hist(nai_det_coyote)
+abline(v=obs_nai_det_coyote)
+
+hist(nai_det_fox)
+abline(v=obs_nai_det_fox)
 
 # naive occupancy 
 
@@ -138,16 +172,16 @@ p_val_coex <- mean(coex>obs_coex)
 png("posterior_predictive_check_CF.png",width = 6.25,height=4.8,unit = "in",res=600)
 par(mfrow=c(2,3))
 
-hist(mean_det_coyote,main = "",xlab="coyote grand average of detection")
+hist(mean_det_coyote,main = "",xlab="Coyote grand average of detection")
 abline(v=obs_mean_det_coyote,col = "red")
-text(x = -0.8,y = 400,
+text(x = -0.78,y = 400,
      labels = paste0("p=", 
                       signif(min(p_val_grand_coyote,
                                  1-p_val_grand_coyote),
                              3)
                      ))
 
-hist(abs_det_coyote,main = "",xlab="coyote average of site had detection")
+hist(abs_det_coyote,main = "",xlab="Coyote naive occupancy")
 abline(v=obs_abs_det_coyote,col = "red")
 text(x = 0.5,y = 400,
      labels = paste0("p=", 
@@ -158,7 +192,7 @@ text(x = 0.5,y = 400,
 
 hist(cor_absolute_det,main = "",xlab = "Corr of naive occupancy")
 abline(v=obs_cor_absolute_det,col = "red")
-text(x = 0.5,y = 300,
+text(x = 0.55,y = 300,
      labels = paste0("p=", 
                      signif(min(p_val_cor,
                                 1-p_val_cor),
@@ -166,7 +200,7 @@ text(x = 0.5,y = 300,
      ))
 
 
-hist(mean_det_fox,main = "",xlab="fox grand average of detection")
+hist(mean_det_fox,main = "",xlab="Fox grand average of detection")
 abline(v=obs_mean_det_fox,col = "red")
 text(x = -0.9,y = 400,
      labels = paste0("p=", 
@@ -176,7 +210,7 @@ text(x = -0.9,y = 400,
      ))
 
 
-hist(abs_det_fox,main = "",xlab="fox average of site had detection")
+hist(abs_det_fox,main = "",xlab="Fox naive occupancy")
 abline(v=obs_abs_det_fox,col = "red")
 text(x = .3,y = 400,
      labels = paste0("p=", 
@@ -186,7 +220,7 @@ text(x = .3,y = 400,
      ))
 
 
-hist(coex,main = "",xlab = "Number of coexistence")
+hist(coex,main = "",xlab = "Number of confirmed coexistence")
 abline(v=obs_coex,col = "red")
 text(x = 30,y = 500,
      labels = paste0("p=", 

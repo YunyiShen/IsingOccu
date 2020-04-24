@@ -60,8 +60,7 @@ p_val_grand_fisher <- mean(mean_det_fisher<obs_mean_det_fisher)
 p_val_grand_marten <- mean(mean_det_marten>obs_mean_det_marten)
 
 
-
-
+  
 # naive occupancy 
 
 abs_det_fisher <- sapply(PP_FM_MI,function(w){
@@ -140,9 +139,9 @@ par(mfrow=c(2,3))
 
 hist(mean_det_fisher,main = "",xlab="Fisher grand average of detection")
 abline(v=obs_mean_det_fisher,col = "red")
-text(x = -0.85,y = 600,labels = paste0("p=",p_val_grand_fisher))
+text(x = -0.85,y = 300,labels = paste0("p=",signif(p_val_grand_fisher,3)))
 
-hist(abs_det_fisher,main = "",xlab="Fisher average of site had detection")
+hist(abs_det_fisher,main = "",xlab="Fisher naive occupancy")
 abline(v=obs_abs_det_fisher,col = "red")
 text(x = .3,y = 300,labels = paste0("p=",signif( p_val_abs_fisher,3)))
 
@@ -156,17 +155,17 @@ abline(v=obs_mean_det_marten,col = "red")
 text(x = -0.7,y = 700,labels = paste0("p=",p_val_grand_marten))
 
 
-hist(abs_det_marten,main = "",xlab="Marten average of site had detection")
+hist(abs_det_marten,main = "",xlab="Marten naive occupancy")
 abline(v=obs_abs_det_marten,col = "red")
 text(x = .5,y = 400,labels = paste0("p=",signif( p_val_abs_marten,3)))
 
 
-hist(coex,main = "",xlab = "Number of coexistence")
+hist(coex,main = "",xlab = "Number of confirmed coexistence")
 abline(v=obs_coex,col = "red")
 text(x = 20,y = 400,labels = paste0("p=",signif( p_val_coex,3)))
 
 dev.off()
-
+  
 
 
 
