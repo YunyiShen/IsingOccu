@@ -31,15 +31,18 @@ PP_FM_MI <- Posterior_predicting(FM_MI_sampled, FM_MI_full$distM, FM_MI_full$dis
                                 FM_MI_full$envX, FM_MI_full$linkmap,
                                 FM_MI_full$link_mainland,
                                 FM_MI_full$interaction.range$intra,FM_MI_full$interaction.range$inter,
-                                detX=NULL, nperiod = 10 ,nIter = 100,method = "CFTP")
+                                detX=NULL, nperiod = 17 ,nIter = 100,method = "CFTP")
 
+dets <- abs( detmat[[1]])
+
+PP_FM_MI <- lapply(PP_FM_MI,"*",dets)
 
 mean_det_fisher <- sapply(PP_FM_MI,function(w){
-  mean(w[1:155,])
+  mean(w[1:155,],na.rm = T)
 })  
 
 mean_det_marten <- sapply(PP_FM_MI,function(w){
-  mean(w[1:155+155,])
+  mean(w[1:155+155,],na.rm = T)
 }) 
 
 
@@ -56,20 +59,20 @@ obs_mean_det_marten <- mean(detmat[[1]][1:155+155,],na.rm = T)
 #points(obs_mean_det_fisher,obs_mean_det_marten
 #       ,col = "red")
 
-p_val_grand_fisher <- mean(mean_det_fisher<obs_mean_det_fisher)
-p_val_grand_marten <- mean(mean_det_marten>obs_mean_det_marten)
+p_val_grand_fisher <- mean(mean_det_fisher<obs_mean_det_fisher,na.rm = T)
+p_val_grand_marten <- mean(mean_det_marten>obs_mean_det_marten,na.rm = T)
 
 
   
 # naive occupancy 
 
 abs_det_fisher <- sapply(PP_FM_MI,function(w){
-  abs_det <- rowSums(w[1:155,]==1)>0
+  abs_det <- rowSums(w[1:155,]==1,na.rm = T)>0
   mean(abs_det)
 })
 
 abs_det_marten <- sapply(PP_FM_MI,function(w){
-  abs_det <- rowSums(w[1:155+155,]==1)>0
+  abs_det <- rowSums(w[1:155+155,]==1,na.rm = T)>0
   mean(abs_det)
 })
 
@@ -103,7 +106,7 @@ text(x = .5,y = 400,labels = paste0("p=",signif( p_val_abs_marten,3)))
 ## correlation between absolute
 
 cor_absolute_det <- sapply(PP_FM_MI,function(w){
-  cor( rowSums(w[1:155,]==1)>0, rowSums(w[1:155+155,]==1)>0)
+  cor( rowSums(w[1:155,]==1,na.rm = T)>0, rowSums(w[1:155+155,]==1,na.rm = T)>0)
   
 })
 
@@ -120,7 +123,7 @@ text(x = .2,y = 300,labels = paste0("p=",signif( p_val_cor,3)))
 ## number of site coexist
 
 coex <- sapply(PP_FM_MI,function(w){
-  sum( rowSums(w[1:155,]==1)>0 & rowSums(w[1:155+155,]==1)>0)
+  sum( rowSums(w[1:155,]==1,na.rm = T)>0 & rowSums(w[1:155+155,]==1,na.rm = T)>0)
   
 })
 
@@ -143,7 +146,7 @@ text(x = -0.85,y = 300,labels = paste0("p=",signif(p_val_grand_fisher,3)))
 
 hist(abs_det_fisher,main = "",xlab="Fisher naive occupancy")
 abline(v=obs_abs_det_fisher,col = "red")
-text(x = .3,y = 300,labels = paste0("p=",signif( p_val_abs_fisher,3)))
+text(x = .25,y = 300,labels = paste0("p=",signif( p_val_abs_fisher,3)))
 
 hist(cor_absolute_det,main = "",xlab = "Corr of naive occupancy")
 abline(v=obs_cor_absolute_det,col = "red")
@@ -152,17 +155,17 @@ text(x = .2,y = 300,labels = paste0("p=",signif( p_val_cor,3)))
 
 hist(mean_det_marten,main = "",xlab="Marten grand average of detection")
 abline(v=obs_mean_det_marten,col = "red")
-text(x = -0.7,y = 700,labels = paste0("p=",p_val_grand_marten))
+text(x = -0.6,y = 700,labels = paste0("p=",p_val_grand_marten))
 
 
 hist(abs_det_marten,main = "",xlab="Marten naive occupancy")
 abline(v=obs_abs_det_marten,col = "red")
-text(x = .5,y = 400,labels = paste0("p=",signif( p_val_abs_marten,3)))
+text(x = .4,y = 400,labels = paste0("p=",signif( p_val_abs_marten,3)))
 
 
 hist(coex,main = "",xlab = "Number of confirmed coexistence")
 abline(v=obs_coex,col = "red")
-text(x = 20,y = 400,labels = paste0("p=",signif( p_val_coex,3)))
+text(x = 15,y = 400,labels = paste0("p=",signif( p_val_coex,3)))
 
 dev.off()
   

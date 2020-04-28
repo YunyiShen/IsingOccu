@@ -31,15 +31,19 @@ PP_CF_MI <- Posterior_predicting(CF_MI_sampled, CF_MI_full$distM, CF_MI_full$dis
                                 CF_MI_full$envX, CF_MI_full$linkmap,
                                 CF_MI_full$link_mainland,
                                 CF_MI_full$interaction.range$intra,CF_MI_full$interaction.range$inter,
-                                detX=NULL, nperiod = 10 ,nIter = 50,method = "CFTP")
+                                detX=NULL, nperiod = 17 ,nIter = 50,method = "CFTP")
 
+
+dets <- abs( detmat[[1]])
+
+PP_CF_MI <- lapply(PP_CF_MI,'*',dets)
 
 mean_det_coyote <- sapply(PP_CF_MI,function(w){
-  mean(w[1:155,])
+  mean(w[1:155,],na.rm = T)
 })  
 
 mean_det_fox <- sapply(PP_CF_MI,function(w){
-  mean(w[1:155+155,])
+  mean(w[1:155+155,],na.rm = T)
 }) 
 
 
@@ -60,51 +64,15 @@ p_val_grand_coyote <- mean(mean_det_coyote<obs_mean_det_coyote)
 p_val_grand_fox <- mean(mean_det_fox>obs_mean_det_fox)
 
 
-# naive det
-
-nai_det_coyote <- sapply(PP_FM_MI,function(w){
-  det <- w[1:155,]
-  had_det <- rowSums(det==1)>0
-  mean(det[had_det,])
-})
-
-nai_det_fox <- sapply(PP_FM_MI,function(w){
-  det <- w[1:155+155,]
-  had_det <- rowSums(det==1)>0
-  mean(det[had_det,])
-})
-
-
-# naive det
-
-obs_nai_det_coyote <- sapply(detmat,function(w){
-  det <- w[1:155,]
-  had_det <- rowSums(det==1,na.rm = T)>0
-  mean(det[had_det,],na.rm = T)
-})
-
-obs_nai_det_fox <- sapply(detmat,function(w){
-  det <- w[1:155+155,]
-  had_det <- rowSums(det==1,na.rm = T)>0
-  mean(det[had_det,],na.rm = T)
-})
-
-
-hist(nai_det_coyote)
-abline(v=obs_nai_det_coyote)
-
-hist(nai_det_fox)
-abline(v=obs_nai_det_fox)
-
 # naive occupancy 
 
 abs_det_coyote <- sapply(PP_CF_MI,function(w){
-  abs_det <- rowSums(w[1:155,]==1)>0
+  abs_det <- rowSums(w[1:155,]==1,na.rm = T)>0
   mean(abs_det)
 })
 
 abs_det_fox <- sapply(PP_CF_MI,function(w){
-  abs_det <- rowSums(w[1:155+155,]==1)>0
+  abs_det <- rowSums(w[1:155+155,]==1,na.rm = T)>0
   mean(abs_det)
 })
 
@@ -138,7 +106,7 @@ text(x = .5,y = 400,labels = paste0("p=",signif( p_val_abs_fox,3)))
 ## correlation between absolute
 
 cor_absolute_det <- sapply(PP_CF_MI,function(w){
-  cor( rowSums(w[1:155,]==1)>0, rowSums(w[1:155+155,]==1)>0)
+  cor( rowSums(w[1:155,]==1,na.rm = T)>0, rowSums(w[1:155+155,]==1,na.rm = T)>0)
   
 })
 
@@ -155,7 +123,7 @@ text(x = .2,y = 300,labels = paste0("p=",signif( p_val_cor,3)))
 ## number of site coexist
 
 coex <- sapply(PP_CF_MI,function(w){
-  sum( rowSums(w[1:155,]==1)>0 & rowSums(w[1:155+155,]==1)>0)
+  sum( rowSums(w[1:155,]==1,na.rm = T)>0 & rowSums(w[1:155+155,]==1,na.rm = T)>0)
   
 })
 
@@ -174,7 +142,7 @@ par(mfrow=c(2,3))
 
 hist(mean_det_coyote,main = "",xlab="Coyote grand average of detection")
 abline(v=obs_mean_det_coyote,col = "red")
-text(x = -0.78,y = 400,
+text(x = -0.75,y = 400,
      labels = paste0("p=", 
                       signif(min(p_val_grand_coyote,
                                  1-p_val_grand_coyote),
@@ -183,7 +151,7 @@ text(x = -0.78,y = 400,
 
 hist(abs_det_coyote,main = "",xlab="Coyote naive occupancy")
 abline(v=obs_abs_det_coyote,col = "red")
-text(x = 0.5,y = 400,
+text(x = 0.5,y = 550,
      labels = paste0("p=", 
                      signif(min(p_val_abs_coyote,
                                 1-p_val_abs_coyote),
@@ -192,7 +160,7 @@ text(x = 0.5,y = 400,
 
 hist(cor_absolute_det,main = "",xlab = "Corr of naive occupancy")
 abline(v=obs_cor_absolute_det,col = "red")
-text(x = 0.55,y = 300,
+text(x = 0.5,y = 310,
      labels = paste0("p=", 
                      signif(min(p_val_cor,
                                 1-p_val_cor),
@@ -212,7 +180,7 @@ text(x = -0.9,y = 400,
 
 hist(abs_det_fox,main = "",xlab="Fox naive occupancy")
 abline(v=obs_abs_det_fox,col = "red")
-text(x = .3,y = 400,
+text(x = .22,y = 400,
      labels = paste0("p=", 
                      signif(min(p_val_abs_fox,
                                 1-p_val_abs_fox),
@@ -222,7 +190,7 @@ text(x = .3,y = 400,
 
 hist(coex,main = "",xlab = "Number of confirmed coexistence")
 abline(v=obs_coex,col = "red")
-text(x = 30,y = 500,
+text(x = 21,y = 300,
      labels = paste0("p=", 
                      signif(min(p_val_coex,
                                 1-p_val_coex),
