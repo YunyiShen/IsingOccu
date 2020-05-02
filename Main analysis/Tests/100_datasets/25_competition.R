@@ -70,12 +70,12 @@ gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 ###### Simulate Data ######
 set.seed(42)
 
-for(i in 1:n_dataset){
+for(i in 79:n_dataset){
 	cat(i,"\n\n")
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
 
-  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+  Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), T,NA+MRF$thr) ## take true occupancy
 
 
   detmat_simu = Sample_Ising_detection_rep(nrep,nperiod,envX,NULL,

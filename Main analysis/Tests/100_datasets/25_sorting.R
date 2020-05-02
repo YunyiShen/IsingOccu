@@ -70,7 +70,7 @@ gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
 set.seed(43)
 
 
-for(i in 16:n_dataset){
+for(i in 70:n_dataset){
   cat(i,"\n\n")	
   MRF = getMRF(theta,envX,distM = 0*link_map[[1]],link_map,link_mainland, link_mainland = link_mainland ,
 			 int_range_intra="nn",int_range_inter="nn")
