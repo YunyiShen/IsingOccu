@@ -39,7 +39,7 @@ nperiod = 6
 nsite = n_grids^2
 distM_mainland = matrix(0,nsite,1)
 
-vars_prop = list( beta_occu = c(1e-3,1e-3)
+vars_prop = list( beta_occu = c(5e-4)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
                   ,eta_intra = rep(1e-3,nspp)
                   ,eta_inter = c(2e-3,2e-3)
