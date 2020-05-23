@@ -7,7 +7,7 @@ Rcpp::sourceCpp("src/IsingCpp_CFTP_sparse.cpp")
 
 
 ## generate graph 
-n_grids = 20# 10 by 10 grid system
+n_grids = 25# 10 by 10 grid system
 link_inner = adjacency.matrix(n_grids) # nearest neighborhood 
 link_outer = Matrix(0,n_grids^2,n_grids^2,sparse = T)
 link_mainland = matrix(0,n_grids^2,1)
@@ -24,7 +24,7 @@ envX = cbind(envX ,rnorm(n_grids^2))
 
 theta = list(beta_occu = c(-.3,-.2,-.3,.2,-.3,.2),
              beta_det = c(-.3,.3,-.3,.3,-.3,.3),
-             eta_intra = c(0.25,0.25,0.25),
+             eta_intra = c(0.15,0.15,0.15),
              eta_inter = c(1,1,1),
              spp_mat = 0.25 * spp_mat,
              spp_mat_det = 0.2 * spp_mat)
@@ -39,12 +39,12 @@ nperiod = 6
 nsite = n_grids^2
 distM_mainland = matrix(0,nsite,1)
 
-vars_prop = list( beta_occu = c(5e-4)
+vars_prop = list( beta_occu = c(1e-3,5e-4,1e-3,5e-4,1e-3,5e-4)
                   ,beta_det = rep(5e-3,nspp * ( ncol(envX)) ) # no extra det thing
-                  ,eta_intra = rep(1e-3,nspp)
+                  ,eta_intra = rep(5e-4,nspp)
                   ,eta_inter = c(2e-3,2e-3)
-                  ,spp_mat = 1e-3
-                  ,spp_mat_det = 5e-3)
+                  ,spp_mat = 5e-4
+                  ,spp_mat_det = 1e-3)
 
 para_prior = list( beta_occu = rep(1000,nspp * ncol(envX))
                    ,beta_det = rep(10,nspp * (ncol(envX)) )
@@ -67,6 +67,18 @@ beta_1 = matrix(NA,nrow = n_dataset,ncol = 5000)
 beta_2 = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_oc = matrix(NA,nrow = n_dataset,ncol = 5000)
 gamma_de = matrix(NA,nrow = n_dataset,ncol = 5000)
+
+spp_mat = matrix(1,3,3)
+diag(spp_mat)=0
+spp_mat = as(spp_mat,'dsCMatrix')
+
+theta_ini = list(beta_occu = c(-.3,-.2,-.3,.2,-.3,.2),
+             beta_det = c(-.3,.3,-.3,.3,-.3,.3),
+             eta_intra = c(0.25,0.25,0.25),
+             eta_inter = c(1,1,1),
+             spp_mat = 0.25 * spp_mat,
+             spp_mat_det = 0.2 * spp_mat)
+
 
 ###### Simulate Data ######
 set.seed(42)
@@ -96,8 +108,8 @@ for(i in 1:n_dataset){
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland 
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = NULL
-                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 150,method = "MH",Gibbs = T)
-  eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
+                                            , ini = theta_ini,thin.by = 10,report.by = 100,nIter = 150,method = "MH",Gibbs = T)
+        eta_intra_1[i,] = kk$theta.mcmc$eta_intra[,1]
   eta_intra_2[i,] = kk$theta.mcmc$eta_intra[,2]
   beta_1[i,] = kk$theta.mcmc$beta_occu[,2]
   beta_2[i,] = kk$theta.mcmc$beta_occu[,4]

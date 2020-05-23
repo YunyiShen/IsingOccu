@@ -29,7 +29,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_120dfull_by_islands.csv"),header = F)[1:310,]))
+detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)[1:310,]))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Coyote,full$Fox_red))
 
@@ -66,7 +66,7 @@ vars_prop = list( beta_occu = c(1e-3,1e-3)
 detX = NULL
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(0.03,2 * (ncol(envX)) )
+                   ,beta_det = rep(0.1,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp*(nspp-1)/2)
                    ,d_intra=rep(1000,nspp)
@@ -83,7 +83,7 @@ Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , detX =  NULL
-                                  , mcmc.iter = 400000, burn.in = 50000
+                                  , mcmc.iter = 500000, burn.in = 50000
                                   , vars_prop = vars_prop
                                   , para_prior = para_prior
                                   , Zprop_rate = 1
@@ -93,11 +93,11 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                   , int_range_intra="nn",int_range_inter="nn"
                                   
                                   , seed = 42
-                                  , ini = theta,thin.by = 100,report.by = 100
-                                  , nIter = 130, method = "MH")
+                                  , ini = theta,thin.by = 50,report.by = 5000
+                                  , nIter = 130, method = "MH",Gibbs = T)
 
 
-save.image("CF_SS_400k_norm_prior_highdet0.03_120d.RData")# latest tuned parameter in 20191125
-
+save.image("CF_SS_500k_norm_prior_highdet0.1_60d.RData")# latest tuned parameter in 20191125
+  
 
 
