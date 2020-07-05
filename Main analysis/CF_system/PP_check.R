@@ -9,7 +9,7 @@ require(jsonlite)
 link = "./data/APIS/"
 detmat = detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)[1:310,]))
 
-CF_MI_full = read_json("./Main analysis/Results/imperfect_obs/Gibbs_norm/CF/CF_MI_60d_0.1.json",T)
+CF_MI_full = read_json("./Main analysis/Results/imperfect_obs/Gibbs_norm/CF/CF_MI_60d_1k.json",T)
 
 CF_MI_full$means$spp_mat <- matrix(CF_MI_full$means$spp_mat,2,2)
 CF_MI_full$means$spp_mat_det <- matrix(CF_MI_full$means$spp_mat_det,2,2)

@@ -35,11 +35,11 @@ diag(spp_mat)=0
 spp_mat = as(spp_mat,'dsCMatrix')
 envX = matrix(1,155,1)
 
-theta = list(beta_occu = c(-.5,-.5),
-             beta_det = c(-.3,-.3),
-             eta_intra = c(0.1,0.1),
-             eta_inter = c(1,1),
-             spp_mat = -.4 * spp_mat,
+theta = list(beta_occu = c(-.5,.5),
+             beta_det = c(-.5,-.5),
+             eta_intra = c(0.15,0.15),
+             eta_inter = c(1,-1),
+             spp_mat = 0 * spp_mat,
              spp_mat_det = -.2 * spp_mat)
 
 link_map = 
@@ -58,7 +58,7 @@ set.seed(42)
 MRF = getMRF(theta,envX,distM_full,link_map,distM_mainland,link_mainland = link_mainland * exp(-2*distM_mainland),
 			 int_range_intra="nn",int_range_inter="nn")
 
-Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), F,NA+MRF$thr) ## take true occupancy
+Z_simu = IsingSamplerCpp(1, MRF$A, MRF$thr, 1, 30, c(-1,1), T,NA+MRF$thr) ## take true occupancy
 
 detmat_format = lapply(1:nrep,function(dummy,nperiod,nsite,nspp){
 	matrix(-1,nrow = nsite*nspp,ncol = nperiod)
@@ -105,7 +105,7 @@ vars_prop = list( beta_occu = c(5e-3,5e-3)
                   ,spp_mat_det = 1e-2)
 
 para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(0.03,2 * (ncol(envX)) )
+                   ,beta_det = rep(1000,2 * (ncol(envX)) )
                    ,eta_intra = rep(1000,nspp)
                    ,eta_inter = rep(1000,nspp)
                    ,d_intra=rep(1000,nspp)
@@ -116,7 +116,7 @@ para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , detX =  NULL
-                                            , mcmc.iter = 50000, burn.in = 5000
+                                            , mcmc.iter = 1e6, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -125,10 +125,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat_simu
                                             , dist_mainland =  distM_mainland , link_mainland =  link_mainland * exp(-2*distM_mainland)
                                             , int_range_intra="nn",int_range_inter="nn"                                          
                                             , seed = 42
-                                            , ini = theta,thin.by = 10,report.by = 100,nIter = 150,method = "MH")
+                                            , ini = theta,thin.by = 300,report.by = 5000,nIter = 150,method = "CFTP")
 
 
-save.image("Test_MH_Competition_50K_with_intra.RData")
+      save.image("Test_MH_neutral_1e6_with_intra.RData")
 
 
 

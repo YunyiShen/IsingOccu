@@ -9,7 +9,7 @@ require(jsonlite)
 link = "./data/APIS/"
 detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.csv"),header = F)))
 
-FM_MI_full = read_json("./Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_MI_60d_0.1.json",T)
+FM_MI_full = read_json("./Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_MI_60d_1k.json",T)
 
 FM_MI_full$means$spp_mat <- matrix(FM_MI_full$means$spp_mat,2,2)
 FM_MI_full$means$spp_mat_det <- matrix(FM_MI_full$means$spp_mat_det,2,2)
@@ -146,7 +146,7 @@ text(x = -0.85,y = 300,labels = paste0("p=",signif(p_val_grand_fisher,3)))
 
 hist(abs_det_fisher,main = "",xlab="Fisher naive occupancy")
 abline(v=obs_abs_det_fisher,col = "red")
-text(x = .25,y = 300,labels = paste0("p=",signif( p_val_abs_fisher,3)))
+text(x = .23,y = 300,labels = paste0("p=",signif( p_val_abs_fisher,3)))
 
 hist(cor_absolute_det,main = "",xlab = "Corr of naive occupancy")
 abline(v=obs_cor_absolute_det,col = "red")
@@ -155,7 +155,7 @@ text(x = .2,y = 300,labels = paste0("p=",signif( p_val_cor,3)))
 
 hist(mean_det_marten,main = "",xlab="Marten grand average of detection")
 abline(v=obs_mean_det_marten,col = "red")
-text(x = -0.6,y = 700,labels = paste0("p=",p_val_grand_marten))
+text(x = -0.64,y = 700,labels = paste0("p=",p_val_grand_marten))
 
 
 hist(abs_det_marten,main = "",xlab="Marten naive occupancy")
@@ -169,6 +169,6 @@ text(x = 15,y = 400,labels = paste0("p=",signif( p_val_coex,3)))
 
 dev.off()
   
-
+  
 
 
