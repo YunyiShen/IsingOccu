@@ -28,7 +28,7 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_90dfull_by_islands.csv"),header = F)))
+detmat = list(as.matrix(read.csv(paste0(link,"Fisher_Marten_60dfull_by_islands.csv"),header = F)))
 full = read.csv(paste0(link,"PA_all_full.csv"),row.names=1)
 Z_sample = matrix(c(full$Fisher,full$Marten))
 
@@ -67,14 +67,14 @@ detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
 Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 
 
-para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(0.1,2 * (ncol(envX)) )
-                   ,eta_intra = rep(1000,nspp)
-                   ,eta_inter = rep(1000,nspp*(nspp-1)/2)
-                   ,d_intra=rep(1000,nspp)
-                   ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1000
-                   ,spp_mat_det = 1000)
+para_prior = list( beta_occu = rep(1e6,2 * ncol(envX))
+                   ,beta_det = rep(1e6,2 * (ncol(envX)) )
+                   ,eta_intra = rep(1e6,nspp)
+                   ,eta_inter = rep(100,nspp*(nspp-1)/2)
+                   ,d_intra=rep(1e6,nspp)
+                   ,d_inter = rep(1e6,nspp)
+                   ,spp_mat = 1e6
+                   ,spp_mat_det = 1e6)
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
@@ -93,7 +93,7 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , nIter = 130,method = "MH",Gibbs = T)
 
 
-save.image("FM_SS_500k_norm_prior_highdet0.1_Gibbs_90d.RData")
+save.image("FM_SS_500k_norm_prior_inter100_ow1e6_Gibbs_60d.RData")
 
 
 
