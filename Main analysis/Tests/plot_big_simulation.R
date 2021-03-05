@@ -104,5 +104,7 @@ ggplot(all_posterior_medians,
   geom_hline(yintercept = 0) + 
   facet_grid(para~setting,labeller = label_parsed)
 
+ggsave(filename = "bigsimulation.pdf",width = 9,height = 8,unit="in")
+
 ggsave(filename = "bigsimulation_temp.png",width = 9,height = 8,unit="in",dpi=500)
 

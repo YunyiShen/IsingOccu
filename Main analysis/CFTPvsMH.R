@@ -1,0 +1,18 @@
+pdf("CFTPvsMH.pdf",width = 6,height = 3)
+par(mfrow = c(1,2))
+load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_Mainland_island_100k_norm_prior_highdet_var_0.1_Gibbs_60d_MH.RData")
+hist(kk$theta.mcmc$spp_mat[,2],main = "MH",xlab = "gamma_oc",freq = F,breaks = ((-7):8)/10)
+load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_Mainland_island_3000k_norm_prior_highdet_var_0.1_Gibbs_60d.RData")
+hist(kk$theta.mcmc$spp_mat[,2],main = "CFTP",xlab = "gamma_oc",freq = F,breaks = ((-7):8)/10)
+dev.off()
+
+pdf("MCMCdiag.pdf",width = 6,height = 6)
+par(mfrow = c(4,1))
+load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_Mainland_island_3000k_norm_prior_highdet_var_0.1_Gibbs_60d.RData")
+traceplot(kk$theta.mcmc$spp_mat[,2],main = "gamma_oc for FM system")
+acf(matrix(kk$theta.mcmc$spp_mat[,2]),main = "")
+load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/CF/CF_Mainland_island_3000k_norm_prior_high_det_0.1_60d_MH_Gibbs.RData")
+traceplot(kk$theta.mcmc$spp_mat[,2],main = "gamma_oc for CF system")
+acf(matrix(kk$theta.mcmc$spp_mat[,2]),main = "")
+dev.off()
+  

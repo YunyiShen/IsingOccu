@@ -9,7 +9,7 @@ require(jsonlite)
 link = "./data/APIS/"
 detmat = detmat = list(as.matrix(read.csv(paste0(link,"Coyote_Fox_Bobcat_60dfull_by_islands.csv"),header = F)[1:310,]))
 
-CF_MI_full = read_json("./Main analysis/Results/imperfect_obs/Gibbs_norm/CF/CF_MI_60d_1k.json",T)
+CF_MI_full = read_json("./Main analysis/Results/imperfect_obs/Gibbs_norm/CF/CF_MI_60d_0.1.json",T)
 
 CF_MI_full$means$spp_mat <- matrix(CF_MI_full$means$spp_mat,2,2)
 CF_MI_full$means$spp_mat_det <- matrix(CF_MI_full$means$spp_mat_det,2,2)
@@ -137,12 +137,12 @@ p_val_coex <- mean(coex>obs_coex)
 
 
 
-png("posterior_predictive_check_CF.png",width = 6.25,height=4.8,unit = "in",res=600)
+pdf("posterior_predictive_check_CF.pdf",width = 6.25,height=4.8)
 par(mfrow=c(2,3))
 
-hist(mean_det_coyote,main = "",xlab="Coyote grand average of detection")
-abline(v=obs_mean_det_coyote,col = "red")
-text(x = -0.75,y = 400,
+hist(mean_det_coyote/2+.5,main = "",xlab="Coyote frequency of detection")
+abline(v=obs_mean_det_coyote/2+.5,col = "red")
+text(x = -0.75/2+.5,y = 400,
      labels = paste0("p=", 
                       signif(min(p_val_grand_coyote,
                                  1-p_val_grand_coyote),
@@ -168,9 +168,9 @@ text(x = 0.5,y = 310,
      ))
 
 
-hist(mean_det_fox,main = "",xlab="Fox grand average of detection")
-abline(v=obs_mean_det_fox,col = "red")
-text(x = -0.9,y = 400,
+hist((mean_det_fox+1)/2,main = "",xlab="Fox frequency of detection")
+abline(v=obs_mean_det_fox/2+.5,col = "red")
+text(x = -0.9/2+.5,y = 400,
      labels = paste0("p=", 
                      signif(min(p_val_grand_fox,
                                 1-p_val_grand_fox),

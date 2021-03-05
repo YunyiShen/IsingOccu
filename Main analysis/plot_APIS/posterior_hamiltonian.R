@@ -48,7 +48,9 @@ ggplot(temp1[-c(1,5,3,7,4,8),],aes(x=name, y=mean, colour = point)) +
 
 require(reshape2)
 temp = data.frame("modelfit",contri[,-c(1,5,3,7,4,8)])
-colnames(temp) = c("id","Coyote_intra","Fox_intra","Interaction","Coyote_env/mainland","Fox_env/mainland")
+colnames(temp) = c("id","Fisher_intra","Marten_intra","Interaction","Fisher_env/mainland","Marten_env/mainland")
+#colnames(temp) = c("id","Fisher_intra","Marten_intra","Interaction","Fisher_env/mainland","Marten_env/mainland")
+
 temp = melt(temp,value.name = "posterior_negPotential")
 ggplot(data = temp,aes(x=variable,y=(posterior_negPotential)))+geom_violin()+
   geom_hline(yintercept = 0)+
@@ -62,6 +64,7 @@ ggplot(data = temp,aes(x=variable,y=(posterior_negPotential)))+geom_violin()+
                                    vjust = 0.5,
                                    hjust = 0)) + 
   ylab("Negative Potential")+
-  xlab("term")+ coord_flip()
+  xlab("")+ 
+  coord_flip()
 
-ggsave("negH_CF_env_det1k.jpg",dpi = 500,width = 6,height = 3)
+ggsave("negH_FM_env.pdf",width = 6,height = 3)
