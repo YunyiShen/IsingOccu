@@ -68,19 +68,19 @@ detmat_0 = lapply(detmat,function(ww){ww[is.na(ww)]=-1;return(ww)})
 Z_absolute = (sapply(detmat_0,function(detmat_i){rowSums((detmat_i+1)/2)>0})) * 2 - 1
 
 
-para_prior = list( beta_occu = rep(1000,2 * ncol(envX))
-                   ,beta_det = rep(1000,2 * (ncol(envX)) )
-                   ,eta_intra = rep(1000,nspp)
-                   ,eta_inter = rep(1000,nspp)
-                   ,d_intra=rep(1000,nspp)
-                   ,d_inter = rep(1000,nspp)
-                   ,spp_mat = 1000
-                   ,spp_mat_det = 1000)
+para_prior = list( beta_occu = rep(1e6,2 * ncol(envX))
+                   ,beta_det = rep(1e6,2 * (ncol(envX)) )
+                   ,eta_intra = rep(1e6,nspp)
+                   ,eta_inter = rep(100,nspp)
+                   ,d_intra=rep(1e6,nspp)
+                   ,d_inter = rep(1e6,nspp)
+                   ,spp_mat = 1e6
+                   ,spp_mat_det = 1e6)
 
 
 kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , detX =  NULL
-                                            , mcmc.iter = 1000000, burn.in = 50000
+                                            , mcmc.iter = 3000000, burn.in = 50000
                                             , vars_prop = vars_prop
                                             , para_prior = para_prior
                                             , Zprop_rate = 1
@@ -90,10 +90,10 @@ kk = IsingOccu.fit.Murray.sampler_Ising_det(X = envX, detmat =  detmat
                                             , int_range_intra="nn",int_range_inter="nn"
                                             
                                             , seed = 42
-                                            , ini = theta,thin.by = 100,report.by = 5000,nIter = 30,Gibbs = T)
+                                            , ini = theta,thin.by = 300,report.by = 5000,nIter = 30,Gibbs = T)
 
 
-save.image("FM_Mainland_island_1000k_norm_prior_lowdet_var_1000_Gibbs_60d.RData")
+save.image("FM_Mainland_island_3000k_norm_prior_etainter_100_ow_1e6_Gibbs_60d.RData")
 ## This is a long chain, in case 80k works, I do not need to restart
 
 
