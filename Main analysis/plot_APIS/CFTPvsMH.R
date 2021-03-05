@@ -1,6 +1,6 @@
 pdf("CFTPvsMH.pdf",width = 6,height = 3)
 par(mfrow = c(1,2))
-load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_Mainland_island_100k_norm_prior_highdet_var_0.1_Gibbs_60d_MH.RData")
+load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/FM/arkive/FM_Mainland_island_100k_norm_prior_highdet_var_0.1_Gibbs_60d_MH.RData")
 hist(kk$theta.mcmc$spp_mat[,2],main = "MH",xlab = "gamma_oc",freq = F,breaks = ((-7):8)/10)
 load("/media/yunyi/Academia/UW Lab jobs/2. ISING Occupancy model/1. IsingOccu/1. IsingOccu/Main analysis/Results/imperfect_obs/Gibbs_norm/FM/FM_Mainland_island_3000k_norm_prior_highdet_var_0.1_Gibbs_60d.RData")
 hist(kk$theta.mcmc$spp_mat[,2],main = "CFTP",xlab = "gamma_oc",freq = F,breaks = ((-7):8)/10)
